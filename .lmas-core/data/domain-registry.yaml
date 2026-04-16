@@ -1,0 +1,364 @@
+# LMAS Domain Registry
+# Central registry of all known domains in the framework.
+# Each domain defines its own constitution extension, authority matrix, and quality gates.
+
+version: "1.1.0"
+
+# ─────────────────────────────────────────────
+# System Agents (domain-agnostic)
+# ─────────────────────────────────────────────
+
+system_agents:
+  lmas-master:
+    name: "Morpheus"
+    description: "Entry point, domain router, framework orchestrator — analisa intenção do usuário, roteia para o domínio/equipe/agente correto, operações de framework, criação de componentes, governança"
+    agent_file: ".lmas-core/development/agents/lmas-master.md"
+    role: router+orchestrator
+    can_execute_tasks: true
+
+  smith:
+    name: "Smith"
+    description: "Universal adversarial delivery verifier — estresse-testa qualquer entrega de qualquer domínio com olhar cínico e adversarial. Acionado opcionalmente após conclusão de entregas."
+    agent_file: ".lmas-core/development/agents/smith.md"
+    role: adversarial-verifier
+    can_execute_tasks: true
+    cross_domain: true
+
+  checkpoint:
+    name: "Checkpoint"
+    description: "Utility agent — gerencia PROJECT-CHECKPOINT.md, rastreia estado do projeto entre sessões, atualiza progresso automaticamente."
+    agent_file: ".lmas-core/development/agents/checkpoint.md"
+    role: utility
+    can_execute_tasks: true
+
+# ─────────────────────────────────────────────
+# Domain Resolution
+# ─────────────────────────────────────────────
+
+resolution:
+  strategy: "team-bundle-first"
+  entry_point: lmas-master
+  chain:
+    - source: "squad config.yaml → domain field"
+    - source: "team bundle → domain field"
+    - source: "project-config.yaml → domain.active"
+    - source: "fallback → default domain"
+
+# ─────────────────────────────────────────────
+# Registered Domains
+# ─────────────────────────────────────────────
+
+domains:
+  software-dev:
+    name: "Software Development"
+    description: "Desenvolvimento de software — backend, frontend, mobile, fullstack"
+    aliases:
+      - software
+      - dev
+      - development
+      - fullstack
+    path: ".lmas-core/domains/software-dev"
+    default: true
+    team_bundles:
+      - team-all
+      - team-fullstack
+      - team-no-ui
+      - team-qa-focused
+      - team-ide-minimal
+    core_agents:
+      - dev
+      - qa
+      - devops
+      - architect
+      - data-engineer
+      - pm
+      - po
+      - sm
+      - analyst
+      - ux-design-expert
+
+  marketing:
+    name: "Marketing Digital"
+    description: "Marketing digital — copywriting, social media, SEO, estratégia de conteúdo, publicação"
+    aliases:
+      - mkt
+      - content
+      - marketing-digital
+      - copy
+      - copywriting
+      - editorial
+      - social media
+      - SEO
+    path: ".lmas-core/domains/marketing"
+    default: false
+    team_bundles:
+      - team-marketing
+    core_agents:
+      - marketing-chief
+      - copywriter
+      - social-media-manager
+      - content-strategist
+      - content-researcher
+      - content-reviewer
+      - seo
+
+  business:
+    name: "Business & Advisory"
+    description: "Estratégia de negócio — ofertas, pricing, tráfego pago, growth, conselho estratégico, decisões executivas"
+    aliases:
+      - biz
+      - business
+      - strategy
+      - offers
+      - pricing
+      - traffic
+      - ads
+      - budget
+      - ROI
+      - ROAS
+      - growth
+      - scale
+      - advisory
+      - leads
+      - sales
+      - campanha paga
+      - investimento
+      - lançamento
+      - launch
+    path: ".lmas-core/domains/business"
+    default: false
+    team_bundles:
+      - team-business
+    core_agents:
+      - mifune
+      - hamann
+      - traffic-manager
+
+  brand:
+    name: "Brand & Storytelling"
+    description: "Criação de marca — posicionamento, naming, identidade, narrativa, storytelling, movimentos"
+    aliases:
+      - brand
+      - branding
+      - marca
+      - positioning
+      - posicionamento
+      - naming
+      - identity
+      - identidade
+      - narrative
+      - narrativa
+      - storytelling
+      - movement
+      - movimento
+      - community
+      - comunidade
+      - archetype
+      - arquétipo
+    path: ".lmas-core/domains/brand"
+    default: false
+    team_bundles:
+      - team-brand
+    core_agents:
+      - kamala
+      - bugs
+
+# ─────────────────────────────────────────────
+# Cross-Domain Agents
+# ─────────────────────────────────────────────
+
+cross_domain_agents:
+  - id: ux-design-expert
+    primary_domain: software-dev
+    available_in: [marketing, brand]
+    routing_keywords:
+      - design
+      - landing page layout
+      - banner design
+      - visual guidelines
+      - UI components
+      - design system
+      - brand visual
+      - logo brief
+      - CIP brief
+      - palette
+      - wireframe
+    rationale: "Sati's Phase 6 commands (*banner, *landing, *pitch-deck, *cip-brief, *logo-brief, *brand-audit) serve marketing and brand needs"
+
+  - id: traffic-manager
+    primary_domain: business
+    available_in: [marketing]
+    routing_keywords:
+      - campaign execution
+      - budget allocation
+      - paid media
+      - campaign plan
+      - ROI report
+    rationale: "Merovingian migrado para business domain — budget e performance são decisões de negócio. Disponível em marketing para Campaign Pipeline cross-domain."
+
+  - id: copywriter
+    primary_domain: marketing
+    available_in: [brand, business]
+    routing_keywords:
+      - brand copy
+      - tagline
+      - ad copy
+      - offer copy
+      - sales letter
+      - landing page copy
+    rationale: "Mouse escreve copy para qualquer domínio — brand copy, ad copy, offer copy."
+
+  - id: seo
+    primary_domain: marketing
+    available_in: [brand, software-dev]
+    routing_keywords:
+      - brand SEO
+      - technical SEO
+      - site audit
+      - schema markup
+    rationale: "Cypher otimiza SEO para sites de marca (brand) e audita SEO técnico (software-dev)."
+
+  - id: content-researcher
+    primary_domain: marketing
+    available_in: [brand, business]
+    routing_keywords:
+      - market research
+      - competitor analysis
+      - brand perception
+      - trend analysis
+    rationale: "Ghost pesquisa mercado para conteúdo (marketing), posicionamento (brand) e estratégia (business)."
+
+  - id: analyst
+    primary_domain: software-dev
+    available_in: [business, brand]
+    routing_keywords:
+      - market research
+      - brainstorm
+      - project brief
+      - competitive analysis
+      - growth metrics
+    rationale: "Atlas faz research e brainstorming que servem business strategy e brand positioning."
+
+# ─────────────────────────────────────────────
+# Squad Registry — Chief-First Architecture
+# ─────────────────────────────────────────────
+# ALL squads are active. No dormant/connected distinction.
+# type: enhanced = chief is a core agent (squad_chief in agent file)
+# type: standalone = chief is a squad-only agent (skill redirect)
+# Graceful degradation: if squad dir doesn't exist on disk, skip silently.
+
+squads:
+  # ── Enhanced Squads (chief = core agent) ──
+  - id: copy-squad
+    path: squads/copy-squad
+    type: enhanced
+    chief: copywriter
+    chief_persona: Mouse
+    agents: 22
+    skill: "LMAS:agents:copywriter"
+    description: "Direct response masters — Halbert, Schwartz, Ogilvy, Sugarman, and 18 more"
+
+  - id: traffic-masters
+    path: squads/traffic-masters
+    type: enhanced
+    chief: traffic-manager
+    chief_persona: Merovingian
+    agents: 15
+    skill: "LMAS:agents:traffic-manager"
+    description: "Platform-specific ad specialists — Meta, Google, YouTube + analytics"
+
+  - id: advisory-board
+    path: squads/advisory-board
+    type: enhanced
+    chief: hamann
+    chief_persona: Hamann
+    agents: 10
+    skill: "LMAS:agents:hamann"
+    description: "Virtual advisory board — Dalio, Munger, Naval, Thiel, Sinek, and 5 more"
+
+  - id: brand-squad
+    path: squads/brand-squad
+    type: enhanced
+    chief: kamala
+    chief_persona: Kamala
+    agents: 14
+    skill: "LMAS:agents:kamala"
+    description: "Brand strategy — Aaker, Ries, Kapferer, Neumeier, Wheeler, and 9 more"
+
+  - id: storytelling
+    path: squads/storytelling
+    type: enhanced
+    chief: bugs
+    chief_persona: Bugs
+    agents: 11
+    skill: "LMAS:agents:bugs"
+    description: "Narrative frameworks — Campbell, Klaff, Duarte, Harmon, and 7 more"
+
+  - id: hormozi-squad
+    path: squads/hormozi-squad
+    type: enhanced
+    chief: mifune
+    chief_persona: Mifune
+    agents: 15
+    skill: "LMAS:agents:mifune"
+    description: "Hormozi business frameworks — Offers, Leads, Pricing, Scale, and 11 more"
+
+  # ── Standalone Squads (chief = squad agent) ──
+  - id: claude-code-mastery
+    path: squads/claude-code-mastery
+    type: standalone
+    chief: claude-mastery-chief
+    chief_persona: Orion
+    agents: 8
+    tasks: 25
+    skill: "claude-code-mastery:agents:claude-mastery-chief"
+    description: "Claude Code internals — hooks, MCP, skills, subagents, context engineering"
+
+  - id: cybersecurity
+    path: squads/cybersecurity
+    type: standalone
+    chief: cyber-chief
+    agents: 15
+    skill: "cybersecurity:agents:cyber-chief"
+    description: "Pentest, red/blue team, AppSec, incident response, OWASP"
+
+  - id: c-level-squad
+    path: squads/c-level-squad
+    type: standalone
+    chief: vision-chief
+    agents: 6
+    skill: "c-level-squad:agents:vision-chief"
+    description: "Virtual C-suite — CEO, COO, CMO, CTO, CIO, CAIO"
+
+  - id: data-squad
+    path: squads/data-squad
+    type: standalone
+    chief: data-chief
+    agents: 7
+    skill: "data-squad:agents:data-chief"
+    description: "Data-driven strategy — analytics, CLV, growth, community, retention"
+
+  - id: design-squad
+    path: squads/design-squad
+    type: standalone
+    chief: design-chief
+    agents: 4
+    skill: "design-squad:agents:design-chief"
+    complements: ux-design-expert
+    description: "DesignOps, design system governance, AI visual generation — complements Sati"
+
+  - id: movement
+    path: squads/movement
+    type: standalone
+    chief: movement-chief
+    agents: 7
+    skill: "movement:agents:movement-chief"
+    description: "Movement building — phenomenology, identity, manifestos, growth cycles, impact"
+
+  - id: video-studio
+    path: squads/video-studio
+    type: standalone
+    chief: studio-director
+    agents: 5
+    skill: "video-studio:agents:studio-director"
+    description: "Video production — reels, ad creatives, avatars, 3D, motion graphics"

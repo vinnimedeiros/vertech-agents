@@ -1,0 +1,19 @@
+schema_version: "1.0"
+# Non-Functional Requirements — Aria (architect)
+
+performance:            # REQUIRED
+  - ""                  # Ex: "API response time < 200ms (p95)"
+
+security:               # REQUIRED
+  - ""                  # Ex: "RLS obrigatorio em TODAS as tabelas"
+
+scalability:
+  - ""                  # Ex: "Suportar 1000 usuarios simultaneos no MVP"
+
+availability:
+  - ""                  # Ex: "Uptime target: 99.5%"
+
+accessibility:
+  - ""                  # Ex: "WCAG 2.1 AA minimo para web"
+
+changelog: []

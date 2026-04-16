@@ -1,0 +1,21 @@
+schema_version: "1.0"
+# Competitive Landscape — Lock (marketing chief) + Analyst
+
+direct_competitors: []  # REQUIRED
+  # - name: ""
+  #   positioning: ""
+  #   weakness: ""
+  #   our_differentiator: ""
+
+indirect_competitors: []
+  # - name: ""
+  #   positioning: ""
+  #   weakness: ""
+  #   our_differentiator: ""
+
+messaging_angles:
+  primary: ""           # REQUIRED — Mensagem principal de diferenciacao
+  secondary: ""
+  tertiary: ""
+
+changelog: []

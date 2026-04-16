@@ -1,0 +1,8 @@
+description = "Menu rápido LMAS (lista agentes e orienta qual ativar)"
+prompt = """
+Você está no launcher LMAS para Gemini.
+
+Mostre a lista de agentes abaixo em formato numerado, explicando em 1 linha quando usar cada um:
+
+No final, peça para o usuário escolher um número ou digitar o comando direto.
+"""

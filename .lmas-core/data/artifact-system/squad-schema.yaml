@@ -1,0 +1,110 @@
+schema_version: "1.0"
+description: "Squad validation schema — defines the contract every squad MUST fulfill to be recognized by the framework."
+
+# ══════════════════════════════════════════════════════════════
+# SQUAD SCHEMA — Minimum Viable Squad
+# Every squad directory in squads/ is validated against this schema.
+# Morpheus *squad-status uses this to report health.
+# ══════════════════════════════════════════════════════════════
+
+required:
+  squad_definition:
+    file: "squad.yaml OR config.yaml"
+    fields:
+      - name: "squad.name"
+        type: string
+        format: kebab-case
+        description: "Unique squad identifier"
+      - name: "squad.version"
+        type: string
+        format: semver
+        description: "Squad version (e.g., 1.0.0)"
+      - name: "squad.domain"
+        type: string
+        description: "Domain or topic the squad covers"
+      - name: "squad.keywords"
+        type: array
+        min_items: 3
+        description: "Keywords for intent matching and routing"
+      - name: "squad.entry_agent"
+        type: string
+        description: "ID of the chief agent (entry point)"
+
+  chief_agent:
+    file: "agents/{entry_agent}.md"
+    description: "Chief agent file MUST exist and contain squad_roster"
+    validations:
+      - "File exists at agents/{entry_agent}.md"
+      - "Contains agent.name and agent.id fields"
+      - "Contains squad_roster OR squad_chief section (if standalone)"
+      - "Contains at least 1 command besides *help"
+
+  minimum_agents:
+    count: 2
+    description: "At least chief + 1 specialist"
+
+recommended:
+  config_yaml:
+    file: "config.yaml"
+    description: "Extended configuration with tier architecture, handoff matrix, cross-cutting concerns"
+
+  memory:
+    file: "MEMORY.md"
+    description: "Persistent knowledge for the squad across sessions"
+
+  tasks:
+    directory: "tasks/"
+    description: "Task workflows specific to the squad"
+    min_files: 1
+
+optional:
+  roster_yaml:
+    file: "roster.yaml"
+    description: "External roster file when squad has > 15 agents (keeps chief file lean)"
+
+  workflows:
+    directory: "workflows/"
+    description: "Multi-step squad-internal workflows"
+
+# ══════════════════════════════════════════════════════════════
+# SQUAD TYPES
+# ══════════════════════════════════════════════════════════════
+
+types:
+  enhanced:
+    description: "Squad whose chief is a core LMAS agent"
+    chief_location: ".lmas-core/development/agents/{core-agent}.md"
+    roster_location: "squad_chief section in core agent YAML"
+    skill: "LMAS:agents:{core-agent}"
+    registration: "Automatic — core agent already registered"
+    examples: [copy-squad, traffic-masters, advisory-board, brand-squad, storytelling, hormozi-squad]
+
+  standalone:
+    description: "Squad with its own chief (no core agent equivalent)"
+    chief_location: "squads/{squad}/agents/{chief}.md"
+    roster_location: "squad_chief section in chief agent YAML"
+    skill: "{squad}:agents:{chief}"
+    registration: "Skill redirect in .claude/commands/{squad}/agents/{chief}.md"
+    examples: [claude-code-mastery, cybersecurity, c-level-squad, data-squad, design-squad, movement]
+
+# ══════════════════════════════════════════════════════════════
+# VALIDATION RULES
+# ══════════════════════════════════════════════════════════════
+
+validation:
+  on_squad_status:
+    - "Check squad.yaml/config.yaml exists and has required fields"
+    - "Check chief agent file exists"
+    - "Check chief has squad_roster or squad_chief section"
+    - "Count agents vs declared count"
+    - "Verify no command namespace collisions with core agents"
+
+  health_scores:
+    healthy: "All required fields present, chief exists, roster complete"
+    warning: "Missing recommended files (config.yaml, tasks/)"
+    error: "Missing required files or chief agent"
+
+  graceful_degradation:
+    - "If squad dir does not exist on disk → skip silently (never error)"
+    - "If chief file missing → report in *squad-status, do not route"
+    - "If roster empty → route to chief but warn about empty roster"

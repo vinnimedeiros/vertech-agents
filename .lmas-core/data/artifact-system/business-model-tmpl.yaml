@@ -1,0 +1,87 @@
+schema_version: "1.0"
+# Business Model — Mifune (business chief)
+
+type: ""              # REQUIRED — marketplace | saas | e-commerce | service | info-product
+
+revenue_streams: []   # REQUIRED
+  # - name: ""
+  #   type: recurring | transactional | one-time
+  #   price: ""
+  #   margin: ""
+
+cost_structure:
+  fixed: []           # REQUIRED
+  variable: []        # REQUIRED
+
+value_proposition:    # REQUIRED
+  for_primary: ""     # Proposta para cliente principal
+  for_secondary: ""   # Proposta para cliente secundario (se aplicavel)
+
+unit_economics:
+  cac:
+    target: ""        # REQUIRED
+    current: null
+    breakdown: {}
+  ltv:
+    target: ""        # REQUIRED
+    calculation: ""
+  ltv_cac_ratio:
+    target: ""        # REQUIRED — minimo 3:1
+    current: null
+  payback_period:
+    target: ""
+    calculation: ""
+  churn:
+    target: ""        # REQUIRED
+    current: null
+  arpu:
+    target: ""
+    composition: ""
+  gross_margin:
+    target: ""
+    calculation: ""
+
+offer_stack:
+  lead_magnet:
+    name: ""
+    description: ""
+    format: ""
+    goal: ""
+    cta: ""
+  entry_offer:
+    name: ""
+    price: ""
+    includes: []
+    excludes: []
+    goal: ""
+  core_offer:
+    name: ""
+    price: ""
+    includes: []
+    anchor_against: ""
+    goal: ""
+  premium_offer:
+    name: ""
+    price: ""
+    includes: []
+    goal: ""
+  price_anchoring: ""
+
+kpis:
+  pre_launch: []
+    # - metric: ""
+    #   target: ""
+    #   deadline: ""
+    #   owner: ""
+  launch: []
+  growth: []
+
+gtm_strategy:
+  phases: []
+    # - name: ""
+    #   duration: ""
+    #   budget: ""
+    #   activities: []
+    #   success_criteria: ""
+
+changelog: []

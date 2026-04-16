@@ -1,0 +1,54 @@
+bundle:
+  name: Team Brand
+  icon: "\U0001F3A8"
+  domain: brand
+  description: Brand creation squad — positioning, naming, identity, storytelling, narrative, movement building.
+
+agents:
+  - kamala              # Brand Chief — positioning, naming, identity, archetype
+  - bugs                # Storytelling Chief — narrative, pitch, presentations, manifesto
+
+workflows:
+  - brand-sprint.yaml        # Positioning → Identity → Narrative
+
+purpose: |
+  This team handles brand creation and narrative:
+
+  1. **Brand Strategy Phase** (@kamala):
+     - Define brand positioning and unique value proposition
+     - Generate and evaluate brand names
+     - Map brand archetype and personality
+     - Build complete brand identity system
+     - Audit existing brand for consistency
+
+  2. **Narrative Phase** (@bugs):
+     - Craft brand narrative and origin story
+     - Create pitch decks and presentations
+     - Write brand manifestos
+     - Analyze story structure and emotional arcs
+     - Build movement narratives
+
+when_to_use:
+  - When creating a brand from scratch
+  - When repositioning an existing brand
+  - When naming a new product, service, or company
+  - When crafting brand narrative or origin story
+  - When building a community movement
+  - When preparing investor pitches or brand presentations
+
+quality_gates:
+  brand_consistency:
+    trigger: Brand identity deliverable ready
+    agent: kamala
+    checks:
+      - Positioning statement validated
+      - Visual identity aligned with archetype
+      - Naming passes linguistic/legal checks
+    threshold: Brand chief signoff
+
+notes:
+  - Brand domain covers PRE-marketing activities (who we are, before how we communicate)
+  - Cross-domain: @copywriter (marketing) writes brand copy
+  - Cross-domain: @ux-design-expert (software-dev) creates logo/CIP briefs and visual identity
+  - Cross-domain: @content-researcher (marketing) provides market research for positioning
+  - Cross-domain: @analyst (software-dev) provides competitive analysis

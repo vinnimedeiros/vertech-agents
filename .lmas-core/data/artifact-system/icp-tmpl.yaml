@@ -1,0 +1,26 @@
+schema_version: "1.0"
+# ICP (Ideal Customer Profile) — Lock (marketing chief)
+
+primary:
+  name: ""              # REQUIRED — Label da persona (ex: "Dono de restaurante local")
+  demographics:
+    age_range: ""       # REQUIRED
+    location: ""
+    income: ""
+    education: ""
+  psychographics:
+    pain_points: []     # REQUIRED — min 3
+    desires: []         # REQUIRED — min 3
+    objections: []      # RECOMMENDED — objecoes comuns
+  decision_triggers: [] # RECOMMENDED — o que faz a pessoa agir
+  channels: []          # REQUIRED — onde essa pessoa consome conteudo
+
+secondary:
+  name: ""
+  demographics:
+    age_range: ""
+  psychographics:
+    pain_points: []
+    desires: []
+
+changelog: []

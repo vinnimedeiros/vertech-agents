@@ -1,0 +1,47 @@
+name: design-squad
+version: "1.0.0-selective"
+short-title: "Design Squad (Selective)"
+description: "Importação seletiva — complementa @ux-design-expert (Sati). Visual generation, DesignOps (Dave Malouf), Design System Leadership (Dan Mall), design patterns catalog, e tasks de handoff."
+author: "Synkra AIOS (adapted for LMAS)"
+license: MIT
+slashPrefix: "design-squad"
+
+lmas:
+  minVersion: "5.3.5"
+  type: squad
+
+tags:
+  - design-ops
+  - visual-generation
+  - ai-image-prompts
+  - design-leadership
+  - handoff
+  - design-patterns
+
+components:
+  tasks:
+    - setup-design-ops.md
+    - generate-handoff.md
+  agents:
+    - visual-generator.md
+    - dave-malouf.md
+    - dan-mall.md
+  data:
+    - design-patterns-catalog.yaml
+  checklists:
+    - output-quality.md
+
+config:
+  extends: extend
+
+notes: |
+  SELECTIVE IMPORT: This squad only contains assets that COMPLEMENT @ux-design-expert (Sati).
+  Sati already covers: Atomic Design (Brad Frost), UX Research, Wireframes, Design Tokens,
+  Component Building, Accessibility, Design System Extraction, 23 Intelligence CSVs.
+
+  What this squad ADDS:
+  - Visual Generator: AI image prompt generation (Midjourney, DALL-E, Stable Diffusion)
+  - Dave Malouf: DesignOps governance, contribution models, scaling design teams
+  - Dan Mall: Design System Leadership, design-dev collaboration models
+  - Design Patterns Catalog: Additional patterns complementing Sati's CSVs
+  - Tasks: setup-design-ops (new), generate-handoff (designer→dev handoff)

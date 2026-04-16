@@ -1,0 +1,69 @@
+bundle:
+  name: Team Business
+  icon: "\U0001F4BC"
+  domain: business
+  description: Business strategy squad — offers, pricing, paid traffic, growth metrics, advisory counsel, executive decisions.
+
+agents:
+  - mifune              # Business Chief — offers, pricing, launch strategy
+  - hamann              # Advisory Chair — strategic counsel, board sessions
+  - traffic-manager     # Paid media — budget, targeting, optimization, platform-specific
+
+workflows:
+  - business-sprint.yaml     # Offer → Pricing → Advisory
+  - campaign-sprint.yaml     # Campaign → Ad Copy → Scale
+  - growth-sprint.yaml       # Measure → Leads → Scale
+
+purpose: |
+  This team handles business strategy and revenue operations:
+
+  1. **Strategy Phase** (@mifune):
+     - Define business model and value proposition
+     - Create irresistible offers (Hormozi frameworks)
+     - Set pricing strategy and unit economics
+     - Plan product launches
+
+  2. **Advisory Phase** (@hamann):
+     - Convene advisory board for strategic counsel
+     - Evaluate scaling decisions
+     - Resolve business crises with expert perspectives
+     - Challenge assumptions before major investments
+
+  3. **Performance Phase** (@traffic-manager):
+     - Budget allocation and platform-specific strategy
+     - Campaign planning and optimization
+     - ROI tracking, ROAS analysis
+     - Scale campaigns based on data
+
+when_to_use:
+  - When defining business strategy, offers, or pricing
+  - When planning and executing paid media campaigns
+  - When seeking strategic counsel before major decisions
+  - When measuring and optimizing growth metrics
+  - When planning product or service launches
+
+quality_gates:
+  pre_launch:
+    trigger: Launch plan ready for review
+    agent: hamann
+    checks:
+      - Strategic counsel review
+      - Risk assessment
+      - Market validation
+    threshold: Advisory board signoff
+
+  pre_campaign:
+    trigger: Campaign ready for budget allocation
+    agent: mifune
+    checks:
+      - ROI projection validated
+      - Budget within approved limits
+      - Offer-market fit confirmed
+    threshold: Business chief signoff
+
+notes:
+  - Traffic Manager (Merovingian) migrated from marketing domain — budget decisions are business decisions
+  - Hamann promoted to core agent — strategic counsel before major decisions (Smith H-2)
+  - Cross-domain: Merovingian available in marketing for Campaign Pipeline
+  - Cross-domain: @copywriter (marketing) writes ad copy for campaigns
+  - Cross-domain: @analyst (software-dev) provides market research

@@ -1,0 +1,25 @@
+{
+  "name": "remotion-templates",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "preview": "remotion preview src/index.ts",
+    "render": "remotion render src/index.ts",
+    "render:hook": "remotion render src/index.ts HookReel --output=out/hook-reel.mp4",
+    "render:quote": "remotion render src/index.ts QuoteReel --output=out/quote-reel.mp4",
+    "render:all": "npm run render:hook && npm run render:quote"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/cli": "^4.0.441",
+    "@remotion/player": "^4.0.441",
+    "@remotion/tailwind": "^4.0.441",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.441"
+  }
+}

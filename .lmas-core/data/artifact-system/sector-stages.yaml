@@ -1,0 +1,413 @@
+schema_version: "1.0"
+
+# ══════════════════════════════════════════════════════════════
+# SECTOR STAGE MAPS — Etapas formais por setor
+# Cada stage tem: agent responsavel, input contract, output artifact.
+# Cross-sector bridges conectam stages entre setores.
+# ══════════════════════════════════════════════════════════════
+
+sectors:
+
+  # ═══════════════════════════════════════════════════════════
+  # BRAND SECTOR — Kamala lidera
+  # ═══════════════════════════════════════════════════════════
+  brand:
+    chief: kamala
+    total_stages: 6
+    stages:
+      - id: brand/1-research
+        name: "Pesquisa de Marca"
+        agent: analyst
+        squad_agent: content-researcher  # Se disponivel
+        input:
+          required: ["project-context.yaml (objectives, constraints)"]
+          optional: ["competitive-landscape.yaml (se existir)"]
+        output:
+          artifact: "artifacts/brand/1-research.md"
+          context_files: ["competitive-landscape.yaml", "icp.yaml"]
+        description: "Pesquisa de mercado, concorrentes, publico-alvo, oportunidades"
+
+      - id: brand/2-positioning
+        name: "Posicionamento"
+        agent: kamala
+        input:
+          required: ["brand/1-research artifact"]
+        output:
+          artifact: "artifacts/brand/2-positioning.md"
+          context_files: ["brand-dna.yaml (parcial: purpose, essence, archetype)"]
+        description: "Proposta de valor, diferencial, arquetipo, tom de voz"
+
+      - id: brand/3-naming
+        name: "Naming"
+        agent: kamala
+        input:
+          required: ["brand/2-positioning artifact", "brand-dna.yaml"]
+        output:
+          artifact: "artifacts/brand/3-naming.md"
+        description: "Geracao de nomes, avaliacao linguistica/legal/emocional, decisao final"
+
+      - id: brand/4-identity
+        name: "Identidade Visual (brief)"
+        agent: kamala
+        input:
+          required: ["brand/2-positioning artifact", "brand/3-naming artifact"]
+        output:
+          artifact: "artifacts/brand/4-identity.md"
+          context_files: ["brand-dna.yaml (completo)"]
+        bridges_to: ["design/1-design-system"]
+        description: "Logo brief, paleta emocional, tipografia, imagery direction, Do/Dont visual"
+
+      - id: brand/5-narrative
+        name: "Narrativa de Marca"
+        agent: bugs
+        input:
+          required: ["brand-dna.yaml", "brand/2-positioning artifact"]
+        output:
+          artifact: "artifacts/brand/5-narrative.md"
+        description: "Brand story, manifesto, narrativa fundacional, pitch"
+
+      - id: brand/6-brandbook
+        name: "Brand Book"
+        agent: kamala
+        input:
+          required: ["Todos os artifacts brand/1-5", "brand-dna.yaml"]
+        output:
+          artifact: "artifacts/brand/6-brandbook.md"
+        bridges_to: ["marketing/1-strategy", "design/1-design-system"]
+        description: "Documento consolidado: guidelines completas da marca"
+
+  # ═══════════════════════════════════════════════════════════
+  # DESIGN SECTOR — UX Design Expert (Sati) lidera
+  # ═══════════════════════════════════════════════════════════
+  design:
+    chief: ux-design-expert
+    total_stages: 4
+    stages:
+      - id: design/1-design-system
+        name: "Design System"
+        agent: ux-design-expert
+        input:
+          required: ["brand/4-identity artifact", "brand-dna.yaml"]
+          bridges_from: ["brand/4-identity"]
+        output:
+          artifact: "artifacts/design/1-design-system.md"
+        description: "Tokens (cores, tipografia, espacamento), componentes base, guidelines"
+
+      - id: design/2-wireframes
+        name: "Wireframes"
+        agent: ux-design-expert
+        input:
+          required: ["design/1-design-system artifact", "prd (se existir)"]
+        output:
+          artifact: "artifacts/design/2-wireframes.md"
+        description: "Estrutura de telas, fluxos de usuario, layout sem visual"
+
+      - id: design/3-ui-design
+        name: "UI Design"
+        agent: ux-design-expert
+        input:
+          required: ["design/1-design-system artifact", "design/2-wireframes artifact"]
+        output:
+          artifact: "artifacts/design/3-ui-design.md"
+        description: "Visual final aplicado aos wireframes, responsive, estados"
+
+      - id: design/4-asset-handoff
+        name: "Asset Handoff"
+        agent: ux-design-expert
+        input:
+          required: ["design/1-3 artifacts"]
+        output:
+          artifact: "artifacts/design/4-asset-handoff.md"
+        bridges_to: ["dev/ui-implementation"]
+        description: "Exportacao de tokens, specs de componentes, breakpoints, assets"
+
+  # ═══════════════════════════════════════════════════════════
+  # DEV SECTOR — Architect (Aria) define, Dev (Neo) implementa
+  # ═══════════════════════════════════════════════════════════
+  dev:
+    chief: architect
+    total_stages: 6
+    stages:
+      - id: dev/1-prd
+        name: "PRD"
+        agent: pm
+        input:
+          required: ["project-context.yaml", "icp.yaml (se existir)"]
+        output:
+          artifact: "prd/"
+          context_files: ["nfrs.yaml"]
+        description: "Product Requirements Document — features, user stories, NFRs"
+
+      - id: dev/2-architecture
+        name: "Arquitetura"
+        agent: architect
+        input:
+          required: ["prd/", "nfrs.yaml"]
+        output:
+          artifact: "architecture/"
+        description: "Stack, diagramas, decisoes tecnicas, ADRs"
+
+      - id: dev/3-stories
+        name: "Stories"
+        agent: sm
+        input:
+          required: ["prd/", "architecture/"]
+        output:
+          artifact: "stories/"
+        description: "User stories com AC, tasks, estimativas"
+
+      - id: dev/4-implementation
+        name: "Implementacao"
+        agent: dev
+        input:
+          required: ["stories/", "architecture/"]
+          optional: ["design/4-asset-handoff artifact"]
+          bridges_from: ["design/4-asset-handoff"]
+        output:
+          artifact: "artifacts/dev/implementation-log.md"
+        description: "Codigo, testes, migrations — SDC (story development cycle)"
+
+      - id: dev/5-qa-gate
+        name: "QA Gate"
+        agent: qa
+        input:
+          required: ["Codigo implementado", "stories/ (acceptance criteria)"]
+        output:
+          artifact: "artifacts/dev/qa-report.md"
+        description: "Quality gate — PASS/CONCERNS/FAIL"
+
+      - id: dev/6-deploy
+        name: "Deploy"
+        agent: devops
+        input:
+          required: ["QA PASS", "Codigo na branch"]
+        output:
+          artifact: "artifacts/dev/deploy-log.md"
+        bridges_to: ["marketing/6-publish"]
+        description: "Push, PR, merge, deploy to production"
+
+  # ═══════════════════════════════════════════════════════════
+  # MARKETING SECTOR — Marketing Chief (Lock) supervisiona
+  # ═══════════════════════════════════════════════════════════
+  marketing:
+    chief: marketing-chief
+    total_stages: 6
+    stages:
+      - id: marketing/1-strategy
+        name: "Estrategia"
+        agent: content-strategist
+        input:
+          required: ["brand-dna.yaml", "icp.yaml", "business-model.yaml"]
+          bridges_from: ["brand/6-brandbook"]
+        output:
+          artifact: "artifacts/marketing/1-strategy.md"
+          context_files: ["content-quality-gate.yaml"]
+        description: "Estrategia de conteudo, canais, frequencia, calendario editorial"
+
+      - id: marketing/2-seo
+        name: "SEO / Keywords"
+        agent: seo
+        input:
+          required: ["marketing/1-strategy artifact", "competitive-landscape.yaml"]
+        output:
+          artifact: "artifacts/marketing/2-seo-keywords.md"
+        description: "Keyword research, search intent, schema markup, content clusters"
+
+      - id: marketing/3-content-calendar
+        name: "Calendario Editorial"
+        agent: content-strategist
+        input:
+          required: ["marketing/1-strategy artifact", "marketing/2-seo artifact"]
+        output:
+          artifact: "artifacts/marketing/3-content-calendar.md"
+        description: "Calendario com temas, datas, canais, formatos, keywords por peca"
+
+      - id: marketing/4-copy
+        name: "Copywriting"
+        agent: copywriter
+        input:
+          required: ["marketing/3-content-calendar artifact", "brand-dna.yaml", "icp.yaml"]
+          optional: ["business/2-offer artifact"]
+          bridges_from: ["business/2-offer"]
+        output:
+          artifact: "artifacts/marketing/4-copy/"
+        description: "Copy para cada peca: landing, ads, social, email, blog"
+
+      - id: marketing/5-review
+        name: "Review Gate"
+        agent: content-reviewer
+        input:
+          required: ["marketing/4-copy artifacts", "content-quality-gate.yaml"]
+        output:
+          artifact: "artifacts/marketing/5-review-report.md"
+        description: "Quality gate de conteudo — score >= 7/10 para publicacao"
+
+      - id: marketing/6-publish
+        name: "Publicacao"
+        agent: social-media-manager
+        input:
+          required: ["marketing/5-review PASS", "marketing/3-content-calendar"]
+          bridges_from: ["dev/6-deploy"]
+        output:
+          artifact: "artifacts/marketing/6-publish-log.md"
+        description: "Agendamento e publicacao nos canais definidos"
+
+  # ═══════════════════════════════════════════════════════════
+  # BUSINESS SECTOR — Mifune lidera
+  # ═══════════════════════════════════════════════════════════
+  business:
+    chief: mifune
+    total_stages: 5
+    stages:
+      - id: business/1-research
+        name: "Pesquisa de Mercado"
+        agent: analyst
+        input:
+          required: ["project-context.yaml"]
+        output:
+          artifact: "artifacts/business/1-research.md"
+          context_files: ["competitive-landscape.yaml"]
+        description: "Tamanho de mercado, tendencias, oportunidades, modelo de negocio viavel"
+
+      - id: business/2-offer
+        name: "Design de Oferta"
+        agent: mifune
+        input:
+          required: ["business/1-research artifact", "icp.yaml"]
+        output:
+          artifact: "artifacts/business/2-offer.md"
+          context_files: ["business-model.yaml (offer_stack, unit_economics)"]
+        bridges_to: ["marketing/4-copy"]
+        description: "Oferta irresistivel, escada de valor, ancoragem de preco"
+
+      - id: business/3-pricing
+        name: "Pricing"
+        agent: mifune
+        input:
+          required: ["business/2-offer artifact", "business-model.yaml"]
+        output:
+          artifact: "artifacts/business/3-pricing.md"
+          context_files: ["business-model.yaml (unit_economics atualizado)"]
+        description: "Estrategia de preco, tiers, comparacao com concorrentes"
+
+      - id: business/4-campaign-plan
+        name: "Plano de Campanha"
+        agent: traffic-manager
+        input:
+          required: ["business/2-offer artifact", "business/3-pricing artifact", "icp.yaml"]
+        output:
+          artifact: "artifacts/business/4-campaign-plan.md"
+        description: "Budget, canais, targeting, cronograma, KPIs, ROI projetado"
+
+      - id: business/5-analytics
+        name: "Analytics & Otimizacao"
+        agent: analyst
+        input:
+          required: ["business/4-campaign-plan artifact", "Dados reais pos-launch"]
+        output:
+          artifact: "artifacts/business/5-analytics.md"
+        description: "Metricas reais vs projetadas, otimizacoes, next steps"
+
+  # ═══════════════════════════════════════════════════════════
+  # VIDEO SECTOR — Studio Director lidera
+  # ═══════════════════════════════════════════════════════════
+  video:
+    chief: studio-director
+    total_stages: 5
+    stages:
+      - id: video/1-brief
+        name: "Brief de Video"
+        agent: copywriter
+        input:
+          required: ["project-context.yaml"]
+          optional: ["brand/4-identity artifact", "brand-dna.yaml"]
+          bridges_from: ["brand/4-identity"]
+        output:
+          artifact: "artifacts/video/1-brief.md"
+        description: "Script + direcao visual + formato + duracao"
+
+      - id: video/2-storyboard
+        name: "Storyboard"
+        agent: studio-director
+        input:
+          required: ["video/1-brief artifact"]
+        output:
+          artifact: "artifacts/video/2-storyboard.md"
+        description: "Shot list, timing por frame, referencias visuais"
+
+      - id: video/3-production
+        name: "Producao"
+        agent: studio-director
+        input:
+          required: ["video/2-storyboard artifact"]
+        output:
+          artifact: "artifacts/video/3-production/"
+        description: "Template Remotion OU avatar AI OU 3D render"
+
+      - id: video/4-editing
+        name: "Edicao"
+        agent: studio-director
+        input:
+          required: ["video/3-production artifacts"]
+        output:
+          artifact: "artifacts/video/4-edit.md"
+        description: "Assembly, transicoes, audio sync, legendas"
+
+      - id: video/5-export
+        name: "Export & Render"
+        agent: studio-director
+        input:
+          required: ["video/4-editing artifact"]
+        output:
+          artifact: "artifacts/video/5-export/"
+        bridges_to: ["marketing/6-publish", "business/4-campaign-plan"]
+        description: "Render por formato (9:16, 16:9, 1:1)"
+
+# ═══════════════════════════════════════════════════════════
+# CROSS-SECTOR BRIDGES (default)
+# ═══════════════════════════════════════════════════════════
+default_bridges:
+  - from: brand/4-identity
+    to: design/1-design-system
+    critical: true
+
+  - from: brand/6-brandbook
+    to: marketing/1-strategy
+    critical: true
+
+  - from: design/4-asset-handoff
+    to: dev/4-implementation
+    critical: false    # Dev pode comecar sem design (backend first)
+
+  - from: business/2-offer
+    to: marketing/4-copy
+    critical: true
+
+  - from: dev/6-deploy
+    to: marketing/6-publish
+    critical: false    # Marketing pode preparar antes do deploy
+
+  - from: brand/4-identity
+    to: video/1-brief
+    critical: true
+
+  - from: video/5-export
+    to: marketing/6-publish
+    critical: false    # Marketing pode publicar video quando pronto
+
+  - from: video/5-export
+    to: business/4-campaign-plan
+    critical: false    # Ad creatives para campanhas
+
+# ═══════════════════════════════════════════════════════════
+# SECTOR INDEPENDENCE RULES
+# ═══════════════════════════════════════════════════════════
+independence:
+  can_start_independently:
+    - dev         # Pode comecar com PRD sem esperar brand
+    - business    # Pode pesquisar mercado sem brand
+    - brand       # Sempre independente (normalmente primeiro)
+  must_wait:
+    - design      # Precisa de brand/4-identity
+    - marketing   # Precisa de brand/6-brandbook OU business/2-offer
+    - video       # Precisa de brand/4-identity para visual direction

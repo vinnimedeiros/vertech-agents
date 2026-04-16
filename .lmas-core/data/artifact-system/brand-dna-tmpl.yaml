@@ -1,0 +1,56 @@
+schema_version: "1.0"
+# Brand DNA — Kamala (brand chief)
+
+purpose: ""           # REQUIRED — Por que esta marca existe alem de lucrar?
+essence: ""           # REQUIRED — Uma palavra que captura tudo
+promise: ""           # REQUIRED — O que entregamos SEMPRE, sem excecao
+
+archetype:
+  primary: ""         # REQUIRED — Personalidade dominante (ex: Heroi, Criador, Sabio)
+  secondary: ""       # RECOMMENDED — Complementar
+  shadow: ""          # RECOMMENDED — O que NAO queremos ser
+
+values: []            # REQUIRED — min 3
+  # - name: ""
+  #   meaning: ""
+  #   behavior: ""    # Como esse valor se manifesta em acoes
+
+personality:
+  is: []              # REQUIRED — 4-6 adjetivos (ex: Confiante, Acessivel, Pratico)
+  is_not: []          # REQUIRED — 4-6 adjetivos que a marca NAO e
+
+voice:
+  tone: ""            # REQUIRED — Descricao do tom geral
+  do: []              # REQUIRED — Exemplos de frases que representam a marca
+  dont: []            # REQUIRED — Exemplos de frases PROIBIDAS
+  per_channel: {}     # RECOMMENDED — Tom + formato por canal
+    # instagram: { tone: "", format: "" }
+    # whatsapp: { tone: "", format: "" }
+    # google_ads: { tone: "", format: "" }
+    # landing_page: { tone: "", format: "" }
+
+archetype_behavior:   # RECOMMENDED
+  voice_when_selling: ""
+  voice_when_problem: ""
+  voice_when_celebrating: ""
+  voice_when_teaching: ""
+  visual_expression:
+    imagery: ""
+    never: ""
+    color_emotion: ""
+  narrative_arc: ""
+
+coherence_rules:
+  immutable: []       # Campos que NUNCA mudam sem aprovacao de @kamala + @marketing-chief
+  flexible: []        # Campos que podem adaptar por canal/contexto
+  requires_review: [] # Mudancas que precisam de @kamala + @marketing-chief
+
+naming_evaluation:    # Preenchido no stage brand/3-naming
+  criteria: []
+  candidates: []
+
+changelog: []
+  # - version: 1
+  #   date: ""
+  #   changed_by: ""
+  #   changes: ""

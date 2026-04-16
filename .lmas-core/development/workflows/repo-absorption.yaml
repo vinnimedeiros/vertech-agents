@@ -1,0 +1,558 @@
+# Repository Absorption Workflow
+# Formal workflow for analyzing external repositories and absorbing beneficial patterns into THE MATRIX
+# Created: 2026-03-29 by Morpheus
+# Constitution: RULE_6 (Skill Activation) enforced — all agent handoffs via Skill tool
+
+id: repo-absorption
+name: Repository Absorption Pipeline
+description: |
+  Analyzes external repositories, classifies by type, runs type-specific evaluation flow,
+  and absorbs beneficial patterns into the LMAS framework. Each phase activates the
+  responsible agent via Skill tool (CONSTITUTION_RULE_6).
+version: "1.0"
+trigger: "*absorb {repo-url|repo-path}"
+owner: lmas-master
+
+# ─────────────────────────────────────────────
+# PHASE 0: Classification (Morpheus)
+# ─────────────────────────────────────────────
+classification:
+  agent: lmas-master
+  description: "Morpheus classifies the repository into one of 4 types"
+  types:
+    A:
+      name: "Claude Code Framework"
+      signal: ".claude/, CLAUDE.md, hooks, rules, skills, MCP configs, agents/"
+      examples: "Superpowers, AIOX, cursor-rules"
+      flow: flow-a
+    B:
+      name: "AI Agent Framework"
+      signal: "Agent definitions, orchestration, multi-agent patterns, crew/team"
+      examples: "CrewAI, AutoGen, Mastra, LangGraph"
+      flow: flow-b
+    C:
+      name: "Tool / MCP Server"
+      signal: "MCP server, CLI tool, SDK wrapper, npm package"
+      examples: "context7, exa-mcp, Apify"
+      flow: flow-c
+    D:
+      name: "Reference / Knowledge"
+      signal: "Methodologies, playbooks, prompts, specs, best practices"
+      examples: "Kepano obsidian-skills, awesome-prompts"
+      flow: flow-d
+
+# ─────────────────────────────────────────────
+# FLOW A: Claude Code Framework
+# ─────────────────────────────────────────────
+flow-a:
+  name: "Claude Code Framework Analysis"
+  phases:
+    - phase: 1
+      name: SCAN
+      agent: claude-mastery-chief
+      activation: "/claude-code-mastery:agents:claude-mastery-chief"
+      action: "Map hooks, rules, CLAUDE.md, settings, skills, agents, MCP, permissions"
+      output: "scan-report (inventory categorized by CC feature area)"
+      parallel_with: null
+
+    - phase: 2
+      name: GAP
+      agent: claude-mastery-chief
+      activation: "(continues from phase 1)"
+      action: "Compare inventory vs LMAS current. Mark: TEMOS / MELHOR / PIOR / NAO TEMOS"
+      output: "gap-analysis (comparative table)"
+      parallel_with: null
+
+    - phase: 3
+      name: DECIDE
+      agent: lmas-master
+      activation: "/LMAS:agents:lmas-master"
+      action: "Governance: for each gap NAO TEMOS or PIOR → ABSORB / ADAPT / SKIP with rationale"
+      output: "absorption-plan"
+      gate: "Constitution check — nothing contradicts LMAS constitution"
+
+    - phase: 4
+      name: IMPLEMENT
+      agent: dev
+      activation: "/LMAS:agents:dev"
+      action: "Create SYNAPSE rules, hooks, templates per absorption plan"
+      output: "Files created/modified in vault via Obsidian API + .claude/rules via Edit"
+
+    - phase: 5
+      name: VERIFY
+      agent: smith
+      activation: "/LMAS:agents:smith"
+      action: "Adversarial review: nothing broke, no contradiction, no duplication"
+      output: "Smith verdict (COMPROMISED/INFECTED/CONTAINED/CLEAN)"
+      gate: "CRITICAL/HIGH findings BLOCK delivery"
+
+# ─────────────────────────────────────────────
+# FLOW B: AI Agent Framework
+# ─────────────────────────────────────────────
+flow-b:
+  name: "AI Agent Framework Analysis"
+  phases:
+    - phase: 1
+      name: SCAN
+      agent: analyst
+      activation: "/LMAS:agents:analyst"
+      action: "Analyze architecture: agent communication, routing, memory, tools, guardrails"
+      output: "architecture-scan"
+
+    - phase: 2
+      name: MAP
+      agent: claude-mastery-chief
+      activation: "/claude-code-mastery:agents:claude-mastery-chief"
+      action: "Translate repo concepts to Claude Code equivalents (crew→subagent, tool→MCP)"
+      output: "concept-mapping"
+
+    - phase: 3
+      name: DECIDE
+      agent: lmas-master
+      activation: "/LMAS:agents:lmas-master"
+      action: "Governance: which PATTERNS (not code) to absorb. Focus on orchestration."
+      output: "absorption-plan"
+      gate: "Constitution check"
+
+    - phase: 4
+      name: IMPLEMENT
+      agent: dev
+      activation: "/LMAS:agents:dev"
+      action: "Adapt patterns to LMAS: new workflows, task templates, agent patterns"
+      output: "Files created/modified"
+
+    - phase: 5
+      name: VERIFY
+      agent: smith
+      activation: "/LMAS:agents:smith"
+      action: "Verify adaptations respect LMAS constitution, no capability duplication"
+      output: "Smith verdict"
+      gate: "CRITICAL/HIGH BLOCK"
+
+# ─────────────────────────────────────────────
+# FLOW C: Tool / MCP Server
+# ─────────────────────────────────────────────
+flow-c:
+  name: "Tool / MCP Server Evaluation"
+  phases:
+    - phase: 1
+      name: SCAN
+      agent: claude-mastery-chief
+      activation: "/claude-code-mastery:agents:claude-mastery-chief"
+      action: "Evaluate: integration type (MCP stdio/http, CLI, API), deps, security"
+      output: "tool-assessment"
+
+    - phase: 2
+      name: EVALUATE
+      agent: analyst
+      activation: "/LMAS:agents:analyst"
+      action: "Value assessment: ROI of integrating, existing alternatives, security review"
+      output: "value-assessment"
+
+    - phase: 3
+      name: DECIDE
+      agent: lmas-master
+      activation: "/LMAS:agents:lmas-master"
+      action: "Decision: INTEGRATE (MCP config) / REFERENCE (tool-registry) / SKIP"
+      output: "integration-plan"
+
+    - phase: 4
+      name: IMPLEMENT
+      agent: dev
+      activation: "/LMAS:agents:dev"
+      action: "Add to tool-registry, create MCP config, update tool-examples"
+      output: "Config files"
+
+    - phase: 5
+      name: VERIFY
+      agent: claude-mastery-chief
+      activation: "/claude-code-mastery:agents:claude-mastery-chief"
+      action: "Test integration works, no conflict with existing MCP servers"
+      output: "Test report"
+
+# ─────────────────────────────────────────────
+# FLOW D: Reference / Knowledge
+# ─────────────────────────────────────────────
+flow-d:
+  name: "Reference / Knowledge Absorption"
+  phases:
+    - phase: 1
+      name: SCAN
+      agent: analyst
+      activation: "/LMAS:agents:analyst"
+      action: "Extract: methodologies, mental frameworks, checklists, reusable patterns"
+      output: "knowledge-extract"
+      note: "For web URLs, pre-process with defuddle for token efficiency"
+
+    - phase: 2
+      name: EVALUATE
+      agent: lmas-master
+      activation: "/LMAS:agents:lmas-master"
+      action: "Relevance to LMAS: which patterns complement workflows vs duplicate"
+      output: "relevance-assessment"
+
+    - phase: 3
+      name: DECIDE
+      agent: lmas-master
+      activation: "(continues from phase 2)"
+      action: "ABSORB (reference store + vault) / ADAPT (template/checklist/rule) / SKIP"
+      output: "absorption-plan"
+
+    - phase: 4
+      name: IMPLEMENT
+      agent: dev
+      activation: "/LMAS:agents:dev"
+      action: "Create vault notes (via Obsidian REST API), update rules, create templates"
+      output: "Reference entries + rule updates"
+      note: "Vault writes ALWAYS via Obsidian REST API, never Read/Write tools"
+
+    - phase: 5
+      name: VERIFY
+      agent: smith
+      activation: "/LMAS:agents:smith"
+      action: "Verify completeness, no contradiction, HOME.md updated, memory saved"
+      output: "Smith verdict"
+      gate: "CRITICAL/HIGH BLOCK"
+
+# ─────────────────────────────────────────────
+# CROSS-FLOW RULES
+# ─────────────────────────────────────────────
+rules:
+  parallelism: "Phases 1-2 may run in parallel via Agent tool when independent"
+  governance_gate: "Phase 4 (DECIDE) is ALWAYS Morpheus in main context — never delegated"
+  constitution: "NOTHING is absorbed if it contradicts LMAS Constitution"
+  duplication: "Equivalent features NAO significa equivalent tool — verificar modelo de execucao, benchmarks, arquitetura antes de SKIP"
+  skill_activation: "CONSTITUTION_RULE_6 — ALL agent handoffs via Skill tool"
+  vault_access: "Vault writes via Obsidian REST API (NEVER Read/Write/Edit tools for vault content)"
+  memory: "Result saved as memory reference_{repo-name}_analysis.md"
+  batch: "Multiple repos of same type may have Phase 1 in parallel"
+  defuddle: "Web URLs pre-processed with 'npx -y defuddle parse <url> --md' for token efficiency"
+
+# ─────────────────────────────────────────────
+# DECISION FRAMEWORK
+# ─────────────────────────────────────────────
+decisions:
+  absorb:
+    criteria: "Pattern/tool/reference fills a GAP in LMAS that no existing component covers"
+    action: "Create vault reference + update rules/templates as needed"
+  adapt:
+    criteria: "Pattern exists in LMAS but external version has improvements"
+    action: "Update existing LMAS component with improvements (never replace wholesale)"
+  skip:
+    criteria: "LMAS already has equivalent or better OR pattern contradicts constitution"
+    action: "Document decision in memory with rationale"
+  optimize:
+    criteria: "External pattern suggests a better WAY to do something we already do"
+    action: "Propose modification to existing workflow/command via *propose-modification"
+    note: "This is the key insight — absorption can trigger workflow optimization, not just addition"
+
+# ─────────────────────────────────────────────
+# DEEP ANALYSIS MANDATE (Lesson: dev-browser 2026-03-29)
+# Superficial checkbox analysis almost caused SKIP of tool 69% cheaper.
+# This section is NON-NEGOTIABLE for all absorption decisions.
+deep_analysis_mandate:
+  rule: "NUNCA analise superficial. SEMPRE 2-step review sequencial com agentes especializados."
+  trigger: "Repo com >1K stars E para Claude Code = analise profunda OBRIGATORIA"
+
+  # TWO-PHASE REVIEW (SEQUENTIAL — um de cada vez, via Skill)
+  # CONSTITUTION_RULE_6: cada agente DEVE ser ativado pela sua Skill
+  two_phase_review:
+    description: "Revisao em 2 passos sequenciais. Cada agente faz SUA parte, ativado via Skill."
+    enforcement: "CONSTITUTION_RULE_6 — violacao = finding CRITICAL"
+
+    phase_1_technical:
+      agent: claude-mastery-chief
+      activation: "/claude-code-mastery:agents:claude-mastery-chief"
+      persona: Orion
+      scope:
+        - "Arquitetura interna (como a ferramenta executa)"
+        - "Modelo de execucao (batch vs individual, sync vs async)"
+        - "Benchmarks de performance (custo, turns, tempo, sucesso)"
+        - "Integracao com Claude Code (MCP, CLI, Skill, hooks)"
+        - "Comparacao tecnica vs ferramentas existentes no LMAS"
+        - "Seguranca (sandbox, permissoes, superficie de ataque)"
+      NOT_allowed:
+        - "Pesquisa de feedback da comunidade"
+        - "Avaliacao de ROI de negocio"
+        - "Analise de sentimento de usuarios"
+      output: "Relatorio tecnico com gap analysis arquitetural"
+
+    phase_2_evaluative:
+      agent: analyst
+      activation: "/LMAS:agents:analyst"
+      persona: Atlas
+      scope:
+        - "Feedback real de usuarios (GitHub issues, Reddit, Twitter, HN)"
+        - "Estabilidade e maturidade (bugs reportados, frequencia de releases)"
+        - "Adocao e traction (stars, installs, contribuidores)"
+        - "Riscos praticos (limitacoes reportadas pela comunidade)"
+        - "Comparacao com alternativas do ponto de vista do usuario"
+        - "ROI de integracao (custo de adotar vs beneficio real)"
+      NOT_allowed:
+        - "Analise de arquitetura interna"
+        - "Avaliacao de modelo de execucao"
+        - "Comparacao tecnica de APIs"
+      output: "Relatorio avaliativo com feedback da comunidade e riscos"
+
+    sequence: "OBRIGATORIAMENTE sequencial. Phase 1 (Tecnico) → Phase 2 (Avaliativo) → Phase 3 (Domain Expert, condicional) → Phase 4 (DECIDE) → Phase 5 (IMPLEMENT) → Phase 6 (VERIFY) → REPORT."
+
+    phase_3_domain_expert:
+      description: "Review pelo especialista do dominio impactado. CONDICIONAL — so ativa quando o repo impacta um dominio/agente especifico."
+      trigger: "Repo claramente impacta um dominio (SEO, design, copy, database, brand, business, etc.)"
+      activation: "Via Skill do agente especialista do dominio"
+      scope:
+        - "O repo melhora MEU fluxo de trabalho atual? Como?"
+        - "O repo substitui algum workaround que eu uso hoje?"
+        - "O repo adiciona capacidade que eu NAO tinha?"
+        - "Quais dos MEUS comandos seriam impactados?"
+        - "Que NOVOS comandos eu deveria ganhar com essa skill?"
+        - "Meus workflows precisam de steps novos ou alterados?"
+        - "Meus artifacts de setor mudam?"
+      NOT_allowed:
+        - "Analise de arquitetura interna (escopo do Orion)"
+        - "Pesquisa de comunidade (escopo do Atlas)"
+      output: "Relatorio do domain expert com recomendacoes especificas para SEU dominio"
+      when_to_skip: "Repo generico sem dominio claro (ex: Obsidian markdown, PDF generico)"
+      examples:
+        - repo: "SEO tool" 
+          expert: "/LMAS:agents:seo"
+          why: "Cypher sabe quais audits faz hoje e o que falta"
+        - repo: "design system ref"
+          expert: "/LMAS:agents:ux-design-expert"
+          why: "Sati sabe os gaps de tokens e componentes"
+        - repo: "copywriting framework"
+          expert: "/LMAS:agents:copywriter"
+          why: "Mouse sabe quais frameworks ja usa"
+        - repo: "database tool"
+          expert: "/LMAS:agents:data-engineer"
+          why: "Tank sabe as limitacoes atuais de schema"
+        - repo: "brand methodology"
+          expert: "/LMAS:agents:kamala"
+          why: "Kamala sabe se complementa ou contradiz brand-dna"
+
+      # ROUTING TABLE: qual expert para qual flow
+      routing_by_flow:
+        flow_a:
+          note: "Orion JA E o domain expert de Claude Code — Phase 3 implicita na Phase 1"
+          skip: true
+        flow_b:
+          default_expert: "@architect"
+          condition: "Se repo muda padroes de orquestracao ou arquitetura de agentes"
+          fallback: "Morpheus decide se outro agente e mais relevante"
+        flow_c:
+          default_expert: "Agente que USARA a tool no dia-a-dia"
+          resolution: "Morpheus identifica o usuario primario da tool"
+          always: true
+          examples:
+            - "Browser tool → @dev"
+            - "SEO tool → @seo"
+            - "PDF/PPTX → @analyst + @pm"
+            - "Database tool → @data-engineer"
+            - "Design tool → @ux-design-expert"
+        flow_d:
+          default_expert: "Agente do dominio da referencia"
+          condition: "Se dominio claramente identificavel"
+          skip_when: "Referencia generica sem dominio claro (ex: Obsidian markdown)"
+          examples:
+            - "Ref de copy → @copywriter"
+            - "Ref de brand → @kamala"
+            - "Ref de business → @mifune"
+            - "Ref de design → @ux-design-expert"
+    rationale: "Cada agente tem expertise distinta. Misturar = analise superficial."
+
+  blocker_checks:
+    - "COMO executa? (batch vs individual, sync vs async, sandbox vs raw)"
+    - "Benchmarks reais? (custo, turns, tempo, taxa de sucesso)"
+    - "Arquitetura interna fundamentalmente diferente?"
+  advisory_checks:
+    - "Feedback de usuarios reais? (GitHub issues, Reddit, HN)"
+    - "Teste pratico lado a lado possivel?"
+  anti_pattern: "NUNCA 'ja temos X -> SKIP' sem verificar COMO faz. Considerar OPTIMIZE antes de SKIP."
+
+# ─────────────────────────────────────────────
+# # POST-ABSORPTION INTEGRATION IMPACT ANALYSIS
+# Lesson: PDF skill (2026-03-29). Absorber NAO e suficiente.
+# A skill MUDA a forma de trabalhar dos agentes afetados.
+# Awareness e o minimo. Integration e o objetivo.
+post_absorption_impact:
+  mandate: "Apos ABSORB, executar IMPACT ANALYSIS completa: como a skill MUDA o trabalho dos agentes."
+  trigger: "Toda decisao ABSORB que introduz nova capacidade (lib, tool, skill, referencia acionavel)"
+  
+  # 7 dimensoes de impacto — todas devem ser avaliadas
+  dimensions:
+
+    1_new_commands:
+      question: "A skill justifica NOVOS COMANDOS em agentes existentes?"
+      examples:
+        - "PDF skill → @analyst ganha *extract-pdf-tables"
+        - "PDF skill → @pm ganha *export-prd-pdf"
+        - "dev-browser → @dev ganha *browser-test com script batching"
+      action: "Propor novos comandos via *modify agent {id}"
+      blocker: false
+
+    2_workflow_changes:
+      question: "Algum workflow existente precisa de STEPS NOVOS ou ALTERADOS?"
+      examples:
+        - "PDF skill → design handoff inclui PDF export como step"
+        - "PDF skill → release workflow inclui changelog PDF"
+        - "dev-browser → SDC Phase 3 usa dev-browser em vez de claude-in-chrome"
+      action: "Atualizar workflow-chains.yaml e/ou workflow YAML"
+      blocker: false
+
+    3_tool_substitutions:
+      question: "A skill SUBSTITUI uma forma antiga de fazer algo? Qual era o workaround?"
+      examples:
+        - "dev-browser substituiu claude-in-chrome para automacao"
+        - "pdfplumber substitui copia manual de texto de PDF"
+        - "defuddle substitui WebFetch para artigos/docs"
+      action: "Atualizar tool-examples.md marcando o novo padrao. Deprecar workaround antigo."
+      blocker: true
+
+    4_agent_definitions:
+      question: "As DEFINICOES dos agentes afetados precisam ser atualizadas? (tools, dependencies)"
+      examples:
+        - "@analyst → adicionar pdfplumber aos tools"
+        - "@pm → adicionar reportlab aos tools"
+        - "@dev → adicionar dev-browser aos tools (substituir browser)"
+      action: "Editar agent YAML em .lmas-core/development/agents/"
+      blocker: false
+
+    5_quality_gates:
+      question: "O Smith ou QA podem agora VERIFICAR algo que antes nao conseguiam?"
+      examples:
+        - "PDF skill → Smith pode verificar PDFs gerados (formatacao, conteudo)"
+        - "dev-browser → QA pode rodar testes browser com menos custo"
+      action: "Documentar nova capacidade de verificacao"
+      blocker: false
+
+    6_sector_artifacts:
+      question: "Novos ARTIFACTS ou HANDOFFS sao possiveis nos setores?"
+      examples:
+        - "PDF skill → design/4-asset-handoff pode incluir PDF spec"
+        - "PDF skill → marketing/4-copy pode exportar como PDF"
+      action: "Avaliar se sector-stages.yaml precisa de update"
+      blocker: false
+
+    7_synapse_awareness:
+      question: "Os agentes SABEM que a capacidade existe? SYNAPSE rule + tool-examples?"
+      action: "Adicionar SYNAPSE rule (global ou sector) + tool-examples.md"
+      blocker: true
+
+  execution: |
+    A impact analysis e executada por Morpheus (Phase 4 DECIDE, apos decisao ABSORB).
+    NAO e um passo separado — e parte integrante da decisao.
+    Para cada dimensao, Morpheus documenta: IMPACTA / NAO IMPACTA / A AVALIAR.
+    Dimensoes com blocker=true DEVEM ser resolvidas antes de considerar absorcao completa.
+    Dimensoes advisory sao registradas como proximos passos recomendados.
+
+  anti_pattern: |
+    NUNCA absorver e assumir que agentes sabem usar automaticamente.
+    NUNCA tratar absorcao como apenas "salvar referencia + SYNAPSE rule".
+    Absorcao MUDA a forma de trabalhar — avaliar todas as 7 dimensoes.
+    Awareness (saber que existe) e o MINIMO. Integration (mudar o fluxo) e o OBJETIVO.
+
+# # # OPTIMIZATION DETECTION
+# ─────────────────────────────────────────────
+optimization_triggers:
+  description: |
+    During DECIDE phase, Morpheus checks if the absorbed pattern suggests
+    improvements to EXISTING Matrix workflows, commands, or agent behaviors.
+    This goes beyond simple ABSORB/SKIP — it asks "should we CHANGE how we work?"
+
+  checks:
+    - id: workflow_improvement
+      question: "Does this pattern suggest a better sequence/flow than our current workflow?"
+      if_yes: "Propose workflow modification via *propose-modification"
+      example: "External repo has a pre-commit hook pattern that's simpler than our CodeRabbit flow"
+
+    - id: command_enhancement
+      question: "Does this pattern add capabilities to an existing agent command?"
+      if_yes: "Propose command enhancement via *modify agent"
+      example: "External CLI tool has flags our obsidian-cli-usage doesn't document"
+
+    - id: rule_refinement
+      question: "Does this pattern expose a gap in our SYNAPSE rules?"
+      if_yes: "Add rule via synapse:tasks:add-rule"
+      example: "External framework has a guard pattern we're missing"
+
+    - id: template_evolution
+      question: "Does this pattern improve one of our artifact templates?"
+      if_yes: "Update template directly"
+      example: "External PRD template has sections we're missing"
+
+    - id: agent_capability
+      question: "Does this pattern suggest a new capability for an existing agent?"
+      if_yes: "Propose agent modification via *modify agent"
+      example: "External framework has an agent that does X, our closest agent could do X too"
+
+    - id: new_component
+      question: "Does this pattern require an entirely new component (agent/squad/workflow)?"
+      if_yes: "Create via *create {type} — last resort, prefer extending existing"
+      example: "External framework has a capability none of our agents cover"
+
+# ─────────────────────────────────────────────
+# ABSORPTION REPORT (Phase Final — OBRIGATORIA)
+# ─────────────────────────────────────────────
+# Ao final de TODA absorcao, Morpheus apresenta um relatorio
+# consolidado ao usuario com TODAS as mudancas e impactos.
+absorption_report:
+  mandate: "Ao final de toda absorcao, apresentar Absorption Report ao usuario. NAO e opcional."
+  trigger: "Apos Phase 6 (VERIFY) ou apos Phase 4 (DECIDE) se skip de verify"
+  presenter: lmas-master
+
+  format: |
+    ## Absorption Report — {repo-name}
+
+    ### Classificacao
+    - Tipo: {A/B/C/D}
+    - Decisao: {ABSORB/ADAPT/SKIP/OPTIMIZE}
+
+    ### O que mudou na Matrix
+    | Area | Antes | Depois |
+    |------|-------|--------|
+    | {area} | {estado anterior} | {estado novo} |
+
+    ### Agentes impactados
+    | Agente | Impacto | Detalhe |
+    |--------|---------|---------|
+    | {agente} | {novo comando / workflow alterado / tool substituido} | {descricao} |
+
+    ### Arquivos criados/modificados
+    - {lista de arquivos com path completo}
+
+    ### SYNAPSE rules adicionadas
+    - {DOMAIN_RULE_N} = {texto}
+
+    ### Proximos passos recomendados
+    - [ ] {acao pendente que nao foi implementada agora}
+
+    ### Decisoes de SKIP (se houver)
+    - {o que foi avaliado e NAO absorvido, com justificativa}
+
+  sections:
+    classification:
+      required: true
+      content: "Tipo do repo + decisao tomada + justificativa"
+    changes:
+      required: true
+      content: "Tabela antes/depois de TUDO que mudou"
+    agents_impacted:
+      required: true
+      content: "Quais agentes foram afetados e COMO (novos comandos, workflows, tools)"
+    files:
+      required: true
+      content: "Lista completa de arquivos criados ou modificados"
+    synapse:
+      required: true
+      content: "Rules adicionadas ao SYNAPSE (constitution, global, sector, agent)"
+    next_steps:
+      required: true
+      content: "Acoes pendentes que ficaram como recomendacao (nao implementadas agora)"
+    skipped:
+      required: false
+      content: "O que foi avaliado e descartado (transparencia total)"
+
+  delivery: |
+    O report e apresentado como ULTIMA mensagem da absorcao, ANTES do commit/push.
+    Formato: markdown direto na conversa (nao salva em arquivo separado).
+    O usuario DEVE ver o report completo antes de aprovar commit.

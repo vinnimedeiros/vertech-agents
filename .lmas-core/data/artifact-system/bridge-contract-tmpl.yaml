@@ -1,0 +1,51 @@
+schema_version: "1.0"
+
+# ══════════════════════════════════════════════════════════════
+# BRIDGE CONTRACT — Contrato bilateral entre setores
+# Smith F2: Cada bridge tem provider (quem entrega) e consumer (quem recebe).
+# Handoff so acontece se contract.status = validated.
+# ══════════════════════════════════════════════════════════════
+
+bridge:
+  id: ""                    # REQUIRED — ex: BRIDGE-brand-to-design
+  from: ""                  # REQUIRED — ex: brand/4-identity
+  to: ""                    # REQUIRED — ex: design/1-design-system
+  status: pending           # pending | validated | blocked
+  validated_by: ""          # Agent que validou (idealmente smith)
+  validated_at: ""
+
+# O que o setor de ORIGEM deve entregar
+provider_delivers:
+  artifacts: []
+    # - path: "artifacts/brand/4-identity.md"
+    #   required_fields:
+    #     - "brand_dna.archetype.primary"
+    #     - "brand_dna.values"
+    #     - "archetype_behavior.visual_expression"
+  context_files: []
+    # - path: "brand-dna.yaml"
+    #   required_fields:
+    #     - "purpose"
+    #     - "essence"
+    #     - "personality"
+
+# O que o setor de DESTINO precisa receber
+consumer_requires:
+  data_points: []
+    # - name: "Paleta emocional"
+    #   description: "Emocoes mapeadas para cores (nao cores especificas)"
+    #   source: "brand/4-identity → archetype_behavior.visual_expression"
+    # - name: "Tipografia guidelines"
+    #   description: "Personalidade → familias tipograficas"
+    #   source: "brand-dna.yaml → personality"
+  decisions_needed: []
+    # - "Archetype definido e aprovado"
+    # - "Brand voice do/dont documentado"
+
+# Checklist de validacao antes do handoff
+validation_checklist: ""    # Path para checklist (ex: brand_handoff_checklist.before_design)
+
+# Fallback se bridge nao validado
+fallback:
+  action: "block"           # block | warn | proceed-with-disclaimer
+  message: "Bridge nao validado. Campos faltando no artefato de origem."

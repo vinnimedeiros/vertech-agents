@@ -1,0 +1,92 @@
+schema_version: "1.0"
+
+# ══════════════════════════════════════════════════════════════
+# PIPELINE STATUS — Estado cross-setor do projeto
+# Lido por hooks (checkpoint-context) no inicio de cada sessao.
+# Atualizado por agentes ao completar fases.
+# ══════════════════════════════════════════════════════════════
+
+project: ""                 # REQUIRED — project id
+
+sectors:
+  brand:
+    status: not-started     # not-started | in-progress | complete | blocked
+    current: null            # Stage atual (ex: "2-positioning")
+    done: []                 # Stages completados
+    blocked_by: []           # Dependencias bloqueantes (ex: "business/1-research")
+
+  design:
+    status: not-started
+    current: null
+    done: []
+    blocked_by: ["brand/4-identity"]
+
+  dev:
+    status: not-started
+    current: null
+    done: []
+    blocked_by: []
+
+  marketing:
+    status: not-started
+    current: null
+    done: []
+    blocked_by: ["brand/6-brandbook", "design/4-asset-handoff"]
+
+  business:
+    status: not-started
+    current: null
+    done: []
+    blocked_by: []
+
+# Bridges cross-setor com status de validacao
+bridges:
+  - id: BRIDGE-brand-to-design
+    from: brand/4-identity
+    to: design/1-design-system
+    contract: "bridges/BRIDGE-brand-to-design.yaml"
+    status: pending           # pending | validated | blocked
+
+  - id: BRIDGE-brand-to-marketing
+    from: brand/6-brandbook
+    to: marketing/1-strategy
+    contract: "bridges/BRIDGE-brand-to-marketing.yaml"
+    status: pending
+
+  - id: BRIDGE-design-to-dev
+    from: design/4-asset-handoff
+    to: dev/ui-implementation
+    contract: "bridges/BRIDGE-design-to-dev.yaml"
+    status: pending
+
+  - id: BRIDGE-business-to-marketing
+    from: business/2-offer
+    to: marketing/4-copy
+    contract: "bridges/BRIDGE-business-to-marketing.yaml"
+    status: pending
+
+  - id: BRIDGE-dev-to-marketing
+    from: dev/deploy
+    to: marketing/6-publish
+    contract: "bridges/BRIDGE-dev-to-marketing.yaml"
+    status: pending
+
+# Log de sessoes (Smith F5 — continuidade inter-sessao)
+session_log: []
+  # - session_id: "abc123"
+  #   date: "2026-03-28"
+  #   agent: "kamala"
+  #   sector: "brand"
+  #   stage_started: "2-positioning"
+  #   stage_completed: "2-positioning"
+  #   artifacts_produced: ["artifacts/brand/2-positioning.md"]
+  #   next_action: "brand/3-naming"
+
+# Health metrics (Smith F9)
+health:
+  total_artifacts: 0
+  complete_artifacts: 0
+  blocked_bridges: 0
+  avg_completeness: 0
+  last_handoff_success: null
+  handoff_failures: 0

@@ -1,0 +1,48 @@
+schema_version: "1.0"
+
+# ─── IDENTIDADE ──────────────────────────────────────────────
+project:
+  id: ""                    # REQUIRED — kebab-case (ex: maisum, clawin, app-airsoft)
+  name: ""                  # REQUIRED — nome legivel (ex: "+um (Maisum)")
+  type: ""                  # REQUIRED — marketplace | saas | app | landing | service | info-product | framework
+  objective: ""             # REQUIRED — frase unica: por que este projeto existe
+
+# ─── QUEM (dono do projeto) ──────────────────────────────────
+user_profile:
+  owner: ""                 # REQUIRED
+  role: ""                  # REQUIRED — ex: "Founder / Full-stack Developer"
+  experience_level: ""      # REQUIRED — ex: "Senior em React, aprendendo mobile"
+  preferences: []           # Lista de preferencias de comunicacao/trabalho
+  known_strengths: []       # O que o usuario domina
+  known_gaps: []            # Onde precisa de mais ajuda
+  working_style: ""         # Como o usuario trabalha (detalhista, rapido, etc)
+
+# ─── OBJETIVOS ───────────────────────────────────────────────
+objectives:
+  primary: ""               # REQUIRED — meta principal do projeto
+  secondary: []             # Metas secundarias
+  constraints: []           # Limitacoes (budget, prazo, equipe, infra)
+
+# ─── STACK TECNICA ───────────────────────────────────────────
+tech_stack:
+  frontend: ""
+  backend: ""
+  database: ""
+  payments: ""
+  hosting: ""
+  monorepo: ""
+  other: []
+
+# ─── REFERENCIAS A CONTEXT FILES ─────────────────────────────
+# Ponteiros para arquivos separados (fonte unica de verdade por dominio).
+# Nem todo projeto precisa de TODOS. Criar sob demanda.
+context_files:
+  brand_dna: "brand-dna.yaml"
+  business_model: "business-model.yaml"
+  icp: "icp.yaml"
+  competitive_landscape: "competitive-landscape.yaml"
+  nfrs: "nfrs.yaml"
+  risk_register: "risk-register.yaml"
+  approval_authority: "approval-authority.yaml"
+  pipeline_status: "pipeline-status.yaml"
+  content_quality_gate: "content-quality-gate.yaml"

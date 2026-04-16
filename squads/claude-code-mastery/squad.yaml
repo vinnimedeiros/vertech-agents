@@ -1,0 +1,81 @@
+name: claude-code-mastery
+version: "1.0.0"
+short-title: "Claude Code Mastery"
+description: "Squad meta — especialista em Claude Code: hooks, skills, subagents, MCP, plugins, agent teams, context engineering, roadmap tracking."
+author: "Synkra AIOS (adapted for LMAS)"
+license: MIT
+slashPrefix: "claude-code-mastery"
+
+lmas:
+  minVersion: "5.3.5"
+  type: squad
+
+tags:
+  - claude-code
+  - hooks
+  - skills
+  - subagents
+  - mcp
+  - plugins
+  - agent-teams
+  - context-engineering
+  - roadmap
+
+components:
+  tasks:
+    - audit-integration.md
+    - audit-settings.md
+    - audit-setup.md
+    - brownfield-setup.md
+    - ci-cd-setup.md
+    - claude-md-engineer.md
+    - configure-claude-code.md
+    - context-rot-audit.md
+    - create-agent-definition.md
+    - create-rules.md
+    - create-team-topology.md
+    - diagnose.md
+    - enterprise-config.md
+    - hook-designer.md
+    - integrate-project.md
+    - mcp-integration-plan.md
+    - mcp-workflow.md
+    - multi-project-setup.md
+    - optimize-context.md
+    - optimize-workflow.md
+    - parallel-decomposition.md
+    - permission-strategy.md
+    - sandbox-setup.md
+    - setup-repository.md
+    - setup-wizard.md
+    - worktree-strategy.md
+  agents:
+    - claude-mastery-chief.md
+    - hooks-architect.md
+    - mcp-integrator.md
+    - swarm-orchestrator.md
+    - config-engineer.md
+    - skill-craftsman.md
+    - project-integrator.md
+    - roadmap-sentinel.md
+  workflows:
+    - wf-audit-complete.yaml
+    - wf-knowledge-update.yaml
+    - wf-project-setup.yaml
+  checklists:
+    - agent-team-readiness-checklist.md
+    - brownfield-readiness-checklist.md
+    - change-checklist.md
+    - context-rot-checklist.md
+    - integration-audit-checklist.md
+    - multi-agent-review-checklist.md
+    - pre-push-checklist.md
+
+config:
+  extends: extend
+
+notes: |
+  META SQUAD: This squad is about mastering Claude Code itself — not about
+  building products. Used by Morpheus and framework developers to optimize
+  the LMAS installation, hooks, MCP integrations, and agent configurations.
+  Original config.yaml preserved for detailed tier/handoff metadata.

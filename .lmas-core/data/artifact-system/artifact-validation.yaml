@@ -1,0 +1,151 @@
+schema_version: "1.0"
+
+# ══════════════════════════════════════════════════════════════
+# ARTIFACT VALIDATION — Quais campos sao required por tipo
+# Smith F1: Artefato com completeness < 100% em required = BLOCKED
+# ══════════════════════════════════════════════════════════════
+
+# ─── PROJECT CONTEXT ─────────────────────────────────────────
+project_context:
+  required:
+    - "project.id"
+    - "project.name"
+    - "project.type"
+    - "project.objective"
+    - "user_profile.owner"
+    - "user_profile.role"
+    - "objectives.primary"
+  recommended:
+    - "user_profile.experience_level"
+    - "user_profile.known_gaps"
+    - "tech_stack.frontend"
+    - "tech_stack.backend"
+    - "objectives.constraints"
+  optional:
+    - "user_profile.preferences"
+    - "user_profile.known_strengths"
+    - "tech_stack.other"
+
+# ─── PHASE ARTIFACT (todos os setores) ──────────────────────
+phase_artifact:
+  required:
+    - "sector"
+    - "stage"
+    - "status"
+    - "produced_by"
+    - "produced_at"
+    - "completeness.score"     # Deve ser calculado
+  recommended:
+    - "depends_on"
+    - "consumed_by"
+    - "decisions"              # Pelo menos 1 decisao por fase
+    - "constraints"
+  optional:
+    - "reviewed_by"
+    - "integration_points"
+    - "test_strategy"
+    - "rollback"
+    - "funnel_mapping"
+    - "investment_decision"
+
+# ─── PHASE ARTIFACT (campos required POR SETOR) ─────────────
+sector_specific:
+  brand:
+    required_extra:
+      - "decisions"            # Brand decisions sao criticos
+      - "constraints"          # Restricoes para proximas fases
+    on_stage:
+      "2-positioning":
+        - "references.brand_dna"    # Deve linkar brand-dna.yaml
+      "3-naming":
+        - "decisions"               # Naming decision e irreversivel
+      "4-identity":
+        - "integration_points"      # Como vira design
+
+  design:
+    required_extra:
+      - "integration_points"   # Design SEMPRE precisa mapear → codigo
+    on_stage:
+      "1-design-system":
+        - "references.brand_dna"
+      "4-asset-handoff":
+        - "integration_points"      # MUST: cada token → arquivo de codigo
+
+  dev:
+    required_extra:
+      - "test_strategy"        # Dev SEMPRE precisa de test strategy
+    on_stage:
+      "4-implementation":
+        - "test_strategy"
+        - "rollback"
+      "5-qa-gate":
+        - "decisions"               # QA verdict e decisao
+
+  marketing:
+    required_extra:
+      - "funnel_mapping"       # Marketing SEMPRE mapeia funil
+    on_stage:
+      "4-copy":
+        - "references.icp"
+        - "references.brand_dna"
+        - "funnel_mapping"
+
+  business:
+    required_extra:
+      - "decisions"            # Business decisions envolvem dinheiro
+    on_stage:
+      "2-offer":
+        - "references.icp"
+        - "investment_decision"
+      "4-campaign-plan":
+        - "investment_decision"
+
+# ─── BRIDGE CONTRACT ────────────────────────────────────────
+bridge_contract:
+  required:
+    - "bridge.id"
+    - "bridge.from"
+    - "bridge.to"
+    - "bridge.status"
+    - "provider_delivers.artifacts"   # Pelo menos 1 artifact
+    - "consumer_requires.data_points" # Pelo menos 1 data point
+  recommended:
+    - "validation_checklist"
+    - "validated_by"
+  optional:
+    - "fallback"
+
+# ─── CONTEXT FILES ──────────────────────────────────────────
+context_files:
+  brand_dna:
+    required: ["purpose", "essence", "archetype.primary", "values", "personality"]
+    recommended: ["archetype.secondary", "voice.do", "voice.dont", "coherence_rules"]
+
+  business_model:
+    required: ["type", "revenue_streams", "value_proposition"]
+    recommended: ["unit_economics", "offer_stack", "kpis"]
+
+  icp:
+    required: ["primary.name", "primary.demographics", "primary.psychographics.pain_points"]
+    recommended: ["primary.channels", "primary.decision_triggers", "secondary"]
+
+  nfrs:
+    required: ["performance", "security"]
+    recommended: ["scalability", "availability", "accessibility"]
+
+  risk_register:
+    required: ["project", "entries"]  # Pode comecar vazio mas deve existir
+
+# ─── REGRA DE BLOQUEIO ──────────────────────────────────────
+blocking_rules:
+  handoff_blocked_when:
+    - "Phase artifact completeness.score < 100% em campos required"
+    - "Bridge contract status != validated"
+    - "Context file referenced mas nao existe"
+  handoff_warning_when:
+    - "Phase artifact completeness.score < 100% em campos recommended"
+    - "Bridge contract sem validation_checklist"
+  handoff_allowed_when:
+    - "Todos os required preenchidos"
+    - "Bridge contract validated"
+    - "Ou: usuario explicitamente override com razao documentada"

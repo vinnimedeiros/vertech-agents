@@ -1,0 +1,59 @@
+schema_version: "1.0"
+# Content Quality Gate — Lock (marketing chief)
+
+min_score: 7            # Score minimo para publicacao (0-10)
+
+criteria:               # REQUIRED
+  - name: "Brand alignment"
+    weight: 2
+    description: "Tom, voz, visual seguem guidelines"
+  - name: "ICP fit"
+    weight: 2
+    description: "Fala diretamente com a persona-alvo"
+  - name: "CTA clarity"
+    weight: 1
+    description: "Acao desejada e clara e unica"
+  - name: "SEO compliance"
+    weight: 1
+    description: "Keywords, meta, estrutura otimizada"
+  - name: "Factual accuracy"
+    weight: 2
+    description: "Dados, claims e promessas sao verdadeiros"
+  - name: "Channel fit"
+    weight: 1
+    description: "Formato adequado ao canal de distribuicao"
+  - name: "Legal safety"
+    weight: 1
+    description: "Sem claims ilegais, sem promessas insustentaveis"
+
+max_score: 10
+
+funnel_stages:
+  - awareness
+  - consideration
+  - decision
+  - retention
+
+legal_constraints:
+  prohibited_claims: []
+    # - "Garantia de resultado/vendas/lucro"
+  required_disclaimers: []
+    # - "Resultados podem variar"
+  data_privacy: []
+    # - "LGPD compliance em toda coleta de leads"
+
+approval_chain:
+  content:
+    flow: "@copywriter → @content-reviewer → @marketing-chief"
+    quality_gate: "score >= 7/10"
+    final_approver: "marketing-chief"
+  campaign:
+    flow: "@traffic-manager → @marketing-chief → @mifune (se budget > R$1.000)"
+    quality_gate: "ROI projetado >= 3x"
+    final_approver: "marketing-chief (execucao) + mifune (budget)"
+  brand_update:
+    flow: "@kamala → @marketing-chief"
+    quality_gate: "Brand alignment checklist 100%"
+    final_approver: "kamala (identidade) + marketing-chief (aplicacao)"
+
+changelog: []

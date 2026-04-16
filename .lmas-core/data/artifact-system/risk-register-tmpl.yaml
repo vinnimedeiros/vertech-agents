@@ -1,0 +1,59 @@
+schema_version: "1.0"
+
+# ══════════════════════════════════════════════════════════════
+# RISK REGISTER — Riscos + Debugs resolvidos (Smith F4)
+# FONTE UNICA para problemas do projeto.
+# APPEND-ONLY: Nunca apagar entradas. Cada entrada e uma licao.
+# Agentes DEVEM ler antes de implementar para nao repetir erros.
+# ══════════════════════════════════════════════════════════════
+
+project: ""
+last_updated: ""
+total_entries: 0
+
+# Categorias para indexacao rapida
+categories:
+  - "build-deploy"
+  - "database-rls"
+  - "auth"
+  - "payments"
+  - "performance"
+  - "security"
+  - "ux-ui"
+  - "infrastructure"
+  - "business-logic"
+
+entries: []
+  # ─── EXEMPLO: Risco futuro ─────────────────────────────────
+  # - id: RISK-1
+  #   type: risk              # risk = futuro, debug = passado
+  #   category: "payments"
+  #   date: "2026-03-20"
+  #   description: "AbacatePay webhook pode falhar silenciosamente"
+  #   probability: medium     # low | medium | high
+  #   impact: critical        # low | medium | high | critical
+  #   mitigation: "Implementar retry queue + dead letter"
+  #   status: open            # open | mitigated | accepted | closed
+  #   owner: dev
+  #   related_entries: []
+
+  # ─── EXEMPLO: Debug resolvido ──────────────────────────────
+  # - id: DBG-1
+  #   type: debug
+  #   category: "build-deploy"
+  #   date: "2026-03-20"
+  #   description: "APK nao abre no celular — crash imediato"
+  #   cause: "Hermes double-compile conflitando com Expo"
+  #   solution: "Desabilitar hermes em app.json, usar JSC"
+  #   files: ["app.json", "android/app/build.gradle"]
+  #   agent: dev
+  #   status: resolved        # resolved | workaround
+  #   lesson: "Verificar compatibilidade Hermes + Expo version ANTES de configurar"
+  #   related_entries: []
+
+# Changelog do registro (Smith F6)
+changelog: []
+  # - version: 1
+  #   date: "2026-03-28"
+  #   changed_by: "dev"
+  #   changes: "Criacao inicial com 3 entradas"

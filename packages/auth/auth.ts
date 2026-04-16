@@ -12,7 +12,8 @@ import { sendEmail } from "@repo/mail";
 import { cancelSubscription } from "@repo/payments";
 import { getBaseUrl } from "@repo/utils";
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import * as schema from "@repo/database/drizzle/schema/postgres";
 import {
 	admin,
 	createAuthMiddleware,
@@ -41,8 +42,9 @@ export const auth = betterAuth({
 	baseURL: appUrl,
 	trustedOrigins: [appUrl],
 	appName: config.appName,
-	database: prismaAdapter(db, {
-		provider: "postgresql",
+	database: drizzleAdapter(db, {
+		provider: "pg",
+		schema,
 	}),
 	advanced: {
 		database: {

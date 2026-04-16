@@ -481,18 +481,15 @@ importers:
       '@paralleldrive/cuid2':
         specifier: ^2.2.2
         version: 2.2.2
-      '@prisma/client':
-        specifier: ^6.9.0
-        version: 6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3)
       '@repo/config':
         specifier: workspace:*
         version: link:../../config
       drizzle-orm:
         specifier: ^0.44.2
-        version: 0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3))(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0)(prisma@6.9.0(typescript@5.8.3))
+        version: 0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(typescript@5.8.3))(@types/pg@8.20.0)(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0)
       drizzle-zod:
-        specifier: ^0.8.2
-        version: 0.8.2(drizzle-orm@0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3))(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0)(prisma@6.9.0(typescript@5.8.3)))(zod@3.25.55)
+        specifier: ^0.7.1
+        version: 0.7.1(drizzle-orm@0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(typescript@5.8.3))(@types/pg@8.20.0)(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0))(zod@3.25.55)
       pg:
         specifier: ^8.16.0
         version: 8.16.0
@@ -509,21 +506,15 @@ importers:
       '@types/node':
         specifier: 22.15.30
         version: 22.15.30
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.20.0
       dotenv-cli:
         specifier: ^8.0.0
         version: 8.0.0
       drizzle-kit:
         specifier: ^0.31.1
         version: 0.31.1
-      prisma:
-        specifier: ^6.9.0
-        version: 6.9.0(typescript@5.8.3)
-      prisma-json-types-generator:
-        specifier: ^3.4.2
-        version: 3.4.2(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3)
-      zod-prisma-types:
-        specifier: ^3.2.4
-        version: 3.2.4(@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3))(prisma@6.9.0(typescript@5.8.3))
 
   packages/i18n:
     dependencies:
@@ -2674,17 +2665,8 @@ packages:
   '@prisma/config@6.9.0':
     resolution: {integrity: sha512-Wcfk8/lN3WRJd5w4jmNQkUwhUw0eksaU/+BlAJwPQKW10k0h0LC9PD/6TQFmqKVbHQL0vG2z266r0S1MPzzhbA==}
 
-  '@prisma/debug@6.3.1':
-    resolution: {integrity: sha512-RrEBkd+HLZx+ydfmYT0jUj7wjLiS95wfTOSQ+8FQbvb6vHh5AeKfEPt/XUQ5+Buljj8hltEfOslEW57/wQIVeA==}
-
-  '@prisma/debug@6.8.2':
-    resolution: {integrity: sha512-4muBSSUwJJ9BYth5N8tqts8JtiLT8QI/RSAzEogwEfpbYGFo9mYsInsVo8dqXdPO2+Rm5OG5q0qWDDE3nyUbVg==}
-
   '@prisma/debug@6.9.0':
     resolution: {integrity: sha512-bFeur/qi/Q+Mqk4JdQ3R38upSYPebv5aOyD1RKywVD+rAMLtRkmTFn28ZuTtVOnZHEdtxnNOCH+bPIeSGz1+Fg==}
-
-  '@prisma/dmmf@6.8.2':
-    resolution: {integrity: sha512-okGJF/7hQZam/2wt+Y0hPyNxyY5S+L0FzAgtL932Q3YxUWHusRllrN39bCV45oF3QWY992g7rTWYdL2Rynt1qg==}
 
   '@prisma/engines-version@6.9.0-10.81e4af48011447c3cc503a190e86995b66d2a28e':
     resolution: {integrity: sha512-Qp9gMoBHgqhKlrvumZWujmuD7q4DV/gooEyPCLtbkc13EZdSz2RsGUJ5mHb3RJgAbk+dm6XenqG7obJEhXcJ6Q==}
@@ -2694,15 +2676,6 @@ packages:
 
   '@prisma/fetch-engine@6.9.0':
     resolution: {integrity: sha512-PMKhJdl4fOdeE3J3NkcWZ+tf3W6rx3ht/rLU8w4SXFRcLhd5+3VcqY4Kslpdm8osca4ej3gTfB3+cSk5pGxgFg==}
-
-  '@prisma/generator-helper@6.3.1':
-    resolution: {integrity: sha512-hX2fxjMksyAWAS0OcDi7GVmRUqsZ35ZY3Zla1EfO+uDYW6BY+om8kuKHyKkIvvRcUlTmL+xccl+nJwNToqP/aA==}
-
-  '@prisma/generator-helper@6.8.2':
-    resolution: {integrity: sha512-KBLW47sbwFBKKYMiICIAEWsG6TdpPapPT7e7hpmpF3xMgYAm6YIXu4JGwfQVDY9Vbcb+0vPdPdSEQtInYOOe5g==}
-
-  '@prisma/generator@6.8.2':
-    resolution: {integrity: sha512-yExkvgqiKg1WHzjYttz40g5DsOtud8RhapM0Mum6pw+wrDoQyhSAxs5NHyFCV+9VPvRd2v+jAP2CTT07bsibjw==}
 
   '@prisma/get-platform@6.9.0':
     resolution: {integrity: sha512-/B4n+5V1LI/1JQcHp+sUpyRT1bBgZVPHbsC4lt4/19Xp4jvNIVcq5KYNtQDk5e/ukTSjo9PZVAxxy9ieFtlpTQ==}
@@ -3982,6 +3955,9 @@ packages:
   '@types/nprogress@0.2.3':
     resolution: {integrity: sha512-k7kRA033QNtC+gLc4VPlfnue58CM1iQLgn1IMAU8VPHGOj7oIHPp9UlhedEnD/Gl8evoCjwkZjlBORtZ3JByUA==}
 
+  '@types/pg@8.20.0':
+    resolution: {integrity: sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==}
+
   '@types/react-dom@19.0.0':
     resolution: {integrity: sha512-1KfiQKsH1o00p9m5ag12axHQSb3FOU9H20UTrujVSkNhuCrRHiQWFqgEnTNK5ZNfnzZv8UWrnXVqCmCF9fgY3w==}
 
@@ -4241,9 +4217,6 @@ packages:
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
-
-  code-block-writer@12.0.0:
-    resolution: {integrity: sha512-q4dMFMlXtKR3XNBHyMHt/3pwYNA69EDk00lloMOaaUMKPUXBw6lpXtbu3MMVG6/uOihGnRDOlkyqsONEUj60+w==}
 
   coffee-script@1.12.7:
     resolution: {integrity: sha512-fLeEhqwymYat/MpTPUjSKHVYYl0ec2mOyALEMLmzr5i1isuG+6jfI2j2d5oBO3VIzgUXgBVIcOT9uH1TFxBckw==}
@@ -4532,11 +4505,11 @@ packages:
       sqlite3:
         optional: true
 
-  drizzle-zod@0.8.2:
-    resolution: {integrity: sha512-9Do/16OjFFNrQDZgvMtxtDDwKWbFOxUAIwNPKX98SfxrP8H18vhN1BvNXbhelLcdgCE7GEaXDJqBjMExSkhpkA==}
+  drizzle-zod@0.7.1:
+    resolution: {integrity: sha512-nZzALOdz44/AL2U005UlmMqaQ1qe5JfanvLujiTHiiT8+vZJTBFhj3pY4Vk+L6UWyKFfNmLhk602Hn4kCTynKQ==}
     peerDependencies:
       drizzle-orm: '>=0.36.0'
-      zod: ^3.25.1
+      zod: '>=3.0.0'
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -6077,14 +6050,6 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prisma-json-types-generator@3.4.2:
-    resolution: {integrity: sha512-f//au4IY4HQ/0IF7JpGZAdJg1Gc2/yiLFTh0SiqYtGDmSkqlo5T2E2UUgkNktQt9twmxDawbUwEodOuNSEJ9EQ==}
-    engines: {node: '>=14.0'}
-    hasBin: true
-    peerDependencies:
-      prisma: ^6.7
-      typescript: ^5.8
-
   prisma@6.9.0:
     resolution: {integrity: sha512-resJAwMyZREC/I40LF6FZ6rZTnlrlrYrb63oW37Gq+U+9xHwbyMSPJjKtM7VZf3gTO86t/Oyz+YeSXr3CmAY1Q==}
     engines: {node: '>=18.18'}
@@ -6971,13 +6936,6 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.21.4
-
-  zod-prisma-types@3.2.4:
-    resolution: {integrity: sha512-S4spVBMJAmecLv+aLyRhXK26qW9nWwcsOf1H1fRcEmiI8DPbftZ99u0fhqHlymuTpmMcUpuKxcNNOIqNY0ScSQ==}
-    hasBin: true
-    peerDependencies:
-      '@prisma/client': ^4.x.x || ^5.x.x || ^6.x.x
-      prisma: ^4.x.x || ^5.x.x || ^6.x.x
 
   zod-to-json-schema@3.24.5:
     resolution: {integrity: sha512-/AuWwMP+YqiPbsJx5D6TfgRTc4kTLjsh5SOcd4bLsfUg2RcEXrFMJl1DGgdHy2aCfsIA/cr/1JM0xcB2GZji8g==}
@@ -8741,22 +8699,16 @@ snapshots:
       standardwebhooks: 1.0.0
       zod: 3.25.55
 
-  '@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3)':
+  '@prisma/client@6.9.0(typescript@5.8.3)':
     optionalDependencies:
-      prisma: 6.9.0(typescript@5.8.3)
       typescript: 5.8.3
+    optional: true
 
   '@prisma/config@6.9.0':
     dependencies:
       jiti: 2.4.2
 
-  '@prisma/debug@6.3.1': {}
-
-  '@prisma/debug@6.8.2': {}
-
   '@prisma/debug@6.9.0': {}
-
-  '@prisma/dmmf@6.8.2': {}
 
   '@prisma/engines-version@6.9.0-10.81e4af48011447c3cc503a190e86995b66d2a28e': {}
 
@@ -8772,18 +8724,6 @@ snapshots:
       '@prisma/debug': 6.9.0
       '@prisma/engines-version': 6.9.0-10.81e4af48011447c3cc503a190e86995b66d2a28e
       '@prisma/get-platform': 6.9.0
-
-  '@prisma/generator-helper@6.3.1':
-    dependencies:
-      '@prisma/debug': 6.3.1
-
-  '@prisma/generator-helper@6.8.2':
-    dependencies:
-      '@prisma/debug': 6.8.2
-      '@prisma/dmmf': 6.8.2
-      '@prisma/generator': 6.8.2
-
-  '@prisma/generator@6.8.2': {}
 
   '@prisma/get-platform@6.9.0':
     dependencies:
@@ -10203,6 +10143,12 @@ snapshots:
 
   '@types/nprogress@0.2.3': {}
 
+  '@types/pg@8.20.0':
+    dependencies:
+      '@types/node': 22.15.30
+      pg-protocol: 1.10.0
+      pg-types: 2.2.0
+
   '@types/react-dom@19.0.0':
     dependencies:
       '@types/react': 19.0.0
@@ -10442,8 +10388,6 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  code-block-writer@12.0.0: {}
-
   coffee-script@1.12.7: {}
 
   collapse-white-space@2.1.0: {}
@@ -10604,18 +10548,18 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3))(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0)(prisma@6.9.0(typescript@5.8.3)):
+  drizzle-orm@0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(typescript@5.8.3))(@types/pg@8.20.0)(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0):
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
-      '@prisma/client': 6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3)
+      '@prisma/client': 6.9.0(typescript@5.8.3)
+      '@types/pg': 8.20.0
       gel: 2.0.2
       kysely: 0.28.2
       pg: 8.16.0
-      prisma: 6.9.0(typescript@5.8.3)
 
-  drizzle-zod@0.8.2(drizzle-orm@0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3))(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0)(prisma@6.9.0(typescript@5.8.3)))(zod@3.25.55):
+  drizzle-zod@0.7.1(drizzle-orm@0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(typescript@5.8.3))(@types/pg@8.20.0)(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0))(zod@3.25.55):
     dependencies:
-      drizzle-orm: 0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3))(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0)(prisma@6.9.0(typescript@5.8.3))
+      drizzle-orm: 0.44.2(@opentelemetry/api@1.9.0)(@prisma/client@6.9.0(typescript@5.8.3))(@types/pg@8.20.0)(gel@2.0.2)(kysely@0.28.2)(pg@8.16.0)
       zod: 3.25.55
 
   dunder-proto@1.0.1:
@@ -12746,13 +12690,6 @@ snapshots:
 
   prettier@3.5.3: {}
 
-  prisma-json-types-generator@3.4.2(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3):
-    dependencies:
-      '@prisma/generator-helper': 6.8.2
-      prisma: 6.9.0(typescript@5.8.3)
-      tslib: 2.8.1
-      typescript: 5.8.3
-
   prisma@6.9.0(typescript@5.8.3):
     dependencies:
       '@prisma/config': 6.9.0
@@ -13806,15 +13743,6 @@ snapshots:
     dependencies:
       zod: 3.25.55
     optional: true
-
-  zod-prisma-types@3.2.4(@prisma/client@6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3))(prisma@6.9.0(typescript@5.8.3)):
-    dependencies:
-      '@prisma/client': 6.9.0(prisma@6.9.0(typescript@5.8.3))(typescript@5.8.3)
-      '@prisma/generator-helper': 6.3.1
-      code-block-writer: 12.0.0
-      lodash: 4.17.21
-      prisma: 6.9.0(typescript@5.8.3)
-      zod: 3.25.55
 
   zod-to-json-schema@3.24.5(zod@3.25.55):
     dependencies:

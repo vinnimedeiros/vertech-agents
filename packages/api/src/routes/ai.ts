@@ -1,6 +1,5 @@
 import { streamText, textModel } from "@repo/ai";
 import {
-	AiChatSchema,
 	createAiChat,
 	deleteAiChat,
 	getAiChatById,
@@ -21,8 +20,14 @@ const MessageSchema = z.object({
 	content: z.string(),
 });
 
-const ChatSchema = AiChatSchema.extend({
-	messages: z.array(MessageSchema),
+const ChatSchema = z.object({
+	id: z.string(),
+	organizationId: z.string().nullable(),
+	userId: z.string().nullable(),
+	title: z.string().nullable(),
+	messages: z.array(MessageSchema).nullable(),
+	createdAt: z.date(),
+	updatedAt: z.date().nullable(),
 });
 
 export const aiRouter = new Hono()

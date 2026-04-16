@@ -5,7 +5,7 @@
 		"@repo/config": "workspace:*",
 		"@repo/i18n": "workspace:*",
 		"@repo/logs": "workspace:*",
-		"next-intl": "4.1.0",
+		"next-intl": "4.9.1",
 		"nodemailer": "^7.0.3",
 		"react": "19.1.0",
 		"react-dom": "19.1.0",

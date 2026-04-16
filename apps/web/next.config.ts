@@ -39,10 +39,7 @@ const nextConfig: NextConfig = {
 			},
 		];
 	},
-	eslint: {
-		ignoreDuringBuilds: true,
-	},
-	webpack: (config, { webpack }) => {
+webpack: (config, { webpack }) => {
 		config.plugins.push(
 			new webpack.IgnorePlugin({
 				resourceRegExp: /^pg-native$|^cloudflare:sockets$/,

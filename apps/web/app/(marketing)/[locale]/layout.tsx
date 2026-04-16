@@ -32,15 +32,15 @@ export default async function MarketingLayout({
 
 	return (
 		<Document locale={locale}>
-			<FumadocsI18nProvider locale={locale}>
-				<FumadocsRootProvider
-					search={{
-						enabled: true,
-						options: {
-							api: "/api/docs-search",
-						},
-					}}
-				>
+			<FumadocsRootProvider
+				search={{
+					enabled: true,
+					options: {
+						api: "/api/docs-search",
+					},
+				}}
+			>
+				<FumadocsI18nProvider locale={locale}>
 					<NextIntlClientProvider locale={locale} messages={messages}>
 						<SessionProvider>
 							<NavBar />
@@ -48,8 +48,8 @@ export default async function MarketingLayout({
 							<Footer />
 						</SessionProvider>
 					</NextIntlClientProvider>
-				</FumadocsRootProvider>
-			</FumadocsI18nProvider>
+				</FumadocsI18nProvider>
+			</FumadocsRootProvider>
 		</Document>
 	);
 }

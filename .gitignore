@@ -63,4 +63,6 @@ Thumbs.db
 # LMAS Local (LMAS)
 .lmas-core/local/
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 .lmas/install-log.txt
+.lmas/.checkpoint-reminder-ts

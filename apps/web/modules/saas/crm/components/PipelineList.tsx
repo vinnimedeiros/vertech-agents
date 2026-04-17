@@ -112,10 +112,10 @@ export function PipelineList({
 
 	return (
 		<>
-		<div className="rounded-lg border bg-card">
+		<div className="rounded-lg bg-card">
 			<Table>
 				<TableHeader>
-					<TableRow>
+					<TableRow className="border-b-0 hover:bg-transparent">
 						<TableHead className="w-10">
 							<Checkbox
 								checked={allVisible ? true : someSelected ? "indeterminate" : false}
@@ -163,7 +163,7 @@ export function PipelineList({
 
 				<TableBody>
 					{leads.length === 0 ? (
-						<TableRow>
+						<TableRow className="border-b-0">
 							<TableCell
 								colSpan={10}
 								className="py-10 text-center text-sm text-muted-foreground"
@@ -188,7 +188,7 @@ export function PipelineList({
 								<TableRow
 									key={lead.id}
 									data-state={isSelected ? "selected" : undefined}
-									className="group"
+									className="group border-b-0"
 								>
 									<TableCell>
 										<Checkbox

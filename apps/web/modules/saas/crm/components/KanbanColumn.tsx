@@ -84,7 +84,7 @@ export function KanbanColumn({
 	const [isPending, startTransition] = useTransition();
 	const nameRef = useRef<HTMLInputElement>(null);
 
-	const memberMap = new Map(members.map((m) => [m.userId, m]));
+	const memberMap = new Map((members ?? []).map((m) => [m.userId, m]));
 
 	function openForm() {
 		setCreating(true);
@@ -136,18 +136,16 @@ export function KanbanColumn({
 	}
 
 	const bgColor = alpha(stage.color, 0.1);
-	const borderColor = alpha(stage.color, 0.25);
 	const hoverBgColor = alpha(stage.color, 0.15);
 
 	return (
 		<div
 			ref={setNodeRef}
 			className={cn(
-				"flex w-72 shrink-0 flex-col gap-3 rounded-xl border p-3 transition-colors",
+				"flex w-72 shrink-0 flex-col gap-3 rounded-xl p-3 transition-colors",
 			)}
 			style={{
 				backgroundColor: isOver ? hoverBgColor : bgColor,
-				borderColor: borderColor,
 			}}
 		>
 			{/* Header: bolinha + badge + count */}

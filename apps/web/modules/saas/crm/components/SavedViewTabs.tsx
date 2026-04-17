@@ -1,5 +1,15 @@
 "use client";
 
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@ui/components/alert-dialog";
 import { Button } from "@ui/components/button";
 import {
 	DropdownMenu,
@@ -183,6 +193,7 @@ function ViewTab({
 	onDeleted,
 }: ViewTabProps) {
 	const [busy, setBusy] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	async function handleUpdateWithCurrent() {
 		setBusy(true);
@@ -238,15 +249,12 @@ function ViewTab({
 		}
 	}
 
-	async function handleDelete() {
-		const confirmed = window.confirm(
-			`Excluir a visão "${view.name}"? Isso não pode ser desfeito.`,
-		);
-		if (!confirmed) return;
+	async function confirmDelete() {
 		setBusy(true);
 		try {
 			await deletePipelineViewAction({ viewId: view.id }, organizationSlug);
 			toast.success("Visão excluída");
+			setDeleteDialogOpen(false);
 			onDeleted();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Falhou");
@@ -335,7 +343,10 @@ function ViewTab({
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							onClick={handleDelete}
+							onSelect={(e) => {
+								e.preventDefault();
+								setDeleteDialogOpen(true);
+							}}
 							disabled={busy}
 							className="text-destructive focus:text-destructive"
 						>
@@ -345,6 +356,31 @@ function ViewTab({
 					</DropdownMenuContent>
 				</DropdownMenu>
 			)}
+
+			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Excluir visão "{view.name}"?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Essa ação é permanente. A aba será removida e os filtros
+							guardados nela não poderão ser recuperados.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={(e) => {
+								e.preventDefault();
+								confirmDelete();
+							}}
+							disabled={busy}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							Excluir
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }

@@ -93,6 +93,13 @@ export function PipelineKanban({
 			const bucket = map.get(lead.stageId);
 			if (bucket) bucket.push(lead);
 		}
+		// Ordena cada coluna por data de criacao ASC (mais antigo em cima, novos entram no fim)
+		map.forEach((bucket) => {
+			bucket.sort(
+				(a: KanbanLead, b: KanbanLead) =>
+					+new Date(a.createdAt) - +new Date(b.createdAt),
+			);
+		});
 		return map;
 	}, [leads, stages]);
 

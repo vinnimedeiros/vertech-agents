@@ -1,5 +1,5 @@
 {
-	"name": "supastarter-nextjs",
+	"name": "vertech-agents",
 	"private": true,
 	"scripts": {
 		"build": "dotenv -c -- turbo build",
@@ -7,7 +7,11 @@
 		"start": "dotenv -c -- turbo start",
 		"lint": "biome lint .",
 		"clean": "turbo clean",
-		"format": "biome format . --write"
+		"format": "biome format . --write",
+		"typecheck": "turbo type-check",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:ui": "vitest --ui"
 	},
 	"engines": {
 		"node": ">=20"
@@ -17,9 +21,11 @@
 		"@biomejs/biome": "1.9.4",
 		"@repo/tsconfig": "workspace:*",
 		"@types/node": "^22.15.30",
+		"@vitest/ui": "^4.1.4",
 		"dotenv-cli": "^8.0.0",
 		"turbo": "^2.5.4",
-		"typescript": "5.8.3"
+		"typescript": "5.8.3",
+		"vitest": "^4.1.4"
 	},
 	"pnpm": {
 		"overrides": {

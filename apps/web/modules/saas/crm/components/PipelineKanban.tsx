@@ -9,15 +9,12 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
-import { Button } from "@ui/components/button";
-import { PlusIcon } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { moveLeadToStageAction } from "../lib/actions";
 import { KanbanColumn } from "./KanbanColumn";
 import { LeadCard } from "./LeadCard";
 import { LeadDetailSheet } from "./LeadDetailSheet";
-import { NewLeadDialog } from "./NewLeadDialog";
 
 export type KanbanStage = {
 	id: string;
@@ -148,26 +145,6 @@ export function PipelineKanban({
 
 	return (
 		<>
-			<div className="mb-4 flex items-center justify-end">
-				<NewLeadDialog
-					organizationId={organizationId}
-					organizationSlug={organizationSlug}
-					pipelineId={pipelineId}
-					stages={stages.map((s) => ({
-						id: s.id,
-						name: s.name,
-						isClosing: s.isClosing,
-						position: s.position,
-					}))}
-					trigger={
-						<Button size="sm" variant="primary">
-							<PlusIcon className="size-4" />
-							Novo lead
-						</Button>
-					}
-				/>
-			</div>
-
 			<DndContext
 				sensors={sensors}
 				onDragStart={handleDragStart}

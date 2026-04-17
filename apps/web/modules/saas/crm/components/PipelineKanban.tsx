@@ -157,6 +157,9 @@ export function PipelineKanban({
 							stage={stage}
 							leads={leadsByStage.get(stage.id) ?? []}
 							onCardOpen={handleCardOpen}
+							organizationId={organizationId}
+							organizationSlug={organizationSlug}
+							pipelineId={pipelineId}
 						/>
 					))}
 				</div>

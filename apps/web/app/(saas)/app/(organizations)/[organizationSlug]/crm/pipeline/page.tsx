@@ -8,7 +8,6 @@ import {
 	listPipelinesWithStats,
 } from "@saas/crm/lib/server";
 import { ComingSoon } from "@saas/shared/components/ComingSoon";
-import { PageHeader } from "@saas/shared/components/PageHeader";
 import { KanbanSquareIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -29,17 +28,11 @@ export default async function CrmPipelinePage({
 
 	if (pipelines.length === 0) {
 		return (
-			<>
-				<PageHeader
-					title="Pipeline"
-					subtitle="Kanban de vendas com estágios customizáveis"
-				/>
-				<ComingSoon
-					icon={KanbanSquareIcon}
-					title="Pipeline não configurado"
-					description="Este workspace ainda não tem pipelines. Crie o primeiro no seletor acima."
-				/>
-			</>
+			<ComingSoon
+				icon={KanbanSquareIcon}
+				title="Pipeline não configurado"
+				description="Este workspace ainda não tem pipelines. Crie o primeiro no seletor acima."
+			/>
 		);
 	}
 
@@ -102,18 +95,16 @@ export default async function CrmPipelinePage({
 
 	return (
 		<>
-			<PageHeader title="Pipeline" subtitle={pipelineData.name}>
-				<PipelineToolbar
-					organizationId={org.id}
-					organizationSlug={organizationSlug}
-					pipelineId={pipelineData.id}
-					pipelineName={pipelineData.name}
-					pipelines={pipelineOptions}
-					stages={editableStages}
-					leadCountByStage={leadCountByStage}
-					basePath={basePath}
-				/>
-			</PageHeader>
+			<PipelineToolbar
+				organizationId={org.id}
+				organizationSlug={organizationSlug}
+				pipelineId={pipelineData.id}
+				pipelineName={pipelineData.name}
+				pipelines={pipelineOptions}
+				stages={editableStages}
+				leadCountByStage={leadCountByStage}
+				basePath={basePath}
+			/>
 			{showDashboard ? (
 				<PipelineDashboard stages={stages} leads={leads} />
 			) : (

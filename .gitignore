@@ -66,3 +66,6 @@ Thumbs.db
 .claude/scheduled_tasks.lock
 .lmas/install-log.txt
 .lmas/.checkpoint-reminder-ts
+
+# Design references (used during dev, not shipped)
+design-refs/

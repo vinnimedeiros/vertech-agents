@@ -37,7 +37,7 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
 		<DropdownMenu>
 			<DropdownMenuTrigger
 				className={cn(
-					"flex items-center gap-1.5 rounded-md px-2 py-1 text-left outline-none hover:bg-accent/50 focus-visible:bg-accent/50",
+					"flex items-center gap-1.5 rounded-md border border-border/60 bg-card/60 py-0.5 pl-1 pr-1.5 text-left shadow-xs outline-none transition-colors hover:bg-card focus-visible:bg-card",
 					className,
 				)}
 			>
@@ -48,7 +48,7 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
 							logoUrl={activeOrganization.logo}
 							className="size-6 shrink-0"
 						/>
-						<span className="hidden max-w-[160px] truncate text-sm font-medium md:block">
+						<span className="hidden max-w-[140px] truncate text-xs font-medium md:block">
 							{activeOrganization.name}
 						</span>
 					</>
@@ -59,14 +59,14 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
 							avatarUrl={user.image}
 							className="size-6 shrink-0"
 						/>
-						<span className="hidden max-w-[160px] truncate text-sm font-medium md:block">
+						<span className="hidden max-w-[140px] truncate text-xs font-medium md:block">
 							{t(
 								"organizations.organizationSelect.personalAccount",
 							)}
 						</span>
 					</>
 				)}
-				<ChevronDownIcon className="size-3.5 shrink-0 opacity-60" />
+				<ChevronDownIcon className="size-3 shrink-0 opacity-60" />
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent align="start" className="w-64">

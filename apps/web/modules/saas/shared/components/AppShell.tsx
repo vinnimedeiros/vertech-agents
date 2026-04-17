@@ -9,29 +9,29 @@ import {
 } from "react";
 import { AppHeader } from "./AppHeader";
 import { AppSidebar } from "./AppSidebar";
-import { AskAIColumn } from "./AskAIColumn";
 import { CommandPalette } from "./CommandPalette";
+import { OrchestratorColumn } from "./OrchestratorColumn";
 
-const ASK_AI_STORAGE_KEY = "vertech:ask-ai-open";
+const ORCHESTRATOR_STORAGE_KEY = "vertech:orchestrator-open";
 
 export function AppShell({ children }: PropsWithChildren) {
-	const [askAIOpen, setAskAIOpen] = useState(false);
+	const [orchestratorOpen, setOrchestratorOpen] = useState(false);
 	const [commandOpen, setCommandOpen] = useState(false);
 
 	useEffect(() => {
 		try {
-			const stored = localStorage.getItem(ASK_AI_STORAGE_KEY);
-			if (stored === "true") setAskAIOpen(true);
+			const stored = localStorage.getItem(ORCHESTRATOR_STORAGE_KEY);
+			if (stored === "true") setOrchestratorOpen(true);
 		} catch {
 			/* no-op */
 		}
 	}, []);
 
-	const toggleAskAI = useCallback(() => {
-		setAskAIOpen((prev) => {
+	const toggleOrchestrator = useCallback(() => {
+		setOrchestratorOpen((prev) => {
 			const next = !prev;
 			try {
-				localStorage.setItem(ASK_AI_STORAGE_KEY, String(next));
+				localStorage.setItem(ORCHESTRATOR_STORAGE_KEY, String(next));
 			} catch {
 				/* no-op */
 			}
@@ -39,10 +39,10 @@ export function AppShell({ children }: PropsWithChildren) {
 		});
 	}, []);
 
-	const closeAskAI = useCallback(() => {
-		setAskAIOpen(false);
+	const closeOrchestrator = useCallback(() => {
+		setOrchestratorOpen(false);
 		try {
-			localStorage.setItem(ASK_AI_STORAGE_KEY, "false");
+			localStorage.setItem(ORCHESTRATOR_STORAGE_KEY, "false");
 		} catch {
 			/* no-op */
 		}
@@ -57,21 +57,24 @@ export function AppShell({ children }: PropsWithChildren) {
 			)}
 		>
 			<AppHeader
-				askAIOpen={askAIOpen}
-				onToggleAskAI={toggleAskAI}
+				orchestratorOpen={orchestratorOpen}
+				onToggleOrchestrator={toggleOrchestrator}
 				onOpenCommand={() => setCommandOpen(true)}
 			/>
 
 			<div className="flex flex-1 gap-[var(--shell-gap)] overflow-hidden">
 				<AppSidebar />
 
-				<main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm">
+				<main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-md border border-border/50 bg-card shadow-sm">
 					<div className="flex-1 overflow-y-auto p-4 md:p-6">
 						{children}
 					</div>
 				</main>
 
-				<AskAIColumn open={askAIOpen} onClose={closeAskAI} />
+				<OrchestratorColumn
+					open={orchestratorOpen}
+					onClose={closeOrchestrator}
+				/>
 			</div>
 
 			<CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />

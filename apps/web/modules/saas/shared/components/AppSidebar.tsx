@@ -89,21 +89,21 @@ export function AppSidebar() {
 	return (
 		<aside
 			className={cn(
-				"flex shrink-0 flex-col items-center gap-1 py-3",
+				"flex shrink-0 flex-col items-center gap-0.5 py-2",
 				"w-[var(--shell-sidebar-width-mobile)] lg:w-[var(--shell-sidebar-width)]",
-				"rounded-xl bg-sidebar text-sidebar-foreground shadow-md",
+				"rounded-md bg-sidebar text-sidebar-foreground shadow-md",
 			)}
 			aria-label="Navegação principal"
 		>
 			<Link
 				href="/app"
-				className="mb-2 flex size-10 items-center justify-center rounded-lg text-primary transition-colors hover:bg-white/5"
+				className="mb-1 flex size-8 items-center justify-center rounded text-primary transition-colors hover:bg-white/5"
 				aria-label="Ir para início"
 			>
-				<Logo withLabel={false} className="[&>svg]:size-7" />
+				<Logo withLabel={false} className="[&>svg]:size-5" />
 			</Link>
 
-			<div className="mx-2 h-px w-8 bg-white/10" />
+			<div className="mx-2 h-px w-6 bg-white/10" />
 
 			<nav className="flex w-full flex-1 flex-col items-center gap-0.5 px-1 pt-1">
 				{items.map((item) => {
@@ -114,7 +114,7 @@ export function AppSidebar() {
 							href={item.href}
 							prefetch
 							className={cn(
-								"group flex w-full flex-col items-center gap-1 rounded-lg px-1 py-2 transition-colors",
+								"group flex w-full flex-col items-center gap-0.5 rounded px-0.5 py-1.5 transition-colors",
 								item.isActive
 									? "bg-white/10 text-white"
 									: "text-sidebar-foreground/70 hover:bg-white/5 hover:text-white",
@@ -123,11 +123,11 @@ export function AppSidebar() {
 						>
 							<Icon
 								className={cn(
-									"size-5 transition-colors",
+									"size-4 transition-colors",
 									item.isActive && "text-primary",
 								)}
 							/>
-							<span className="text-[10px] font-medium leading-tight">
+							<span className="text-[9px] font-medium leading-tight">
 								{item.label}
 							</span>
 						</Link>

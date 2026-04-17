@@ -3,24 +3,27 @@
 import { cn } from "@ui/lib";
 import { SparklesIcon } from "lucide-react";
 
-type AskAIButtonProps = {
+type OrchestratorButtonProps = {
 	open: boolean;
 	onToggle: () => void;
 };
 
-export function AskAIButton({ open, onToggle }: AskAIButtonProps) {
+export function OrchestratorButton({
+	open,
+	onToggle,
+}: OrchestratorButtonProps) {
 	return (
 		<button
 			type="button"
 			onClick={onToggle}
 			aria-expanded={open}
-			aria-controls="ask-ai-panel"
-			aria-label="Pergunte à IA"
+			aria-controls="orchestrator-panel"
+			aria-label="Peça ao Orquestrador"
 			className={cn(
-				"group flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs transition-all",
-				"hover:bg-primary/10 hover:pl-2 hover:pr-2",
+				"group flex items-center gap-0 rounded-md px-0 py-1 text-xs transition-all duration-300",
+				"hover:gap-1.5 hover:bg-primary/10 hover:px-2",
 				open
-					? "bg-primary/15 text-primary"
+					? "gap-1.5 bg-primary/15 px-2 text-primary"
 					: "text-foreground/70 hover:text-primary",
 			)}
 		>
@@ -31,7 +34,7 @@ export function AskAIButton({ open, onToggle }: AskAIButtonProps) {
 				)}
 			>
 				<span className="whitespace-nowrap font-medium">
-					Pergunte à IA
+					Peça ao Orquestrador
 				</span>
 			</span>
 			<SparklesIcon

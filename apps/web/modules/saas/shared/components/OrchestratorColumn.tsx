@@ -4,15 +4,18 @@ import { Button } from "@ui/components/button";
 import { cn } from "@ui/lib";
 import { SparklesIcon, XIcon } from "lucide-react";
 
-type AskAIColumnProps = {
+type OrchestratorColumnProps = {
 	open: boolean;
 	onClose: () => void;
 };
 
-export function AskAIColumn({ open, onClose }: AskAIColumnProps) {
+export function OrchestratorColumn({
+	open,
+	onClose,
+}: OrchestratorColumnProps) {
 	return (
 		<aside
-			id="ask-ai-panel"
+			id="orchestrator-panel"
 			aria-hidden={!open}
 			className={cn(
 				"shrink-0 overflow-hidden transition-[width] duration-300 ease-out",
@@ -21,7 +24,7 @@ export function AskAIColumn({ open, onClose }: AskAIColumnProps) {
 		>
 			<div
 				className={cn(
-					"flex h-full flex-col rounded-xl border border-border/50 bg-card shadow-sm",
+					"flex h-full flex-col rounded-md border border-border/50 bg-card shadow-sm",
 					!open && "invisible",
 				)}
 			>
@@ -29,7 +32,7 @@ export function AskAIColumn({ open, onClose }: AskAIColumnProps) {
 					<div className="flex items-center gap-1.5">
 						<SparklesIcon className="size-3.5 text-primary" />
 						<span className="text-sm font-semibold">
-							Pergunte à IA
+							Peça ao Orquestrador
 						</span>
 					</div>
 					<Button
@@ -38,7 +41,7 @@ export function AskAIColumn({ open, onClose }: AskAIColumnProps) {
 						size="icon"
 						className="size-7 rounded-md"
 						onClick={onClose}
-						aria-label="Fechar painel de IA"
+						aria-label="Fechar painel do Orquestrador"
 					>
 						<XIcon className="size-4" />
 					</Button>
@@ -49,15 +52,15 @@ export function AskAIColumn({ open, onClose }: AskAIColumnProps) {
 						<SparklesIcon className="size-5 text-primary" />
 					</div>
 					<div className="space-y-1">
-						<p className="text-sm font-semibold">Agente de IA</p>
+						<p className="text-sm font-semibold">Orquestrador Vertech</p>
 						<p className="text-xs text-foreground/60">
-							Em breve — ativaremos o agente comercial com
-							contexto do workspace, memória e integração aos seus
-							leads.
+							Em breve — co-piloto da aplicação com acesso a tools
+							operacionais, streaming de tokens, preview ao vivo de
+							alterações e undo de 30 dias.
 						</p>
 					</div>
 					<span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-foreground/60">
-						Chega na Fase 7
+						Chega na Fase 10
 					</span>
 				</div>
 			</div>

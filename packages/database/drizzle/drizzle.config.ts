@@ -3,7 +3,11 @@ import { defineConfig } from "drizzle-kit";
 export default defineConfig({
 	dialect: "postgresql",
 	schema: "./drizzle/schema/postgres.ts",
+	out: "./drizzle/migrations",
 	dbCredentials: {
-		url: process.env.DATABASE_URL as string,
+		// Use direct connection for migrations (pooler has issues with DDL)
+		url: (process.env.DIRECT_URL || process.env.DATABASE_URL) as string,
 	},
+	verbose: true,
+	strict: true,
 });

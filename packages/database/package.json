@@ -18,10 +18,10 @@
 	"main": "./index.ts",
 	"name": "@repo/database",
 	"scripts": {
-		"generate": "dotenv -c -e ../../.env -- drizzle-kit generate --config=./drizzle/drizzle.config.ts",
-		"push": "dotenv -c -e ../../.env -- drizzle-kit push --config=./drizzle/drizzle.config.ts",
-		"migrate": "dotenv -c -e ../../.env -- drizzle-kit migrate --config=./drizzle/drizzle.config.ts",
-		"studio": "dotenv -c -e ../../.env -- drizzle-kit studio --config=./drizzle/drizzle.config.ts",
+		"generate": "dotenv -c -e ../../.env.local -- drizzle-kit generate --config=./drizzle/drizzle.config.ts",
+		"push": "dotenv -c -e ../../.env.local -- drizzle-kit push --config=./drizzle/drizzle.config.ts",
+		"migrate": "dotenv -c -e ../../.env.local -- drizzle-kit migrate --config=./drizzle/drizzle.config.ts",
+		"studio": "dotenv -c -e ../../.env.local -- drizzle-kit studio --config=./drizzle/drizzle.config.ts",
 		"type-check": "tsc --noEmit"
 	},
 	"types": "./**/.tsx",

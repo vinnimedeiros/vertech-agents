@@ -95,6 +95,7 @@
     "mdx": "^0.3.1",
     "postcss": "8.5.4",
     "rehype-img-size": "^1.0.1",
+    "shadcn": "^4.3.0",
     "start-server-and-test": "^2.0.12",
     "tailwindcss": "4.1.8"
   },

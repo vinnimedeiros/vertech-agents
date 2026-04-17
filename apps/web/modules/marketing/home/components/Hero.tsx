@@ -24,12 +24,12 @@ export function Hero() {
 				</div>
 
 				<h1 className="mx-auto max-w-3xl text-balance font-bold text-5xl lg:text-7xl">
-					Your revolutionary Next.js SaaS
+					Vertech Agents
 				</h1>
 
 				<p className="mx-auto mt-4 max-w-lg text-balance text-foreground/60 text-lg">
-					This is a demo application built with supastarter. It will
-					save you a lot of time and effort building your next SaaS.
+					CRM comercial com agentes de IA que atendem no WhatsApp e
+					executam ações reais no seu pipeline.
 				</p>
 
 				<div className="mt-6 flex flex-col items-center justify-center gap-3 md:flex-row">
@@ -44,7 +44,7 @@ export function Hero() {
 					</Button>
 				</div>
 
-				<div className="mt-16 px-8 text-center">
+				<div className="mt-16 hidden px-8 text-center">
 					<h5 className="font-semibold text-foreground/50 text-xs uppercase tracking-wider">
 						Built & shipped with these awesome tools
 					</h5>

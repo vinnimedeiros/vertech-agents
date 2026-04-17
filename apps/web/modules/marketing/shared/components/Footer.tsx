@@ -9,11 +9,8 @@ export function Footer() {
 				<div>
 					<Logo className="opacity-70 grayscale" />
 					<p className="mt-3 text-sm opacity-70">
-						© {new Date().getFullYear()} {config.appName}.{" "}
-						<a href="https://supastarter.dev">
-							Built with supastarter
-						</a>
-						.
+						© {new Date().getFullYear()} {config.appName}. Todos os
+						direitos reservados.
 					</p>
 				</div>
 

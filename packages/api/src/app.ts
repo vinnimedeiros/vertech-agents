@@ -9,6 +9,7 @@ import {} from "openapi-merge";
 import { mergeOpenApiSchemas } from "./lib/openapi-schema";
 import { corsMiddleware } from "./middleware/cors";
 import { loggerMiddleware } from "./middleware/logger";
+import { globalRateLimit } from "./middleware/rate-limit";
 import { adminRouter } from "./routes/admin/router";
 import { aiRouter } from "./routes/ai";
 import { authRouter } from "./routes/auth";
@@ -24,6 +25,7 @@ export const app = new Hono().basePath("/api");
 
 app.use(loggerMiddleware);
 app.use(corsMiddleware);
+app.use(globalRateLimit);
 
 const appRouter = app
 	.route("/", authRouter)

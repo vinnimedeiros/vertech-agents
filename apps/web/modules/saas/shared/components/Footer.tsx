@@ -1,4 +1,5 @@
 import { LocaleLink } from "@i18n/routing";
+import { config } from "@repo/config";
 import { cn } from "@ui/lib";
 
 export function Footer() {
@@ -9,7 +10,7 @@ export function Footer() {
 			)}
 		>
 			<span>
-				<a href="https://supastarter.dev">Built with supastarter</a>
+				© {new Date().getFullYear()} {config.appName}
 			</span>
 			<span className="opacity-50"> | </span>
 			<LocaleLink href="/legal/privacy-policy">Privacy policy</LocaleLink>

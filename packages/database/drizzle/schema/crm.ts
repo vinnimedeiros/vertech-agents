@@ -50,6 +50,14 @@ export const proposalStatusEnum = pgEnum("ProposalStatus", [
 	"REJECTED",
 ]);
 
+export const stageCategoryEnum = pgEnum("StageCategory", [
+	"NOT_STARTED",
+	"ACTIVE",
+	"SCHEDULED",
+	"WON",
+	"LOST",
+]);
+
 // =============================================
 // Pipelines
 // =============================================
@@ -86,9 +94,21 @@ export const pipelineStage = pgTable(
 		position: integer("position").notNull(),
 		isClosing: boolean("isClosing").notNull().default(false),
 		isWon: boolean("isWon").notNull().default(false),
+		// Phase 04E: categoria funcional com semantica cross-module
+		category: stageCategoryEnum("category").notNull().default("ACTIVE"),
+		// Phase 04E: probabilidade de conversao 0-100, usada em weighted pipeline value
+		probability: integer("probability").notNull().default(50),
+		// Phase 04E: SLA em dias no stage, usado pra stagnation detection
+		maxDays: integer("maxDays"),
+		// Phase 04E: slug estavel pra integracoes
+		slug: varchar("slug", { length: 120 }),
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 	},
-	(table) => [index("pipeline_stage_pipeline_idx").on(table.pipelineId)],
+	(table) => [
+		index("pipeline_stage_pipeline_idx").on(table.pipelineId),
+		index("pipeline_stage_category_idx").on(table.category),
+		index("pipeline_stage_slug_idx").on(table.slug),
+	],
 );
 
 // =============================================
@@ -155,6 +175,20 @@ export const lead = pgTable(
 		temperature: temperatureEnum("temperature").notNull().default("COLD"),
 		priority: leadPriorityEnum("priority").notNull().default("NORMAL"),
 		origin: text("origin"),
+		// Phase 04E: historico de entrada em cada stage { stageId: ISODate }
+		stageDates: json("stageDates")
+			.$type<Record<string, string>>()
+			.notNull()
+			.default({}),
+		// Phase 04E: tags livres multi-valor
+		tags: text("tags").array().notNull().default([]),
+		// Phase 04E: progress bar no card
+		subtaskCount: integer("subtaskCount").notNull().default(0),
+		subtaskDone: integer("subtaskDone").notNull().default(0),
+		// Phase 04E: data limite opcional
+		dueDate: timestamp("dueDate"),
+		// Phase 04E: favoritado pelo user
+		starred: boolean("starred").notNull().default(false),
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 		closedAt: timestamp("closedAt"),
@@ -301,3 +335,189 @@ export const proposalRelations = relations(proposal, ({ one }) => ({
 		references: [lead.id],
 	}),
 }));
+
+// =============================================
+// Phase 04E: Saved Views
+// =============================================
+
+export const pipelineViewModeEnum = pgEnum("PipelineViewMode", [
+	"kanban",
+	"list",
+	"dashboard",
+]);
+
+export const pipelineViewSortEnum = pgEnum("PipelineViewSort", [
+	"none",
+	"priority",
+	"date",
+	"name",
+	"value",
+]);
+
+export const pipelineView = pgTable(
+	"pipeline_view",
+	{
+		id: varchar("id", { length: 255 })
+			.$defaultFn(() => cuid())
+			.primaryKey(),
+		organizationId: text("organizationId")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		pipelineId: text("pipelineId")
+			.notNull()
+			.references(() => pipeline.id, { onDelete: "cascade" }),
+		name: text("name").notNull(),
+		filters: json("filters")
+			.$type<Record<string, unknown>>()
+			.notNull()
+			.default({}),
+		viewMode: pipelineViewModeEnum("viewMode").notNull().default("kanban"),
+		sortBy: pipelineViewSortEnum("sortBy").notNull().default("none"),
+		isDefault: boolean("isDefault").notNull().default(false),
+		position: integer("position").notNull().default(0),
+		createdBy: text("createdBy").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		createdAt: timestamp("createdAt").notNull().defaultNow(),
+		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+	},
+	(table) => [
+		index("pipeline_view_pipeline_idx").on(table.pipelineId),
+		index("pipeline_view_organization_idx").on(table.organizationId),
+	],
+);
+
+export const pipelineViewRelations = relations(pipelineView, ({ one }) => ({
+	organization: one(organization, {
+		fields: [pipelineView.organizationId],
+		references: [organization.id],
+	}),
+	pipeline: one(pipeline, {
+		fields: [pipelineView.pipelineId],
+		references: [pipeline.id],
+	}),
+	creator: one(user, {
+		fields: [pipelineView.createdBy],
+		references: [user.id],
+	}),
+}));
+
+// =============================================
+// Phase 04E: Status Templates
+// =============================================
+
+export const statusTemplate = pgTable(
+	"status_template",
+	{
+		id: varchar("id", { length: 255 })
+			.$defaultFn(() => cuid())
+			.primaryKey(),
+		// null = template built-in (do produto), nao pertence a nenhuma org
+		organizationId: text("organizationId").references(
+			() => organization.id,
+			{ onDelete: "cascade" },
+		),
+		name: text("name").notNull(),
+		description: text("description"),
+		vertical: varchar("vertical", { length: 80 }),
+		// array de { name, color, category, probability, maxDays, position }
+		stages: json("stages")
+			.$type<
+				Array<{
+					name: string;
+					color: string;
+					category:
+						| "NOT_STARTED"
+						| "ACTIVE"
+						| "SCHEDULED"
+						| "WON"
+						| "LOST";
+					probability: number;
+					maxDays: number | null;
+					position: number;
+				}>
+			>()
+			.notNull(),
+		isBuiltIn: boolean("isBuiltIn").notNull().default(false),
+		isPublic: boolean("isPublic").notNull().default(false),
+		usageCount: integer("usageCount").notNull().default(0),
+		createdBy: text("createdBy").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		createdAt: timestamp("createdAt").notNull().defaultNow(),
+		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+	},
+	(table) => [
+		index("status_template_organization_idx").on(table.organizationId),
+		index("status_template_vertical_idx").on(table.vertical),
+		index("status_template_builtin_idx").on(table.isBuiltIn),
+	],
+);
+
+export const statusTemplateRelations = relations(statusTemplate, ({ one }) => ({
+	organization: one(organization, {
+		fields: [statusTemplate.organizationId],
+		references: [organization.id],
+	}),
+	creator: one(user, {
+		fields: [statusTemplate.createdBy],
+		references: [user.id],
+	}),
+}));
+
+// =============================================
+// Phase 04E: Orchestrator Audit Log
+// =============================================
+
+export const actorTypeEnum = pgEnum("ActorType", [
+	"user",
+	"orchestrator",
+	"architect",
+	"commercial_agent",
+	"system",
+]);
+
+export const orchestratorAuditLog = pgTable(
+	"orchestrator_audit_log",
+	{
+		id: varchar("id", { length: 255 })
+			.$defaultFn(() => cuid())
+			.primaryKey(),
+		organizationId: text("organizationId")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+		userId: text("userId").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		actorType: actorTypeEnum("actorType").notNull(),
+		actorId: varchar("actorId", { length: 255 }).notNull(),
+		resource: varchar("resource", { length: 80 }).notNull(),
+		resourceId: varchar("resourceId", { length: 255 }).notNull(),
+		action: varchar("action", { length: 80 }).notNull(),
+		before: json("before").$type<Record<string, unknown> | null>(),
+		after: json("after").$type<Record<string, unknown> | null>(),
+		// self-reference para marcar quem desfez (nullable)
+		undoneBy: varchar("undoneBy", { length: 255 }),
+		undoneAt: timestamp("undoneAt"),
+		createdAt: timestamp("createdAt").notNull().defaultNow(),
+	},
+	(table) => [
+		index("audit_org_created_idx").on(table.organizationId, table.createdAt),
+		index("audit_resource_idx").on(table.resource, table.resourceId),
+		index("audit_actor_idx").on(table.actorType, table.actorId),
+	],
+);
+
+export const orchestratorAuditLogRelations = relations(
+	orchestratorAuditLog,
+	({ one }) => ({
+		organization: one(organization, {
+			fields: [orchestratorAuditLog.organizationId],
+			references: [organization.id],
+		}),
+		user: one(user, {
+			fields: [orchestratorAuditLog.userId],
+			references: [user.id],
+		}),
+	}),
+);

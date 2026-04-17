@@ -549,6 +549,22 @@ importers:
         specifier: ^0.31.1
         version: 0.31.1
 
+  packages/events:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../database
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 1.9.4
+        version: 1.9.4
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@types/node':
+        specifier: ^22.15.30
+        version: 22.15.30
+
   packages/i18n:
     dependencies:
       '@repo/config':

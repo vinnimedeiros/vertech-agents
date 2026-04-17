@@ -18,6 +18,7 @@
 		"create:user": "dotenv -c -e ../../.env.local -- tsx ./src/create-user.ts",
 		"bootstrap:superadmin": "dotenv -c -e ../../.env.local -- tsx ./src/bootstrap-superadmin.ts",
 		"seed:hierarchy": "dotenv -c -e ../../.env.local -- tsx ./src/seed-hierarchy.ts",
+		"backfill:pipelines": "dotenv -c -e ../../.env.local -- tsx ./src/backfill-default-pipelines.ts",
 		"type-check": "tsc --noEmit"
 	},
 	"version": "0.0.0"

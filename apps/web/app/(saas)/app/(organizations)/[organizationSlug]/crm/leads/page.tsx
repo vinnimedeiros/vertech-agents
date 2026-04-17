@@ -4,6 +4,7 @@ import { NewLeadDialog } from "@saas/crm/components/NewLeadDialog";
 import {
 	getDefaultPipelineWithStages,
 	listLeadsForOrg,
+	listOrgMembers,
 } from "@saas/crm/lib/server";
 import { ComingSoon } from "@saas/shared/components/ComingSoon";
 import { PageHeader } from "@saas/shared/components/PageHeader";
@@ -36,7 +37,10 @@ export default async function CrmLeadsPage({
 		);
 	}
 
-	const leadsRaw = await listLeadsForOrg(org.id);
+	const [leadsRaw, members] = await Promise.all([
+		listLeadsForOrg(org.id),
+		listOrgMembers(org.id),
+	]);
 	const leads = leadsRaw.map((l) => ({
 		id: l.id,
 		title: l.title,
@@ -58,6 +62,7 @@ export default async function CrmLeadsPage({
 		color: s.color,
 		isClosing: s.isClosing,
 		isWon: s.isWon,
+		position: s.position,
 	}));
 
 	return (
@@ -82,6 +87,7 @@ export default async function CrmLeadsPage({
 				organizationSlug={organizationSlug}
 				leads={leads}
 				stages={stages}
+				members={members}
 			/>
 		</>
 	);

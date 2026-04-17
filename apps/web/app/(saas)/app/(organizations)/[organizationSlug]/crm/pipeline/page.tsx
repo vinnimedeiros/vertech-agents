@@ -200,6 +200,9 @@ export default async function CrmPipelinePage({
 						name: s.name,
 						color: s.color,
 						maxDays: s.maxDays,
+						position: s.position,
+						isClosing: s.isClosing,
+						isWon: s.isWon,
 					}))}
 					members={members}
 					baseState={baseState}

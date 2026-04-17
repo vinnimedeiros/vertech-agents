@@ -25,7 +25,8 @@ import {
 	ThermometerIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { LeadDetailSheet } from "./LeadDetailSheet";
+import { LeadModal } from "./LeadModal";
+import type { OrgMemberOption } from "../lib/server";
 
 export type LeadRow = {
 	id: string;
@@ -60,12 +61,14 @@ type SheetStage = {
 	color: string;
 	isClosing: boolean;
 	isWon: boolean;
+	position: number;
 };
 
 type LeadsTableProps = {
 	organizationSlug: string;
 	leads: LeadRow[];
 	stages: SheetStage[];
+	members?: OrgMemberOption[];
 	emptyMessage?: string;
 	hideStageFilter?: boolean;
 };
@@ -110,6 +113,7 @@ export function LeadsTable({
 	organizationSlug,
 	leads,
 	stages,
+	members = [],
 	emptyMessage = "Nenhum lead encontrado.",
 	hideStageFilter = false,
 }: LeadsTableProps) {
@@ -290,12 +294,15 @@ export function LeadsTable({
 				</Table>
 			</div>
 
-			<LeadDetailSheet
+			<LeadModal
 				open={sheetOpen}
 				onOpenChange={setSheetOpen}
 				leadId={selectedLeadId}
 				organizationSlug={organizationSlug}
 				stages={stages}
+				members={members}
+				leadIds={filtered.map((l) => l.id)}
+				onNavigate={(id) => setSelectedLeadId(id)}
 			/>
 		</div>
 	);

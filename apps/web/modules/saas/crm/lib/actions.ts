@@ -70,6 +70,7 @@ const updateLeadSchema = z.object({
 	priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
 	origin: z.string().trim().nullable().optional(),
 	assignedTo: z.string().nullable().optional(),
+	starred: z.boolean().optional(),
 });
 
 const moveLeadSchema = z.object({

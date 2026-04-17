@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { moveLeadToStageAction } from "../lib/actions";
 import { KanbanColumn } from "./KanbanColumn";
 import { LeadCard } from "./LeadCard";
-import { LeadDetailSheet } from "./LeadDetailSheet";
+import { LeadModal } from "./LeadModal";
 
 export type KanbanStage = {
 	id: string;
@@ -191,7 +191,7 @@ export function PipelineKanban({
 				</DragOverlay>
 			</DndContext>
 
-			<LeadDetailSheet
+			<LeadModal
 				open={sheetOpen}
 				onOpenChange={setSheetOpen}
 				leadId={selectedLeadId}
@@ -202,7 +202,11 @@ export function PipelineKanban({
 					color: s.color,
 					isClosing: s.isClosing,
 					isWon: s.isWon,
+					position: s.position,
 				}))}
+				members={members}
+				leadIds={leads.map((l) => l.id)}
+				onNavigate={(id) => setSelectedLeadId(id)}
 			/>
 		</>
 	);

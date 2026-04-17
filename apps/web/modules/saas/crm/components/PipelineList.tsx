@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import { Checkbox } from "@ui/components/checkbox";
 import { BulkActionsBar } from "./BulkActionsBar";
+import { LeadModal } from "./LeadModal";
 import {
 	Table,
 	TableBody,
@@ -12,11 +13,7 @@ import {
 	TableRow,
 } from "@ui/components/table";
 import { cn } from "@ui/lib";
-import {
-	ArrowDownIcon,
-	ArrowUpIcon,
-	ArrowUpDownIcon,
-} from "lucide-react";
+import { ArrowDownIcon, ArrowUpDownIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useViewState } from "../lib/use-view-state";
 import type { OrgMemberOption } from "../lib/server";
@@ -46,6 +43,9 @@ export type PipelineListStage = {
 	name: string;
 	color: string;
 	maxDays: number | null;
+	position: number;
+	isClosing: boolean;
+	isWon: boolean;
 };
 
 type PipelineListProps = {
@@ -74,6 +74,7 @@ export function PipelineList({
 }: PipelineListProps) {
 	const { currentState, setSortBy } = useViewState(basePath, baseState);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
+	const [openLeadId, setOpenLeadId] = useState<string | null>(null);
 
 	const stageMap = useMemo(
 		() => new Map(stages.map((s) => [s.id, s])),
@@ -188,7 +189,12 @@ export function PipelineList({
 								<TableRow
 									key={lead.id}
 									data-state={isSelected ? "selected" : undefined}
-									className="group border-b-0"
+									className="group cursor-pointer border-b-0"
+									onClick={(e) => {
+										// Ignorar clique se foi no checkbox
+										if ((e.target as HTMLElement).closest("[role=checkbox]")) return;
+										setOpenLeadId(lead.id);
+									}}
 								>
 									<TableCell>
 										<Checkbox
@@ -290,6 +296,19 @@ export function PipelineList({
 			stages={stages.map((s) => ({ id: s.id, name: s.name, color: s.color }))}
 			members={members}
 			organizationSlug={organizationSlug}
+		/>
+
+		<LeadModal
+			open={openLeadId !== null}
+			onOpenChange={(o) => {
+				if (!o) setOpenLeadId(null);
+			}}
+			leadId={openLeadId}
+			organizationSlug={organizationSlug}
+			stages={stages}
+			members={members}
+			leadIds={leads.map((l) => l.id)}
+			onNavigate={(id) => setOpenLeadId(id)}
 		/>
 		</>
 	);

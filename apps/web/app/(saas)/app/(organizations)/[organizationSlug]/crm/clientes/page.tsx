@@ -3,6 +3,7 @@ import { LeadsTable } from "@saas/crm/components/LeadsTable";
 import {
 	getDefaultPipelineWithStages,
 	listLeadsForOrg,
+	listOrgMembers,
 } from "@saas/crm/lib/server";
 import { ComingSoon } from "@saas/shared/components/ComingSoon";
 import { PageHeader } from "@saas/shared/components/PageHeader";
@@ -35,7 +36,10 @@ export default async function CrmClientesPage({
 		);
 	}
 
-	const leadsRaw = await listLeadsForOrg(org.id);
+	const [leadsRaw, members] = await Promise.all([
+		listLeadsForOrg(org.id),
+		listOrgMembers(org.id),
+	]);
 	const wonLeads = leadsRaw
 		.filter((l) => l.stage.isWon)
 		.map((l) => ({
@@ -59,6 +63,7 @@ export default async function CrmClientesPage({
 		color: s.color,
 		isClosing: s.isClosing,
 		isWon: s.isWon,
+		position: s.position,
 	}));
 
 	return (
@@ -71,6 +76,7 @@ export default async function CrmClientesPage({
 				organizationSlug={organizationSlug}
 				leads={wonLeads}
 				stages={stages}
+				members={members}
 				hideStageFilter
 				emptyMessage="Nenhum cliente fechado ainda. Mova um lead para um estágio de ganho no Kanban."
 			/>

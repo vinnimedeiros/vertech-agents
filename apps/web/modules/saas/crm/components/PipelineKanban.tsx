@@ -23,6 +23,7 @@ export type KanbanStage = {
 	position: number;
 	isClosing: boolean;
 	isWon: boolean;
+	maxDays?: number | null;
 };
 
 export type KanbanLead = {
@@ -32,7 +33,11 @@ export type KanbanLead = {
 	currency: string;
 	temperature: "COLD" | "WARM" | "HOT";
 	priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+	origin: string | null;
 	stageId: string;
+	assignedTo: string | null;
+	createdAt: Date | string;
+	stageDates: Record<string, string> | null;
 	contact: {
 		id: string;
 		name: string;
@@ -43,12 +48,20 @@ export type KanbanLead = {
 	};
 };
 
+export type KanbanMember = {
+	userId: string;
+	name: string | null;
+	email: string | null;
+	image: string | null;
+};
+
 type PipelineKanbanProps = {
 	organizationId: string;
 	organizationSlug: string;
 	pipelineId: string;
 	stages: KanbanStage[];
 	initialLeads: KanbanLead[];
+	members: KanbanMember[];
 };
 
 export function PipelineKanban({
@@ -57,6 +70,7 @@ export function PipelineKanban({
 	pipelineId,
 	stages,
 	initialLeads,
+	members,
 }: PipelineKanbanProps) {
 	const [leads, setLeads] = useState<KanbanLead[]>(initialLeads);
 	const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
@@ -160,14 +174,13 @@ export function PipelineKanban({
 							organizationId={organizationId}
 							organizationSlug={organizationSlug}
 							pipelineId={pipelineId}
+							members={members}
 						/>
 					))}
 				</div>
 
 				<DragOverlay>
-					{activeLead ? (
-						<LeadCard lead={activeLead} isOverlay />
-					) : null}
+					{activeLead ? <LeadCard lead={activeLead} isOverlay /> : null}
 				</DragOverlay>
 			</DndContext>
 

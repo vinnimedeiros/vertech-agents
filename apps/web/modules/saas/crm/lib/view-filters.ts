@@ -17,8 +17,8 @@ export const SORT_KEYS = [
 ] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 
-export const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
-export const TEMPERATURES = ["cold", "warm", "hot"] as const;
+export const PRIORITIES = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
+export const TEMPERATURES = ["COLD", "WARM", "HOT"] as const;
 
 export const viewFiltersStateSchema = z.object({
 	searchQuery: z.string().optional(),

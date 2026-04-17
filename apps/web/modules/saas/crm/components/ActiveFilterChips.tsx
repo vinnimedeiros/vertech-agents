@@ -10,16 +10,16 @@ import type {
 } from "../lib/view-filters";
 
 const PRIORITY_LABELS: Record<string, string> = {
-	low: "Baixa",
-	medium: "Média",
-	high: "Alta",
-	urgent: "Urgente",
+	LOW: "Baixa",
+	NORMAL: "Normal",
+	HIGH: "Alta",
+	URGENT: "Urgente",
 };
 
 const TEMPERATURE_LABELS: Record<string, string> = {
-	cold: "Frio",
-	warm: "Morno",
-	hot: "Quente",
+	COLD: "Frio",
+	WARM: "Morno",
+	HOT: "Quente",
 };
 
 const SORT_LABELS: Record<SortKey, string> = {

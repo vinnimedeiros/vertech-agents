@@ -117,10 +117,10 @@ export function filterLeads<T extends FilterableLead>(
 }
 
 const PRIORITY_ORDER: Record<string, number> = {
-	urgent: 0,
-	high: 1,
-	medium: 2,
-	low: 3,
+	URGENT: 0,
+	HIGH: 1,
+	NORMAL: 2,
+	LOW: 3,
 };
 
 export function sortLeads<T extends FilterableLead>(

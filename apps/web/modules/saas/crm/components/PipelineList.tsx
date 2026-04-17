@@ -58,10 +58,10 @@ type PipelineListProps = {
 };
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
-	urgent: { label: "Urgente", className: "bg-red-100 text-red-800 border-red-200" },
-	high: { label: "Alta", className: "bg-orange-100 text-orange-800 border-orange-200" },
-	medium: { label: "Média", className: "bg-amber-100 text-amber-800 border-amber-200" },
-	low: { label: "Baixa", className: "bg-slate-100 text-slate-700 border-slate-200" },
+	URGENT: { label: "Urgente", className: "bg-red-100 text-red-800 border-red-200" },
+	HIGH: { label: "Alta", className: "bg-orange-100 text-orange-800 border-orange-200" },
+	NORMAL: { label: "Normal", className: "bg-amber-100 text-amber-800 border-amber-200" },
+	LOW: { label: "Baixa", className: "bg-slate-100 text-slate-700 border-slate-200" },
 };
 
 export function PipelineList({

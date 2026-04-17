@@ -114,7 +114,11 @@ export default async function CrmPipelinePage({
 		currency: l.currency,
 		temperature: l.temperature,
 		priority: l.priority,
+		origin: l.origin,
 		stageId: l.stageId,
+		assignedTo: l.assignedTo,
+		createdAt: l.createdAt,
+		stageDates: l.stageDates,
 		contact: l.contact,
 	}));
 
@@ -133,6 +137,7 @@ export default async function CrmPipelinePage({
 		position: s.position,
 		isClosing: s.isClosing,
 		isWon: s.isWon,
+		maxDays: s.maxDays,
 	}));
 
 	const editableStages = pipelineData.stages.map((s) => ({
@@ -208,6 +213,7 @@ export default async function CrmPipelinePage({
 					pipelineId={pipelineData.id}
 					stages={stages}
 					initialLeads={leadsForUi}
+					members={members}
 				/>
 			)}
 		</PipelineShell>

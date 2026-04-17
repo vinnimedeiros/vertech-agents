@@ -15,7 +15,11 @@ import {
 	createLeadAction,
 } from "../lib/actions";
 import { LeadCard } from "./LeadCard";
-import type { KanbanLead, KanbanStage } from "./PipelineKanban";
+import type {
+	KanbanLead,
+	KanbanMember,
+	KanbanStage,
+} from "./PipelineKanban";
 
 type KanbanColumnProps = {
 	stage: KanbanStage;
@@ -24,6 +28,7 @@ type KanbanColumnProps = {
 	organizationId: string;
 	organizationSlug: string;
 	pipelineId: string;
+	members: KanbanMember[];
 };
 
 function formatPhoneBR(value: string): string {
@@ -35,6 +40,30 @@ function formatPhoneBR(value: string): string {
 	return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
+/**
+ * Aplica opacity hex a uma cor. Funciona com #RRGGBB; qualquer outro formato retorna como está.
+ * @param opacity 0 a 1
+ */
+function alpha(color: string, opacity: number): string {
+	if (!color.startsWith("#") || color.length !== 7) return color;
+	const a = Math.round(opacity * 255)
+		.toString(16)
+		.padStart(2, "0");
+	return `${color}${a}`;
+}
+
+function computeDaysInStage(
+	lead: KanbanLead,
+	stageId: string,
+): number {
+	const stageDate = lead.stageDates?.[stageId];
+	const entered = stageDate ? new Date(stageDate) : new Date(lead.createdAt);
+	return Math.max(
+		0,
+		Math.floor((Date.now() - entered.getTime()) / (1000 * 60 * 60 * 24)),
+	);
+}
+
 export function KanbanColumn({
 	stage,
 	leads,
@@ -42,6 +71,7 @@ export function KanbanColumn({
 	organizationId,
 	organizationSlug,
 	pipelineId,
+	members,
 }: KanbanColumnProps) {
 	const { setNodeRef, isOver } = useDroppable({
 		id: stage.id,
@@ -53,6 +83,8 @@ export function KanbanColumn({
 	const [phone, setPhone] = useState("");
 	const [isPending, startTransition] = useTransition();
 	const nameRef = useRef<HTMLInputElement>(null);
+
+	const memberMap = new Map(members.map((m) => [m.userId, m]));
 
 	function openForm() {
 		setCreating(true);
@@ -93,7 +125,6 @@ export function KanbanColumn({
 				);
 				setName("");
 				setPhone("");
-				// mantém o form aberto pra cadastro rápido em sequência
 				nameRef.current?.focus();
 			} catch (err) {
 				toast.error("Não foi possível criar o lead", {
@@ -104,113 +135,137 @@ export function KanbanColumn({
 		});
 	}
 
+	const bgColor = alpha(stage.color, 0.1);
+	const borderColor = alpha(stage.color, 0.25);
+	const hoverBgColor = alpha(stage.color, 0.15);
+
 	return (
-		<div className="flex w-72 shrink-0 flex-col gap-2">
-			<div className="flex items-center justify-between px-1">
-				<div className="flex items-center gap-2">
-					<span
-						className="size-2 rounded-full"
-						style={{ backgroundColor: stage.color }}
-					/>
-					<h3 className="font-semibold text-foreground/80 text-sm uppercase tracking-wide">
-						{stage.name}
-					</h3>
-				</div>
-				<span className="rounded-full bg-muted px-2 py-0.5 text-foreground/60 text-xs tabular-nums">
+		<div
+			ref={setNodeRef}
+			className={cn(
+				"flex w-72 shrink-0 flex-col gap-3 rounded-xl border p-3 transition-colors",
+			)}
+			style={{
+				backgroundColor: isOver ? hoverBgColor : bgColor,
+				borderColor: borderColor,
+			}}
+		>
+			{/* Header: bolinha + badge + count */}
+			<header className="flex items-center gap-2">
+				<span
+					className="size-2.5 shrink-0 rounded-full"
+					style={{ backgroundColor: stage.color }}
+				/>
+				<span
+					className="rounded px-2 py-0.5 font-semibold text-[11px] uppercase tracking-wider text-white"
+					style={{ backgroundColor: stage.color }}
+				>
+					{stage.name}
+				</span>
+				<span className="text-foreground/50 text-sm tabular-nums">
 					{leads.length}
 				</span>
-			</div>
+			</header>
 
-			<div
-				ref={setNodeRef}
-				className={cn(
-					"flex min-h-[400px] flex-col gap-2 rounded-lg border border-dashed p-2 transition-colors",
-					isOver
-						? "border-primary/50 bg-primary/5"
-						: "border-transparent bg-muted/30",
-				)}
-			>
-				{creating ? (
-					<div className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-card p-2 shadow-sm">
-						<Input
-							ref={nameRef}
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							onKeyDown={(e) => {
-								if (e.key === "Enter") {
-									e.preventDefault();
-									handleCreate();
-								}
-								if (e.key === "Escape") closeForm();
-							}}
-							placeholder="Nome do contato"
-							className="h-7 text-xs"
+			{/* Adicionar novo lead (link com cor da etapa) */}
+			{creating ? (
+				<div className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-card p-2 shadow-sm">
+					<Input
+						ref={nameRef}
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								handleCreate();
+							}
+							if (e.key === "Escape") closeForm();
+						}}
+						placeholder="Nome do contato"
+						className="h-7 text-xs"
+						disabled={isPending}
+					/>
+					<Input
+						value={phone}
+						onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								handleCreate();
+							}
+							if (e.key === "Escape") closeForm();
+						}}
+						placeholder="Telefone (opcional)"
+						className="h-7 text-xs"
+						inputMode="tel"
+						disabled={isPending}
+					/>
+					<div className="flex items-center justify-between gap-1 pt-0.5">
+						<button
+							type="button"
+							onClick={closeForm}
 							disabled={isPending}
-						/>
-						<Input
-							value={phone}
-							onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
-							onKeyDown={(e) => {
-								if (e.key === "Enter") {
-									e.preventDefault();
-									handleCreate();
-								}
-								if (e.key === "Escape") closeForm();
-							}}
-							placeholder="Telefone (opcional)"
-							className="h-7 text-xs"
-							inputMode="tel"
-							disabled={isPending}
-						/>
-						<div className="flex items-center justify-between gap-1 pt-0.5">
-							<button
-								type="button"
-								onClick={closeForm}
-								disabled={isPending}
-								className="rounded px-1.5 py-0.5 text-[11px] text-foreground/60 hover:bg-muted hover:text-foreground"
-							>
-								Cancelar
-							</button>
-							<button
-								type="button"
-								onClick={handleCreate}
-								disabled={isPending || !name.trim()}
-								className="flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-							>
-								{isPending ? (
-									<Loader2Icon className="size-3 animate-spin" />
-								) : null}
-								Adicionar
-							</button>
-						</div>
+							className="rounded px-1.5 py-0.5 text-[11px] text-foreground/60 hover:bg-muted hover:text-foreground"
+						>
+							Cancelar
+						</button>
+						<button
+							type="button"
+							onClick={handleCreate}
+							disabled={isPending || !name.trim()}
+							className="flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+						>
+							{isPending ? (
+								<Loader2Icon className="size-3 animate-spin" />
+							) : null}
+							Adicionar
+						</button>
 					</div>
-				) : (
-					<button
-						type="button"
-						onClick={openForm}
-						className={cn(
-							"flex items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[11px] text-foreground/50 transition-colors",
-							"hover:bg-muted hover:text-foreground",
-						)}
-					>
-						<PlusIcon className="size-3" />
-						Novo lead
-					</button>
-				)}
-
-				<SortableContext
-					items={leads.map((l) => l.id)}
-					strategy={verticalListSortingStrategy}
+				</div>
+			) : (
+				<button
+					type="button"
+					onClick={openForm}
+					className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-background/40"
+					style={{ color: stage.color }}
 				>
-					{leads.map((lead) => (
-						<LeadCard
-							key={lead.id}
-							lead={lead}
-							onOpen={onCardOpen ? () => onCardOpen(lead.id) : undefined}
-						/>
-					))}
-				</SortableContext>
-			</div>
+					<PlusIcon className="size-4" />
+					Adicionar novo lead
+				</button>
+			)}
+
+			{/* Cards */}
+			<SortableContext
+				items={leads.map((l) => l.id)}
+				strategy={verticalListSortingStrategy}
+			>
+				<div className="flex flex-col gap-2">
+					{leads.map((lead) => {
+						const days = computeDaysInStage(lead, stage.id);
+						const isStagnant =
+							stage.maxDays != null &&
+							stage.maxDays > 0 &&
+							days > stage.maxDays;
+						const responsible = lead.assignedTo
+							? memberMap.get(lead.assignedTo)
+							: null;
+						return (
+							<LeadCard
+								key={lead.id}
+								lead={lead}
+								stageColor={stage.color}
+								onOpen={onCardOpen ? () => onCardOpen(lead.id) : undefined}
+								daysInStage={days}
+								isStagnant={isStagnant}
+								responsibleName={
+									responsible?.name ?? responsible?.email ?? null
+								}
+								responsibleImage={responsible?.image ?? null}
+							/>
+						);
+					})}
+				</div>
+			</SortableContext>
 		</div>
 	);
 }

@@ -477,6 +477,9 @@ importers:
       next:
         specifier: 15.3.3
         version: 15.3.3(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
     devDependencies:
       '@biomejs/biome':
         specifier: 1.9.4
@@ -684,6 +687,13 @@ importers:
         version: 22.15.30
 
   packages/utils:
+    dependencies:
+      '@repo/database':
+        specifier: workspace:*
+        version: link:../database
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
     devDependencies:
       '@biomejs/biome':
         specifier: 1.9.4

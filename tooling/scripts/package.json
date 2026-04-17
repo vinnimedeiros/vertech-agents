@@ -15,7 +15,9 @@
 	"name": "@repo/scripts",
 	"private": true,
 	"scripts": {
-		"create:user": "dotenv -c -e ../../.env -- tsx ./src/create-user.ts",
+		"create:user": "dotenv -c -e ../../.env.local -- tsx ./src/create-user.ts",
+		"bootstrap:superadmin": "dotenv -c -e ../../.env.local -- tsx ./src/bootstrap-superadmin.ts",
+		"seed:hierarchy": "dotenv -c -e ../../.env.local -- tsx ./src/seed-hierarchy.ts",
 		"type-check": "tsc --noEmit"
 	},
 	"version": "0.0.0"

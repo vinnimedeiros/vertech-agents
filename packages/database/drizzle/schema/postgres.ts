@@ -2,6 +2,7 @@ import { createId as cuid } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 import {
 	boolean,
+	index,
 	integer,
 	json,
 	pgEnum,
@@ -16,6 +17,20 @@ import {
 export const purchaseTypeEnum = pgEnum("PurchaseType", [
 	"SUBSCRIPTION",
 	"ONE_TIME",
+]);
+
+/**
+ * Hierarquia multi-tenant do Vertech Agents.
+ * - SUPERADMIN: raiz única da plataforma (parentOrganizationId = null)
+ * - MASTER: whitelabel — compra licença do SUPERADMIN, revende
+ * - AGENCY: revendedor sem marca própria (filho de MASTER ou direto de SUPERADMIN)
+ * - CLIENT: usuário final (filho de qualquer nível acima)
+ */
+export const organizationTypeEnum = pgEnum("OrganizationType", [
+	"SUPERADMIN",
+	"MASTER",
+	"AGENCY",
+	"CLIENT",
 ]);
 
 // Tables
@@ -132,9 +147,22 @@ export const organization = pgTable(
 		createdAt: timestamp("createdAt").notNull(),
 		metadata: text("metadata"),
 		paymentsCustomerId: text("paymentsCustomerId"),
+
+		// Multi-tenancy hierárquica (Vertech Agents — Phase 2)
+		organizationType: organizationTypeEnum("organizationType")
+			.notNull()
+			.default("CLIENT"),
+		parentOrganizationId: varchar("parentOrganizationId", { length: 255 }),
+		branding: json("branding").$type<Record<string, unknown>>().default({}),
+		features: json("features").$type<Record<string, boolean>>().default({}),
+		billing: json("billing").$type<Record<string, unknown>>().default({}),
 	},
 
-	(table) => [uniqueIndex("organization_slug_idx").on(table.slug)],
+	(table) => [
+		uniqueIndex("organization_slug_idx").on(table.slug),
+		index("organization_parent_idx").on(table.parentOrganizationId),
+		index("organization_type_idx").on(table.organizationType),
+	],
 );
 
 export const member = pgTable(
@@ -227,9 +255,21 @@ export const userRelations = relations(user, ({ many }) => ({
 	twoFactors: many(twoFactor),
 }));
 
-export const organizationRelations = relations(organization, ({ many }) => ({
-	members: many(member),
-	invitations: many(invitation),
-	purchases: many(purchase),
-	aiChats: many(aiChat),
-}));
+export const organizationRelations = relations(
+	organization,
+	({ many, one }) => ({
+		members: many(member),
+		invitations: many(invitation),
+		purchases: many(purchase),
+		aiChats: many(aiChat),
+		// Hierarquia self-referential
+		parent: one(organization, {
+			fields: [organization.parentOrganizationId],
+			references: [organization.id],
+			relationName: "OrganizationHierarchy",
+		}),
+		children: many(organization, {
+			relationName: "OrganizationHierarchy",
+		}),
+	}),
+);

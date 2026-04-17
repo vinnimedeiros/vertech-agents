@@ -1,12 +1,24 @@
-import { getActiveOrganization } from "@saas/auth/lib/server";
+import { getActiveOrganization, getSession } from "@saas/auth/lib/server";
 import { PipelineDashboard } from "@saas/crm/components/PipelineDashboard";
 import { PipelineKanban } from "@saas/crm/components/PipelineKanban";
-import { PipelineToolbar } from "@saas/crm/components/PipelineToolbar";
+import { PipelineList } from "@saas/crm/components/PipelineList";
+import { PipelineShell } from "@saas/crm/components/PipelineShell";
+import {
+	filterLeads,
+	sortLeads,
+} from "@saas/crm/lib/filter-leads";
 import {
 	getPipelineWithStages,
 	listLeadsByPipeline,
+	listOrgMembers,
+	listPipelineViewsForUser,
 	listPipelinesWithStats,
 } from "@saas/crm/lib/server";
+import { type ViewState } from "@saas/crm/lib/view-filters";
+import {
+	paramsFromRecord,
+	readCurrentStateFromParams,
+} from "@saas/crm/lib/view-params";
 import { ComingSoon } from "@saas/shared/components/ComingSoon";
 import { KanbanSquareIcon } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -16,13 +28,20 @@ export default async function CrmPipelinePage({
 	searchParams,
 }: {
 	params: Promise<{ organizationSlug: string }>;
-	searchParams: Promise<{ view?: string; pipelineId?: string }>;
+	searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
 	const { organizationSlug } = await params;
-	const { view, pipelineId: queryPipelineId } = await searchParams;
+	const rawParams = await searchParams;
+	const sp = paramsFromRecord(rawParams);
+	const queryPipelineId = sp.get("pipelineId");
+	const queryViewId = sp.get("viewId");
 
-	const org = await getActiveOrganization(organizationSlug);
+	const [org, session] = await Promise.all([
+		getActiveOrganization(organizationSlug),
+		getSession(),
+	]);
 	if (!org) return notFound();
+	if (!session?.user) return notFound();
 
 	const pipelines = await listPipelinesWithStats(org.id);
 
@@ -36,17 +55,59 @@ export default async function CrmPipelinePage({
 		);
 	}
 
-	// Resolver pipeline ativo: query param → default → primeiro
 	const resolvedPipeline =
 		(queryPipelineId && pipelines.find((p) => p.id === queryPipelineId)) ||
 		pipelines.find((p) => p.isDefault) ||
 		pipelines[0];
 
-	const pipelineData = await getPipelineWithStages(resolvedPipeline.id);
+	const [pipelineData, views, members] = await Promise.all([
+		getPipelineWithStages(resolvedPipeline.id),
+		listPipelineViewsForUser(resolvedPipeline.id, session.user.id),
+		listOrgMembers(org.id),
+	]);
 	if (!pipelineData) return notFound();
 
+	const activeView = queryViewId
+		? views.find((v) => v.id === queryViewId) ?? null
+		: views.find((v) => v.isDefault) ?? null;
+
+	const baseState: ViewState | null = activeView
+		? {
+				filters: activeView.filters,
+				viewMode: activeView.viewMode,
+				sortBy: activeView.sortBy,
+			}
+		: null;
+
+	const currentState: ViewState = readCurrentStateFromParams(
+		sp,
+		baseState ?? undefined,
+	);
+
 	const leadsRaw = await listLeadsByPipeline(pipelineData.id);
-	const leads = leadsRaw.map((l) => ({
+	const stagesById: Record<
+		string,
+		{ id: string; isClosing: boolean; maxDays: number | null }
+	> = {};
+	for (const s of pipelineData.stages) {
+		stagesById[s.id] = {
+			id: s.id,
+			isClosing: s.isClosing,
+			maxDays: s.maxDays,
+		};
+	}
+
+	const normalizedLeads = leadsRaw.map((l) => ({
+		...l,
+		stageDates: (l.stageDates ?? null) as Record<string, string> | null,
+	}));
+
+	const filteredLeads = sortLeads(
+		filterLeads(normalizedLeads, currentState.filters, stagesById),
+		currentState.sortBy,
+	);
+
+	const leadsForUi = filteredLeads.map((l) => ({
 		id: l.id,
 		title: l.title,
 		value: l.value,
@@ -57,9 +118,11 @@ export default async function CrmPipelinePage({
 		contact: l.contact,
 	}));
 
-	// Lead count por stage pra usar no StageEditorModal (migration flow)
+	const allLeadsCount = leadsRaw.length;
+	const visibleLeadsCount = filteredLeads.length;
+
 	const leadCountByStage: Record<string, number> = {};
-	for (const l of leads) {
+	for (const l of leadsForUi) {
 		leadCountByStage[l.stageId] = (leadCountByStage[l.stageId] ?? 0) + 1;
 	}
 
@@ -91,31 +154,62 @@ export default async function CrmPipelinePage({
 	}));
 
 	const basePath = `/app/${organizationSlug}/crm/pipeline`;
-	const showDashboard = view === "dashboard";
 
 	return (
-		<>
-			<PipelineToolbar
-				organizationId={org.id}
-				organizationSlug={organizationSlug}
-				pipelineId={pipelineData.id}
-				pipelineName={pipelineData.name}
-				pipelines={pipelineOptions}
-				stages={editableStages}
-				leadCountByStage={leadCountByStage}
-				basePath={basePath}
-			/>
-			{showDashboard ? (
-				<PipelineDashboard stages={stages} leads={leads} />
+		<PipelineShell
+			organizationId={org.id}
+			organizationSlug={organizationSlug}
+			pipelineId={pipelineData.id}
+			pipelineName={pipelineData.name}
+			pipelines={pipelineOptions}
+			stages={editableStages}
+			leadCountByStage={leadCountByStage}
+			basePath={basePath}
+			views={views}
+			activeViewId={activeView?.id ?? null}
+			currentState={currentState}
+			baseState={baseState}
+			members={members}
+			totalLeads={allLeadsCount}
+			visibleLeads={visibleLeadsCount}
+		>
+			{currentState.viewMode === "dashboard" ? (
+				<PipelineDashboard stages={stages} leads={leadsForUi} />
+			) : currentState.viewMode === "list" ? (
+				<PipelineList
+					leads={filteredLeads.map((l) => ({
+						id: l.id,
+						title: l.title,
+						value: l.value,
+						currency: l.currency,
+						priority: l.priority,
+						temperature: l.temperature,
+						stageId: l.stageId,
+						assignedTo: l.assignedTo,
+						createdAt: l.createdAt,
+						stageDates: l.stageDates,
+						contact: l.contact,
+					}))}
+					stages={pipelineData.stages.map((s) => ({
+						id: s.id,
+						name: s.name,
+						color: s.color,
+						maxDays: s.maxDays,
+					}))}
+					members={members}
+					baseState={baseState}
+					basePath={basePath}
+					organizationSlug={organizationSlug}
+				/>
 			) : (
 				<PipelineKanban
 					organizationId={org.id}
 					organizationSlug={organizationSlug}
 					pipelineId={pipelineData.id}
 					stages={stages}
-					initialLeads={leads}
+					initialLeads={leadsForUi}
 				/>
 			)}
-		</>
+		</PipelineShell>
 	);
 }

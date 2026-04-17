@@ -29,6 +29,20 @@
       "when": 1776452447366,
       "tag": "0003_messy_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776456950822,
+      "tag": "0004_serious_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1776457153853,
+      "tag": "0005_loose_mariko_yashida",
+      "breakpoints": true
     }
   ]
 }

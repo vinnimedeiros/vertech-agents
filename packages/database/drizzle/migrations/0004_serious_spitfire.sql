@@ -1,0 +1,1 @@
+ALTER TABLE "pipeline_view" ADD COLUMN "isShared" boolean DEFAULT false NOT NULL;

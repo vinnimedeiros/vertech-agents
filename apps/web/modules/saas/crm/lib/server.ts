@@ -8,12 +8,17 @@ import {
 	eq,
 	lead,
 	leadActivity,
+	member,
+	or,
 	pipeline,
 	pipelineStage,
+	pipelineView,
 	proposal,
 	sql,
+	user,
 } from "@repo/database";
 import { cache } from "react";
+import type { SortKey, ViewFiltersState, ViewMode } from "./view-filters";
 
 // ============================================================
 // Pipelines
@@ -168,6 +173,7 @@ export const listLeadsByPipeline = cache(async (pipelineId: string) => {
 			origin: lead.origin,
 			stageId: lead.stageId,
 			assignedTo: lead.assignedTo,
+			stageDates: lead.stageDates,
 			createdAt: lead.createdAt,
 			updatedAt: lead.updatedAt,
 			closedAt: lead.closedAt,
@@ -251,3 +257,85 @@ export const listActivitiesByLead = cache(async (leadId: string) => {
 		.where(eq(leadActivity.leadId, leadId))
 		.orderBy(desc(leadActivity.createdAt));
 });
+
+// ============================================================
+// Org Members (pra filtro de assignee na Phase 04E.3+04E.4)
+// ============================================================
+
+export type OrgMemberOption = {
+	userId: string;
+	name: string | null;
+	email: string | null;
+	image: string | null;
+};
+
+export const listOrgMembers = cache(
+	async (organizationId: string): Promise<OrgMemberOption[]> => {
+		const rows = await db
+			.select({
+				userId: user.id,
+				name: user.name,
+				email: user.email,
+				image: user.image,
+			})
+			.from(member)
+			.innerJoin(user, eq(member.userId, user.id))
+			.where(eq(member.organizationId, organizationId))
+			.orderBy(asc(user.name));
+		return rows;
+	},
+);
+
+// ============================================================
+// Pipeline Views (Phase 04E.3)
+// ============================================================
+
+export type PipelineViewRow = {
+	id: string;
+	pipelineId: string;
+	name: string;
+	filters: ViewFiltersState;
+	viewMode: ViewMode;
+	sortBy: SortKey;
+	isDefault: boolean;
+	isShared: boolean;
+	position: number;
+	createdBy: string | null;
+	isMine: boolean;
+};
+
+/**
+ * Lista visões do pipeline visíveis pro usuário: as dele + as compartilhadas.
+ * Ordena por position asc, depois createdAt asc.
+ */
+export const listPipelineViewsForUser = cache(
+	async (pipelineId: string, userId: string): Promise<PipelineViewRow[]> => {
+		const rows = await db
+			.select()
+			.from(pipelineView)
+			.where(
+				and(
+					eq(pipelineView.pipelineId, pipelineId),
+					or(
+						eq(pipelineView.createdBy, userId),
+						eq(pipelineView.isShared, true),
+					),
+				),
+			)
+			.orderBy(asc(pipelineView.position), asc(pipelineView.createdAt));
+
+		return rows.map((r) => ({
+			id: r.id,
+			pipelineId: r.pipelineId,
+			name: r.name,
+			filters: (r.filters ?? {}) as ViewFiltersState,
+			viewMode: r.viewMode,
+			sortBy: r.sortBy,
+			isDefault: r.isDefault,
+			isShared: r.isShared,
+			position: r.position,
+			createdBy: r.createdBy,
+			isMine: r.createdBy === userId,
+		}));
+	},
+);

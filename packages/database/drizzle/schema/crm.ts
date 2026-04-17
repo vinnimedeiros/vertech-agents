@@ -352,6 +352,7 @@ export const pipelineViewSortEnum = pgEnum("PipelineViewSort", [
 	"date",
 	"name",
 	"value",
+	"daysInStage",
 ]);
 
 export const pipelineView = pgTable(
@@ -374,6 +375,7 @@ export const pipelineView = pgTable(
 		viewMode: pipelineViewModeEnum("viewMode").notNull().default("kanban"),
 		sortBy: pipelineViewSortEnum("sortBy").notNull().default("none"),
 		isDefault: boolean("isDefault").notNull().default(false),
+		isShared: boolean("isShared").notNull().default(false),
 		position: integer("position").notNull().default(0),
 		createdBy: text("createdBy").references(() => user.id, {
 			onDelete: "set null",

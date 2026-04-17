@@ -1,0 +1,1 @@
+ALTER TYPE "public"."PipelineViewSort" ADD VALUE 'daysInStage';

@@ -72,6 +72,34 @@ export type PipelineStageReorderedEvent = {
 };
 
 // ============================================================
+// Pipeline View events (Phase 04E.3)
+// ============================================================
+
+export type PipelineViewCreatedEvent = {
+	type: "pipeline.view.created";
+	payload: { viewId: string; pipelineId: string; name: string };
+	meta: EventMeta;
+};
+
+export type PipelineViewUpdatedEvent = {
+	type: "pipeline.view.updated";
+	payload: { viewId: string; changes: Record<string, unknown> };
+	meta: EventMeta;
+};
+
+export type PipelineViewDeletedEvent = {
+	type: "pipeline.view.deleted";
+	payload: { viewId: string; pipelineId: string };
+	meta: EventMeta;
+};
+
+export type PipelineViewDefaultChangedEvent = {
+	type: "pipeline.view.default_changed";
+	payload: { viewId: string; pipelineId: string };
+	meta: EventMeta;
+};
+
+// ============================================================
 // Lead events
 // ============================================================
 
@@ -162,6 +190,10 @@ export type DomainEvent =
 	| PipelineStageUpdatedEvent
 	| PipelineStageDeletedEvent
 	| PipelineStageReorderedEvent
+	| PipelineViewCreatedEvent
+	| PipelineViewUpdatedEvent
+	| PipelineViewDeletedEvent
+	| PipelineViewDefaultChangedEvent
 	| LeadCreatedEvent
 	| LeadUpdatedEvent
 	| LeadStageChangedEvent

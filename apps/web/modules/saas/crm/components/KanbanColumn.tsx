@@ -184,7 +184,19 @@ export function KanbanColumn({
 							</button>
 						</div>
 					</div>
-				) : null}
+				) : (
+					<button
+						type="button"
+						onClick={openForm}
+						className={cn(
+							"flex items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[11px] text-foreground/50 transition-colors",
+							"hover:bg-muted hover:text-foreground",
+						)}
+					>
+						<PlusIcon className="size-3" />
+						Novo lead
+					</button>
+				)}
 
 				<SortableContext
 					items={leads.map((l) => l.id)}
@@ -198,20 +210,6 @@ export function KanbanColumn({
 						/>
 					))}
 				</SortableContext>
-
-				{!creating ? (
-					<button
-						type="button"
-						onClick={openForm}
-						className={cn(
-							"mt-auto flex items-center justify-center gap-1 rounded-md px-2 py-1.5 text-[11px] text-foreground/50 transition-colors",
-							"hover:bg-muted hover:text-foreground",
-						)}
-					>
-						<PlusIcon className="size-3" />
-						Novo lead
-					</button>
-				) : null}
 			</div>
 		</div>
 	);

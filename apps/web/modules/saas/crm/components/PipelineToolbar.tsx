@@ -61,7 +61,7 @@ export function PipelineToolbar({
 				</Button>
 			</div>
 
-			<div className="h-px w-full bg-border/60" />
+			<div className="-mx-4 md:-mx-6 h-0.5 bg-border/80" />
 
 			<StageEditorModal
 				open={stageEditorOpen}

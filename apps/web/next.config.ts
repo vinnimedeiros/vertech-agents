@@ -5,7 +5,12 @@ import nextIntlPlugin from "next-intl/plugin";
 const withNextIntl = nextIntlPlugin("./modules/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-	transpilePackages: ["@repo/api", "@repo/auth", "@repo/database", "@repo/utils"],
+	transpilePackages: [
+		"@repo/api",
+		"@repo/auth",
+		"@repo/database",
+		"@repo/utils",
+	],
 	images: {
 		remotePatterns: [
 			{
@@ -39,7 +44,7 @@ const nextConfig: NextConfig = {
 			},
 		];
 	},
-webpack: (config, { webpack }) => {
+	webpack: (config, { webpack }) => {
 		config.plugins.push(
 			new webpack.IgnorePlugin({
 				resourceRegExp: /^pg-native$|^cloudflare:sockets$/,

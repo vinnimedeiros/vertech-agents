@@ -2,19 +2,19 @@
 
 import { requireOrgAccess } from "@repo/auth";
 import {
-	and,
 	contact,
 	db,
+	desc,
 	eq,
 	lead,
 	leadActivity,
 	pipeline,
 	pipelineStage,
+	proposal,
 } from "@repo/database";
-import { headers } from "next/headers";
+import { getSession } from "@saas/auth/lib/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getSession } from "@saas/auth/lib/server";
 
 // ============================================================
 // Schemas
@@ -73,6 +73,24 @@ const moveLeadSchema = z.object({
 	toStageId: z.string().min(1),
 });
 
+const createProposalSchema = z.object({
+	organizationId: z.string().min(1),
+	leadId: z.string().optional().nullable(),
+	title: z.string().trim().min(1, "Título é obrigatório"),
+	text: z.string().trim().optional().nullable(),
+	totalValue: z.number().nonnegative().optional().nullable(),
+	status: z.enum(["DRAFT", "SENT", "ACCEPTED", "REJECTED"]).default("DRAFT"),
+});
+
+const updateProposalSchema = z.object({
+	id: z.string().min(1),
+	title: z.string().trim().min(1).optional(),
+	text: z.string().trim().nullable().optional(),
+	totalValue: z.number().nonnegative().nullable().optional(),
+	status: z.enum(["DRAFT", "SENT", "ACCEPTED", "REJECTED"]).optional(),
+	leadId: z.string().nullable().optional(),
+});
+
 const logActivitySchema = z.object({
 	leadId: z.string().min(1),
 	type: z.enum([
@@ -117,17 +135,13 @@ async function assertLeadAccess(userId: string, leadId: string) {
 	return row.organizationId;
 }
 
-function orgSlugFromPath(): string | null {
-	// Server actions cannot easily read the active org slug; callers should
-	// trigger revalidatePath themselves. This helper stays a no-op placeholder.
-	return null;
-}
-
 function revalidateCrm(organizationSlug?: string | null) {
 	// Revalida as rotas de CRM da org ativa.
 	if (organizationSlug) {
 		revalidatePath(`/app/${organizationSlug}/crm/pipeline`, "page");
 		revalidatePath(`/app/${organizationSlug}/crm/leads`, "page");
+		revalidatePath(`/app/${organizationSlug}/crm/clientes`, "page");
+		revalidatePath(`/app/${organizationSlug}/crm/propostas`, "page");
 	}
 }
 
@@ -373,6 +387,38 @@ export async function deleteLeadAction(
 }
 
 // ============================================================
+// Lead details (for drawer)
+// ============================================================
+
+export async function getLeadDetailsAction(leadId: string) {
+	const user = await requireAuthed();
+	await assertLeadAccess(user.id, leadId);
+
+	const [row] = await db
+		.select()
+		.from(lead)
+		.innerJoin(contact, eq(lead.contactId, contact.id))
+		.where(eq(lead.id, leadId))
+		.limit(1);
+
+	if (!row) {
+		throw new Error("LEAD_NOT_FOUND");
+	}
+
+	const activities = await db
+		.select()
+		.from(leadActivity)
+		.where(eq(leadActivity.leadId, leadId))
+		.orderBy(desc(leadActivity.createdAt));
+
+	return {
+		lead: row.lead,
+		contact: row.contact,
+		activities,
+	};
+}
+
+// ============================================================
 // Activities
 // ============================================================
 
@@ -399,4 +445,94 @@ export async function logActivityAction(
 
 	revalidateCrm(organizationSlug);
 	return created;
+}
+
+// ============================================================
+// Proposals
+// ============================================================
+
+export async function createProposalAction(
+	input: z.input<typeof createProposalSchema>,
+	organizationSlug?: string,
+) {
+	const user = await requireAuthed();
+	const data = createProposalSchema.parse(input);
+	await requireOrgAccess(user.id, data.organizationId);
+
+	if (data.leadId) {
+		const [leadRow] = await db
+			.select({ organizationId: lead.organizationId })
+			.from(lead)
+			.where(eq(lead.id, data.leadId))
+			.limit(1);
+		if (!leadRow || leadRow.organizationId !== data.organizationId) {
+			throw new Error("LEAD_INVALID");
+		}
+	}
+
+	const now = new Date();
+	const [created] = await db
+		.insert(proposal)
+		.values({
+			organizationId: data.organizationId,
+			leadId: data.leadId ?? null,
+			title: data.title,
+			content: { text: data.text ?? "" },
+			totalValue:
+				data.totalValue != null ? String(data.totalValue) : null,
+			status: data.status,
+			createdAt: now,
+			updatedAt: now,
+		})
+		.returning();
+
+	revalidateCrm(organizationSlug);
+	return created;
+}
+
+async function assertProposalAccess(userId: string, proposalId: string) {
+	const [row] = await db
+		.select({ organizationId: proposal.organizationId })
+		.from(proposal)
+		.where(eq(proposal.id, proposalId))
+		.limit(1);
+
+	if (!row) {
+		throw new Error("PROPOSAL_NOT_FOUND");
+	}
+	await requireOrgAccess(userId, row.organizationId);
+	return row.organizationId;
+}
+
+export async function updateProposalAction(
+	input: z.input<typeof updateProposalSchema>,
+	organizationSlug?: string,
+) {
+	const user = await requireAuthed();
+	const data = updateProposalSchema.parse(input);
+	await assertProposalAccess(user.id, data.id);
+
+	const { id, text, totalValue, ...rest } = data;
+	const updateSet: Record<string, unknown> = {
+		...rest,
+		updatedAt: new Date(),
+	};
+	if (text !== undefined) updateSet.content = { text: text ?? "" };
+	if (totalValue !== undefined) {
+		updateSet.totalValue = totalValue != null ? String(totalValue) : null;
+	}
+	if (rest.status === "SENT") updateSet.sentAt = new Date();
+
+	await db.update(proposal).set(updateSet).where(eq(proposal.id, id));
+	revalidateCrm(organizationSlug);
+}
+
+export async function deleteProposalAction(
+	proposalId: string,
+	organizationSlug?: string,
+) {
+	const user = await requireAuthed();
+	await assertProposalAccess(user.id, proposalId);
+	await db.delete(proposal).where(eq(proposal.id, proposalId));
+	revalidateCrm(organizationSlug);
 }

@@ -1,18 +1,87 @@
+import { getActiveOrganization } from "@saas/auth/lib/server";
+import { LeadsTable } from "@saas/crm/components/LeadsTable";
+import { NewLeadDialog } from "@saas/crm/components/NewLeadDialog";
+import {
+	getDefaultPipelineWithStages,
+	listLeadsForOrg,
+} from "@saas/crm/lib/server";
 import { ComingSoon } from "@saas/shared/components/ComingSoon";
 import { PageHeader } from "@saas/shared/components/PageHeader";
 import { UsersIcon } from "lucide-react";
+import { notFound } from "next/navigation";
 
-export default function CrmLeadsPage() {
+export default async function CrmLeadsPage({
+	params,
+}: {
+	params: Promise<{ organizationSlug: string }>;
+}) {
+	const { organizationSlug } = await params;
+	const org = await getActiveOrganization(organizationSlug);
+	if (!org) return notFound();
+
+	const pipelineData = await getDefaultPipelineWithStages(org.id);
+	if (!pipelineData) {
+		return (
+			<>
+				<PageHeader
+					title="Leads"
+					subtitle="Lista e detalhe de todos os contatos em prospecção"
+				/>
+				<ComingSoon
+					icon={UsersIcon}
+					title="Pipeline não configurado"
+					description="Este workspace ainda não tem um pipeline padrão."
+				/>
+			</>
+		);
+	}
+
+	const leadsRaw = await listLeadsForOrg(org.id);
+	const leads = leadsRaw.map((l) => ({
+		id: l.id,
+		title: l.title,
+		value: l.value,
+		currency: l.currency,
+		temperature: l.temperature,
+		priority: l.priority,
+		stageId: l.stageId,
+		updatedAt: l.updatedAt,
+		createdAt: l.createdAt,
+		closedAt: l.closedAt,
+		contact: l.contact,
+		stage: l.stage,
+	}));
+
+	const stages = pipelineData.stages.map((s) => ({
+		id: s.id,
+		name: s.name,
+		color: s.color,
+		isClosing: s.isClosing,
+		isWon: s.isWon,
+	}));
+
 	return (
 		<>
 			<PageHeader
 				title="Leads"
-				subtitle="Lista e detalhe de todos os contatos em prospecção"
-			/>
-			<ComingSoon
-				icon={UsersIcon}
-				title="Leads em breve"
-				description="Visualize todos os leads em uma tabela filtrável, com timeline de atividades e drawer de detalhes completo."
+				subtitle="Lista completa com filtros e timeline"
+			>
+				<NewLeadDialog
+					organizationId={org.id}
+					organizationSlug={organizationSlug}
+					pipelineId={pipelineData.id}
+					stages={pipelineData.stages.map((s) => ({
+						id: s.id,
+						name: s.name,
+						isClosing: s.isClosing,
+						position: s.position,
+					}))}
+				/>
+			</PageHeader>
+			<LeadsTable
+				organizationSlug={organizationSlug}
+				leads={leads}
+				stages={stages}
 			/>
 		</>
 	);

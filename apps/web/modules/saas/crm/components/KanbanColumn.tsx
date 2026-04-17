@@ -12,9 +12,10 @@ import type { KanbanLead, KanbanStage } from "./PipelineKanban";
 type KanbanColumnProps = {
 	stage: KanbanStage;
 	leads: KanbanLead[];
+	onCardOpen?: (leadId: string) => void;
 };
 
-export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
+export function KanbanColumn({ stage, leads, onCardOpen }: KanbanColumnProps) {
 	const { setNodeRef, isOver } = useDroppable({
 		id: stage.id,
 		data: { type: "column", stageId: stage.id },
@@ -51,7 +52,15 @@ export function KanbanColumn({ stage, leads }: KanbanColumnProps) {
 					strategy={verticalListSortingStrategy}
 				>
 					{leads.map((lead) => (
-						<LeadCard key={lead.id} lead={lead} />
+						<LeadCard
+							key={lead.id}
+							lead={lead}
+							onOpen={
+								onCardOpen
+									? () => onCardOpen(lead.id)
+									: undefined
+							}
+						/>
 					))}
 				</SortableContext>
 

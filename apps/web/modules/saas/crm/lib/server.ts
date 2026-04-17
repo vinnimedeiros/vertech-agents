@@ -10,6 +10,7 @@ import {
 	leadActivity,
 	pipeline,
 	pipelineStage,
+	proposal,
 } from "@repo/database";
 import { cache } from "react";
 
@@ -76,6 +77,46 @@ export const getPipelineWithStages = cache(async (pipelineId: string) => {
 // Leads
 // ============================================================
 
+export const listLeadsForOrg = cache(async (organizationId: string) => {
+	return db
+		.select({
+			id: lead.id,
+			title: lead.title,
+			description: lead.description,
+			value: lead.value,
+			currency: lead.currency,
+			temperature: lead.temperature,
+			priority: lead.priority,
+			origin: lead.origin,
+			assignedTo: lead.assignedTo,
+			stageId: lead.stageId,
+			pipelineId: lead.pipelineId,
+			createdAt: lead.createdAt,
+			updatedAt: lead.updatedAt,
+			closedAt: lead.closedAt,
+			contact: {
+				id: contact.id,
+				name: contact.name,
+				phone: contact.phone,
+				email: contact.email,
+				company: contact.company,
+				photoUrl: contact.photoUrl,
+			},
+			stage: {
+				id: pipelineStage.id,
+				name: pipelineStage.name,
+				color: pipelineStage.color,
+				isClosing: pipelineStage.isClosing,
+				isWon: pipelineStage.isWon,
+			},
+		})
+		.from(lead)
+		.innerJoin(contact, eq(lead.contactId, contact.id))
+		.innerJoin(pipelineStage, eq(lead.stageId, pipelineStage.id))
+		.where(eq(lead.organizationId, organizationId))
+		.orderBy(desc(lead.updatedAt));
+});
+
 export const listLeadsByPipeline = cache(async (pipelineId: string) => {
 	return db
 		.select({
@@ -133,6 +174,37 @@ export const listContactsByOrg = cache(async (organizationId: string) => {
 // ============================================================
 // Activities
 // ============================================================
+
+// ============================================================
+// Proposals
+// ============================================================
+
+export const listProposalsByOrg = cache(async (organizationId: string) => {
+	return db
+		.select({
+			id: proposal.id,
+			title: proposal.title,
+			totalValue: proposal.totalValue,
+			status: proposal.status,
+			leadId: proposal.leadId,
+			sentAt: proposal.sentAt,
+			createdAt: proposal.createdAt,
+			updatedAt: proposal.updatedAt,
+			lead: {
+				id: lead.id,
+				title: lead.title,
+			},
+			contact: {
+				id: contact.id,
+				name: contact.name,
+			},
+		})
+		.from(proposal)
+		.leftJoin(lead, eq(proposal.leadId, lead.id))
+		.leftJoin(contact, eq(lead.contactId, contact.id))
+		.where(eq(proposal.organizationId, organizationId))
+		.orderBy(desc(proposal.updatedAt));
+});
 
 export const listActivitiesByLead = cache(async (leadId: string) => {
 	return db

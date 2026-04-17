@@ -56,9 +56,10 @@ function formatCurrency(value: string | null, currency: string): string | null {
 type LeadCardProps = {
 	lead: KanbanLead;
 	isOverlay?: boolean;
+	onOpen?: () => void;
 };
 
-export function LeadCard({ lead, isOverlay = false }: LeadCardProps) {
+export function LeadCard({ lead, isOverlay = false, onOpen }: LeadCardProps) {
 	const {
 		attributes,
 		listeners,
@@ -86,6 +87,17 @@ export function LeadCard({ lead, isOverlay = false }: LeadCardProps) {
 			style={style}
 			{...attributes}
 			{...listeners}
+			onClick={() => {
+				if (!isDragging && !isOverlay) onOpen?.();
+			}}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					onOpen?.();
+				}
+			}}
+			role={onOpen ? "button" : undefined}
+			tabIndex={onOpen ? 0 : undefined}
 			className={cn(
 				"group cursor-grab touch-none rounded-md border border-l-4 bg-card p-3 shadow-sm transition-all active:cursor-grabbing",
 				PRIORITY_COLORS[lead.priority] ?? PRIORITY_COLORS.NORMAL,

@@ -9,11 +9,15 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
-import { moveLeadToStageAction } from "@saas/crm/lib/actions";
-import { toast } from "sonner";
+import { Button } from "@ui/components/button";
+import { PlusIcon } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
+import { toast } from "sonner";
+import { moveLeadToStageAction } from "../lib/actions";
 import { KanbanColumn } from "./KanbanColumn";
 import { LeadCard } from "./LeadCard";
+import { LeadDetailSheet } from "./LeadDetailSheet";
+import { NewLeadDialog } from "./NewLeadDialog";
 
 export type KanbanStage = {
 	id: string;
@@ -43,18 +47,24 @@ export type KanbanLead = {
 };
 
 type PipelineKanbanProps = {
+	organizationId: string;
 	organizationSlug: string;
+	pipelineId: string;
 	stages: KanbanStage[];
 	initialLeads: KanbanLead[];
 };
 
 export function PipelineKanban({
+	organizationId,
 	organizationSlug,
+	pipelineId,
 	stages,
 	initialLeads,
 }: PipelineKanbanProps) {
 	const [leads, setLeads] = useState<KanbanLead[]>(initialLeads);
 	const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
+	const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+	const [sheetOpen, setSheetOpen] = useState(false);
 	const [, startTransition] = useTransition();
 
 	const sensors = useSensors(
@@ -102,20 +112,23 @@ export function PipelineKanban({
 		}
 
 		if (!toStageId) return;
+		const targetStageId = toStageId;
 
 		const current = leads.find((l) => l.id === leadId);
-		if (!current || current.stageId === toStageId) return;
+		if (!current || current.stageId === targetStageId) return;
 
 		// Optimistic update
 		const previous = leads;
 		setLeads((prev) =>
-			prev.map((l) => (l.id === leadId ? { ...l, stageId: toStageId! } : l)),
+			prev.map((l) =>
+				l.id === leadId ? { ...l, stageId: targetStageId } : l,
+			),
 		);
 
 		startTransition(async () => {
 			try {
 				await moveLeadToStageAction(
-					{ leadId, toStageId: toStageId! },
+					{ leadId, toStageId: targetStageId },
 					organizationSlug,
 				);
 			} catch (err) {
@@ -128,25 +141,69 @@ export function PipelineKanban({
 		});
 	}
 
+	function handleCardOpen(leadId: string) {
+		setSelectedLeadId(leadId);
+		setSheetOpen(true);
+	}
+
 	return (
-		<DndContext
-			sensors={sensors}
-			onDragStart={handleDragStart}
-			onDragEnd={handleDragEnd}
-		>
-			<div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
-				{stages.map((stage) => (
-					<KanbanColumn
-						key={stage.id}
-						stage={stage}
-						leads={leadsByStage.get(stage.id) ?? []}
-					/>
-				))}
+		<>
+			<div className="mb-4 flex items-center justify-end">
+				<NewLeadDialog
+					organizationId={organizationId}
+					organizationSlug={organizationSlug}
+					pipelineId={pipelineId}
+					stages={stages.map((s) => ({
+						id: s.id,
+						name: s.name,
+						isClosing: s.isClosing,
+						position: s.position,
+					}))}
+					trigger={
+						<Button size="sm" variant="primary">
+							<PlusIcon className="size-4" />
+							Novo lead
+						</Button>
+					}
+				/>
 			</div>
 
-			<DragOverlay>
-				{activeLead ? <LeadCard lead={activeLead} isOverlay /> : null}
-			</DragOverlay>
-		</DndContext>
+			<DndContext
+				sensors={sensors}
+				onDragStart={handleDragStart}
+				onDragEnd={handleDragEnd}
+			>
+				<div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
+					{stages.map((stage) => (
+						<KanbanColumn
+							key={stage.id}
+							stage={stage}
+							leads={leadsByStage.get(stage.id) ?? []}
+							onCardOpen={handleCardOpen}
+						/>
+					))}
+				</div>
+
+				<DragOverlay>
+					{activeLead ? (
+						<LeadCard lead={activeLead} isOverlay />
+					) : null}
+				</DragOverlay>
+			</DndContext>
+
+			<LeadDetailSheet
+				open={sheetOpen}
+				onOpenChange={setSheetOpen}
+				leadId={selectedLeadId}
+				organizationSlug={organizationSlug}
+				stages={stages.map((s) => ({
+					id: s.id,
+					name: s.name,
+					color: s.color,
+					isClosing: s.isClosing,
+					isWon: s.isWon,
+				}))}
+			/>
+		</>
 	);
 }

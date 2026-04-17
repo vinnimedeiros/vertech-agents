@@ -11,6 +11,7 @@ import {
 	pipeline,
 	pipelineStage,
 	proposal,
+	sql,
 } from "@repo/database";
 import { cache } from "react";
 
@@ -24,6 +25,43 @@ export const listPipelinesByOrg = cache(async (organizationId: string) => {
 		.from(pipeline)
 		.where(eq(pipeline.organizationId, organizationId))
 		.orderBy(asc(pipeline.position), asc(pipeline.name));
+});
+
+/**
+ * Pipelines da org enriquecidos com contagem de leads + valor total.
+ * Usado pelo PipelineSelector no header do Kanban.
+ */
+export const listPipelinesWithStats = cache(async (organizationId: string) => {
+	const pipelines = await db
+		.select()
+		.from(pipeline)
+		.where(eq(pipeline.organizationId, organizationId))
+		.orderBy(asc(pipeline.position), asc(pipeline.name));
+
+	if (pipelines.length === 0) return [];
+
+	const leadsAgg = await db
+		.select({
+			pipelineId: lead.pipelineId,
+			count: sql<number>`count(*)::int`,
+			totalValue: sql<string>`coalesce(sum(${lead.value}), 0)::text`,
+		})
+		.from(lead)
+		.where(eq(lead.organizationId, organizationId))
+		.groupBy(lead.pipelineId);
+
+	const statsByPipeline = new Map(
+		leadsAgg.map((row) => [
+			row.pipelineId,
+			{ count: row.count, totalValue: row.totalValue },
+		]),
+	);
+
+	return pipelines.map((p) => ({
+		...p,
+		leadCount: statsByPipeline.get(p.id)?.count ?? 0,
+		totalValue: statsByPipeline.get(p.id)?.totalValue ?? "0",
+	}));
 });
 
 export const getDefaultPipelineWithStages = cache(

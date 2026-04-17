@@ -111,6 +111,9 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@repo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@repo/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n

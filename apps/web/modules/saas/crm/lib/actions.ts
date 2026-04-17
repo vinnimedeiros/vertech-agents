@@ -12,9 +12,13 @@ import {
 	pipelineStage,
 	proposal,
 } from "@repo/database";
+import { bus, startAuditMiddleware } from "@repo/events";
 import { getSession } from "@saas/auth/lib/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
+// Ensure audit middleware is attached once per process
+startAuditMiddleware();
 
 // ============================================================
 // Schemas
@@ -324,6 +328,7 @@ export async function moveLeadToStageAction(
 			organizationId: lead.organizationId,
 			pipelineId: lead.pipelineId,
 			stageId: lead.stageId,
+			stageDates: lead.stageDates,
 		})
 		.from(lead)
 		.where(eq(lead.id, leadId))
@@ -350,16 +355,23 @@ export async function moveLeadToStageAction(
 	}
 
 	const [fromStage] = await db
-		.select({ name: pipelineStage.name })
+		.select({ name: pipelineStage.name, category: pipelineStage.category })
 		.from(pipelineStage)
 		.where(eq(pipelineStage.id, current.stageId))
 		.limit(1);
 
 	const now = new Date();
+	// Registra timestamp de entrada no novo stage (preserva histórico existente)
+	const nextStageDates = {
+		...(current.stageDates ?? {}),
+		[toStageId]: now.toISOString(),
+	};
+
 	await db
 		.update(lead)
 		.set({
 			stageId: toStageId,
+			stageDates: nextStageDates,
 			closedAt: toStage.isClosing ? now : null,
 			updatedAt: now,
 		})
@@ -371,6 +383,23 @@ export async function moveLeadToStageAction(
 		title: `Estágio: ${fromStage?.name ?? "?"} → ${toStage.name}`,
 		createdBy: user.id,
 		createdAt: now,
+	});
+
+	bus.emitEvent({
+		type: "lead.stage.changed",
+		payload: {
+			leadId,
+			fromStageId: current.stageId,
+			toStageId,
+			fromCategory: fromStage?.category ?? "ACTIVE",
+			toCategory: toStage.category,
+		},
+		meta: {
+			orgId: current.organizationId,
+			actorType: "user",
+			actorId: user.id,
+			timestamp: now,
+		},
 	});
 
 	revalidateCrm(organizationSlug);

@@ -6,20 +6,19 @@ import { UserMenu } from "@saas/shared/components/UserMenu";
 import { Logo } from "@shared/components/Logo";
 import { cn } from "@ui/lib";
 import {
-	BotMessageSquareIcon,
+	BriefcaseBusinessIcon,
 	ChevronRightIcon,
 	HomeIcon,
 	SettingsIcon,
+	SparklesIcon,
 	UserCog2Icon,
 	UserCogIcon,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { OrganzationSelect } from "../../organizations/components/OrganizationSelect";
 
 export function NavBar() {
-	const t = useTranslations();
 	const pathname = usePathname();
 	const { user } = useSession();
 	const { activeOrganization } = useActiveOrganization();
@@ -32,23 +31,27 @@ export function NavBar() {
 
 	const menuItems = [
 		{
-			label: t("app.menu.start"),
+			label: "Início",
 			href: basePath,
 			icon: HomeIcon,
 			isActive: pathname === basePath,
 		},
-		{
-			label: t("app.menu.aiChatbot"),
-			href: activeOrganization
-				? `/app/${activeOrganization.slug}/chatbot`
-				: "/app/chatbot",
-			icon: BotMessageSquareIcon,
-			isActive: pathname.includes("/chatbot"),
-		},
 		...(activeOrganization
 			? [
 					{
-						label: t("app.menu.organizationSettings"),
+						label: "Comercial",
+						href: `${basePath}/crm/chat`,
+						icon: BriefcaseBusinessIcon,
+						isActive: pathname.startsWith(`${basePath}/crm`),
+					},
+					{
+						label: "Agentes",
+						href: `${basePath}/agents`,
+						icon: SparklesIcon,
+						isActive: pathname.startsWith(`${basePath}/agents`),
+					},
+					{
+						label: "Configurações",
 						href: `${basePath}/settings`,
 						icon: SettingsIcon,
 						isActive: pathname.startsWith(`${basePath}/settings/`),
@@ -56,7 +59,7 @@ export function NavBar() {
 				]
 			: []),
 		{
-			label: t("app.menu.accountSettings"),
+			label: "Minha conta",
 			href: "/app/settings",
 			icon: UserCog2Icon,
 			isActive: pathname.startsWith("/app/settings/"),
@@ -64,7 +67,7 @@ export function NavBar() {
 		...(user?.role === "admin"
 			? [
 					{
-						label: t("app.menu.admin"),
+						label: "Admin",
 						href: "/app/admin",
 						icon: UserCogIcon,
 						isActive: pathname.startsWith("/app/admin/"),

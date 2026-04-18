@@ -502,7 +502,7 @@ export function LeadModal({
 															)?.name ?? "—"}
 														</span>
 													</SelectTrigger>
-													<SelectContent>
+													<SelectContent withPortal={false}>
 														{sortedStages.map((s) => (
 															<SelectItem key={s.id} value={s.id}>
 																<span className="flex items-center gap-1.5">
@@ -825,12 +825,13 @@ function AssigneePicker({
 }) {
 	const current = value ? members.find((m) => m.userId === value) : null;
 
+	const [open, setOpen] = useState(false);
 	return (
-		<Popover>
+		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
 				<button
 					type="button"
-					className="flex items-center gap-2 rounded px-1.5 py-0.5 text-sm hover:bg-muted"
+					className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-0.5 text-sm hover:bg-muted"
 				>
 					{current ? (
 						<>
@@ -849,15 +850,19 @@ function AssigneePicker({
 					)}
 				</button>
 			</PopoverTrigger>
-			<PopoverContent align="start" className="w-56 p-1">
+			<PopoverContent align="start" className="w-56 p-1" withPortal={false}>
 				<div className="max-h-60 space-y-0.5 overflow-y-auto">
 					{members.map((m) => (
 						<button
 							key={m.userId}
 							type="button"
-							onClick={() => onChange(m.userId)}
+							onMouseDown={(e) => {
+								e.preventDefault();
+								onChange(m.userId);
+								setOpen(false);
+							}}
 							className={cn(
-								"flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted",
+								"flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted",
 								value === m.userId && "bg-primary/10",
 							)}
 						>
@@ -876,8 +881,12 @@ function AssigneePicker({
 					{value && (
 						<button
 							type="button"
-							onClick={() => onChange(null)}
-							className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted"
+							onMouseDown={(e) => {
+								e.preventDefault();
+								onChange(null);
+								setOpen(false);
+							}}
+							className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted"
 						>
 							Remover responsável
 						</button>
@@ -912,7 +921,7 @@ function PrioritySelect({
 				/>
 				<span className="text-sm">{current?.label ?? "—"}</span>
 			</SelectTrigger>
-			<SelectContent>
+			<SelectContent withPortal={false}>
 				{PRIORITY_OPTIONS.map((p) => (
 					<SelectItem key={p.value} value={p.value}>
 						<span className="flex items-center gap-2">
@@ -948,7 +957,7 @@ function TemperatureSelect({
 					</span>
 				)}
 			</SelectTrigger>
-			<SelectContent>
+			<SelectContent withPortal={false}>
 				{TEMPERATURE_OPTIONS.map((t) => (
 					<SelectItem key={t.value} value={t.value}>
 						<span

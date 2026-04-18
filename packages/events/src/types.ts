@@ -180,6 +180,34 @@ export type FollowupScheduledEvent = {
 };
 
 // ============================================================
+// Chat events (Phase 05)
+// ============================================================
+
+export type ConversationCreatedEvent = {
+	type: "conversation.created";
+	payload: { conversationId: string; contactId: string; channel: string };
+	meta: EventMeta;
+};
+
+export type ConversationStatusChangedEvent = {
+	type: "conversation.status.changed";
+	payload: { conversationId: string; from: string; to: string };
+	meta: EventMeta;
+};
+
+export type MessageCreatedEvent = {
+	type: "message.created";
+	payload: {
+		messageId: string;
+		conversationId: string;
+		direction: "INBOUND" | "OUTBOUND";
+		senderType: "CONTACT" | "USER" | "AGENT" | "SYSTEM";
+		type: string;
+	};
+	meta: EventMeta;
+};
+
+// ============================================================
 // Union
 // ============================================================
 
@@ -202,7 +230,10 @@ export type DomainEvent =
 	| ProposalStatusChangedEvent
 	| CalendarMeetingRequestedEvent
 	| FollowupSentEvent
-	| FollowupScheduledEvent;
+	| FollowupScheduledEvent
+	| ConversationCreatedEvent
+	| ConversationStatusChangedEvent
+	| MessageCreatedEvent;
 
 export type DomainEventType = DomainEvent["type"];
 

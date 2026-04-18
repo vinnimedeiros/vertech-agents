@@ -8,6 +8,12 @@ type OrchestratorButtonProps = {
 	onToggle: () => void;
 };
 
+/**
+ * Botão compacto no canto direito da searchbar.
+ * Estado normal: só a estrelinha.
+ * Hover: desliza pra esquerda e revela "Peça ao Orquestrador".
+ * Estado aberto: mesma expansão, com destaque.
+ */
 export function OrchestratorButton({
 	open,
 	onToggle,
@@ -20,28 +26,27 @@ export function OrchestratorButton({
 			aria-controls="orchestrator-panel"
 			aria-label="Peça ao Orquestrador"
 			className={cn(
-				"group flex items-center gap-0 rounded-md px-0 py-1 text-xs transition-all duration-300",
-				"hover:gap-1.5 hover:bg-primary/10 hover:px-2",
+				"group/orchestrator flex h-6 items-center overflow-hidden rounded-md text-xs transition-all duration-300 ease-out",
 				open
-					? "gap-1.5 bg-primary/15 px-2 text-primary"
-					: "text-foreground/70 hover:text-primary",
+					? "max-w-[180px] bg-primary/15 px-2 text-primary"
+					: "max-w-[28px] px-1 text-foreground/70 hover:max-w-[180px] hover:bg-primary/10 hover:px-2 hover:text-primary",
 			)}
 		>
 			<span
 				className={cn(
-					"grid overflow-hidden transition-[grid-template-columns,opacity] duration-300",
-					"grid-cols-[0fr] opacity-0 group-hover:grid-cols-[1fr] group-hover:opacity-100",
+					"whitespace-nowrap pr-1.5 font-medium transition-opacity duration-200",
+					open
+						? "opacity-100"
+						: "opacity-0 group-hover/orchestrator:opacity-100 group-hover/orchestrator:delay-100",
 				)}
 			>
-				<span className="whitespace-nowrap font-medium">
-					Peça ao Orquestrador
-				</span>
+				Peça ao Orquestrador
 			</span>
 			<SparklesIcon
 				className={cn(
-					"size-4 shrink-0 transition-transform duration-300",
-					"group-hover:rotate-180",
-					"text-primary",
+					"size-4 shrink-0 text-primary transition-transform duration-300",
+					"group-hover/orchestrator:rotate-180",
+					open && "rotate-180",
 				)}
 			/>
 		</button>

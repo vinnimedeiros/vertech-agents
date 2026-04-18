@@ -5,9 +5,17 @@ import {
 	SortableContext,
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Input } from "@ui/components/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import { cn } from "@ui/lib";
-import { Loader2Icon, PlusIcon } from "lucide-react";
+import {
+	BuildingIcon,
+	Loader2Icon,
+	MailIcon,
+	PhoneIcon,
+	PlusIcon,
+	SaveIcon,
+	UserIcon,
+} from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
@@ -81,11 +89,23 @@ export function KanbanColumn({
 	const [creating, setCreating] = useState(false);
 	const [name, setName] = useState("");
 	const [phone, setPhone] = useState("");
+	const [email, setEmail] = useState("");
+	const [company, setCompany] = useState("");
+	const [assignedTo, setAssignedTo] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
 	const nameRef = useRef<HTMLInputElement>(null);
 	const formRef = useRef<HTMLDivElement>(null);
 
 	const memberMap = new Map((members ?? []).map((m) => [m.userId, m]));
+
+	function resetForm() {
+		setCreating(false);
+		setName("");
+		setPhone("");
+		setEmail("");
+		setCompany("");
+		setAssignedTo(null);
+	}
 
 	// Fecha o form ao clicar fora (como clicar em Cancelar)
 	useEffect(() => {
@@ -93,10 +113,14 @@ export function KanbanColumn({
 		function onPointerDown(e: PointerEvent) {
 			if (!formRef.current) return;
 			if (formRef.current.contains(e.target as Node)) return;
-			// Fecha sem salvar
-			setCreating(false);
-			setName("");
-			setPhone("");
+			const target = e.target as HTMLElement;
+			// Ignora clicks em popovers abertos (assignee picker)
+			if (
+				target.closest("[data-radix-popper-content-wrapper]") ||
+				target.closest("[role=dialog]")
+			)
+				return;
+			resetForm();
 		}
 		document.addEventListener("pointerdown", onPointerDown);
 		return () => document.removeEventListener("pointerdown", onPointerDown);
@@ -107,19 +131,17 @@ export function KanbanColumn({
 		setTimeout(() => nameRef.current?.focus(), 10);
 	}
 
-	function closeForm() {
-		setCreating(false);
-		setName("");
-		setPhone("");
-	}
-
 	function handleCreate() {
 		if (!name.trim()) {
 			toast.error("Informe o nome do contato");
+			nameRef.current?.focus();
 			return;
 		}
 		const contactName = name.trim();
 		const contactPhone = phone.trim();
+		const contactEmail = email.trim();
+		const contactCompany = company.trim();
+		const leadAssignee = assignedTo;
 		startTransition(async () => {
 			try {
 				const contact = await createContactAction(
@@ -127,6 +149,8 @@ export function KanbanColumn({
 						organizationId,
 						name: contactName,
 						phone: contactPhone || null,
+						email: contactEmail || null,
+						company: contactCompany || null,
 					},
 					organizationSlug,
 				);
@@ -136,12 +160,11 @@ export function KanbanColumn({
 						contactId: contact.id,
 						pipelineId,
 						stageId: stage.id,
+						assignedTo: leadAssignee,
 					},
 					organizationSlug,
 				);
-				setName("");
-				setPhone("");
-				nameRef.current?.focus();
+				resetForm();
 			} catch (err) {
 				toast.error("Não foi possível criar o lead", {
 					description:
@@ -220,58 +243,102 @@ export function KanbanColumn({
 			{creating ? (
 				<div
 					ref={formRef}
-					className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-card p-2 shadow-sm"
+					className="rounded-lg border border-border/60 bg-card p-3 shadow-sm"
+					onKeyDown={(e) => {
+						if (e.key === "Escape") resetForm();
+					}}
 				>
-					<Input
-						ref={nameRef}
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") {
-								e.preventDefault();
-								handleCreate();
-							}
-							if (e.key === "Escape") closeForm();
-						}}
-						placeholder="Nome do contato"
-						className="h-7 text-xs"
-						disabled={isPending}
-					/>
-					<Input
-						value={phone}
-						onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") {
-								e.preventDefault();
-								handleCreate();
-							}
-							if (e.key === "Escape") closeForm();
-						}}
-						placeholder="Telefone (opcional)"
-						className="h-7 text-xs"
-						inputMode="tel"
-						disabled={isPending}
-					/>
-					<div className="flex items-center justify-between gap-1 pt-0.5">
-						<button
-							type="button"
-							onClick={closeForm}
+					{/* Header: titulo editavel + botao salvar */}
+					<div className="mb-3 flex items-start justify-between gap-2">
+						<input
+							ref={nameRef}
+							type="text"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									e.preventDefault();
+									handleCreate();
+								}
+							}}
+							placeholder="Novo lead…"
+							className="flex-1 bg-transparent text-sm font-semibold text-foreground outline-none placeholder:text-foreground/40"
 							disabled={isPending}
-							className="rounded px-1.5 py-0.5 text-[11px] text-foreground/60 hover:bg-muted hover:text-foreground"
-						>
-							Cancelar
-						</button>
+						/>
 						<button
 							type="button"
 							onClick={handleCreate}
 							disabled={isPending || !name.trim()}
-							className="flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+							className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] text-foreground/80 transition-colors hover:bg-muted/70 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{isPending ? (
 								<Loader2Icon className="size-3 animate-spin" />
-							) : null}
-							Adicionar
+							) : (
+								<SaveIcon className="size-3" />
+							)}
+							Salvar
 						</button>
+					</div>
+
+					{/* Campos clean (icone + input sem borda) */}
+					<div className="space-y-1.5">
+						<CleanField icon={PhoneIcon}>
+							<span className="text-[11px] text-foreground/40">+55</span>
+							<input
+								type="tel"
+								value={phone}
+								onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										e.preventDefault();
+										handleCreate();
+									}
+								}}
+								placeholder="(00) 00000-0000"
+								className="flex-1 bg-transparent text-[11px] outline-none placeholder:text-foreground/30"
+								disabled={isPending}
+							/>
+						</CleanField>
+
+						<AssigneeInlinePicker
+							members={members}
+							value={assignedTo}
+							onChange={setAssignedTo}
+						/>
+
+						<CleanField icon={BuildingIcon}>
+							<input
+								type="text"
+								value={company}
+								onChange={(e) => setCompany(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										e.preventDefault();
+										handleCreate();
+									}
+								}}
+								placeholder="Adicionar empresa"
+								className="flex-1 bg-transparent text-[11px] outline-none placeholder:text-foreground/30"
+								disabled={isPending}
+							/>
+						</CleanField>
+
+						<CleanField icon={MailIcon}>
+							<input
+								type="email"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										e.preventDefault();
+										handleCreate();
+									}
+								}}
+								placeholder="Adicionar email"
+								className="flex-1 bg-transparent text-[11px] outline-none placeholder:text-foreground/30"
+								disabled={isPending}
+							/>
+						</CleanField>
 					</div>
 				</div>
 			) : (
@@ -284,6 +351,127 @@ export function KanbanColumn({
 					<PlusIcon className="size-4" />
 					Adicionar novo lead
 				</button>
+			)}
+		</div>
+	);
+}
+
+// ============================================================
+// Helpers do form "Novo lead"
+// ============================================================
+
+function CleanField({
+	icon: Icon,
+	children,
+}: {
+	icon: React.ComponentType<{ className?: string }>;
+	children: React.ReactNode;
+}) {
+	return (
+		<div className="flex items-center gap-2 rounded px-1 py-1 hover:bg-muted/30">
+			<Icon className="size-3.5 shrink-0 text-foreground/40" />
+			{children}
+		</div>
+	);
+}
+
+function AssigneeInlinePicker({
+	members,
+	value,
+	onChange,
+}: {
+	members: KanbanMember[];
+	value: string | null;
+	onChange: (userId: string | null) => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const pickerRef = useRef<HTMLDivElement>(null);
+	const current = value ? members.find((m) => m.userId === value) : null;
+
+	useEffect(() => {
+		if (!open) return;
+		function onDown(e: PointerEvent) {
+			if (!pickerRef.current) return;
+			if (pickerRef.current.contains(e.target as Node)) return;
+			setOpen(false);
+		}
+		document.addEventListener("pointerdown", onDown);
+		return () => document.removeEventListener("pointerdown", onDown);
+	}, [open]);
+
+	return (
+		<div ref={pickerRef} className="relative">
+			<button
+				type="button"
+				onClick={() => setOpen((o) => !o)}
+				className="flex w-full cursor-pointer items-center gap-2 rounded px-1 py-1 text-[11px] transition-colors hover:bg-muted/30"
+			>
+				<UserIcon className="size-3.5 shrink-0 text-foreground/40" />
+				{current ? (
+					<span className="flex items-center gap-1.5 text-foreground">
+						<Avatar className="size-4">
+							{current.image && <AvatarImage src={current.image} />}
+							<AvatarFallback className="bg-violet-500 text-[9px] text-white">
+								{(current.name ?? current.email ?? "?")
+									.slice(0, 1)
+									.toUpperCase()}
+							</AvatarFallback>
+						</Avatar>
+						{current.name ?? current.email}
+					</span>
+				) : (
+					<span className="text-foreground/30">Adicionar responsável</span>
+				)}
+			</button>
+
+			{open && (
+				<div className="absolute top-full left-0 z-10 mt-1 w-56 rounded-md border bg-popover p-1 shadow-md">
+					{members.length === 0 ? (
+						<p className="px-2 py-1.5 text-[11px] text-muted-foreground">
+							Nenhum membro
+						</p>
+					) : (
+						<div className="max-h-48 overflow-y-auto">
+							{members.map((m) => (
+								<button
+									key={m.userId}
+									type="button"
+									onMouseDown={(e) => {
+										e.preventDefault();
+										onChange(m.userId);
+										setOpen(false);
+									}}
+									className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left text-[11px] transition-colors hover:bg-muted"
+								>
+									<Avatar className="size-4">
+										{m.image && <AvatarImage src={m.image} />}
+										<AvatarFallback className="bg-violet-500 text-[9px] text-white">
+											{(m.name ?? m.email ?? "?")
+												.slice(0, 1)
+												.toUpperCase()}
+										</AvatarFallback>
+									</Avatar>
+									<span className="flex-1 truncate">
+										{m.name ?? m.email ?? "Usuário"}
+									</span>
+								</button>
+							))}
+							{value && (
+								<button
+									type="button"
+									onMouseDown={(e) => {
+										e.preventDefault();
+										onChange(null);
+										setOpen(false);
+									}}
+									className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left text-[11px] text-muted-foreground transition-colors hover:bg-muted"
+								>
+									Remover responsável
+								</button>
+							)}
+						</div>
+					)}
+				</div>
 			)}
 		</div>
 	);

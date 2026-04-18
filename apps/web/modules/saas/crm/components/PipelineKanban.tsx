@@ -63,6 +63,7 @@ type PipelineKanbanProps = {
 	stages: KanbanStage[];
 	initialLeads: KanbanLead[];
 	members: KanbanMember[];
+	allInterests?: string[];
 };
 
 export function PipelineKanban({
@@ -72,6 +73,7 @@ export function PipelineKanban({
 	stages,
 	initialLeads,
 	members,
+	allInterests = [],
 }: PipelineKanbanProps) {
 	const [leads, setLeads] = useState<KanbanLead[]>(initialLeads);
 	const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
@@ -218,6 +220,7 @@ export function PipelineKanban({
 				members={members}
 				leadIds={leads.map((l) => l.id)}
 				onNavigate={(id) => setSelectedLeadId(id)}
+				allInterests={allInterests}
 			/>
 		</>
 	);

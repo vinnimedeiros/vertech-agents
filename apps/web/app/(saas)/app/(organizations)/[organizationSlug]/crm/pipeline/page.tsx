@@ -9,6 +9,7 @@ import {
 } from "@saas/crm/lib/filter-leads";
 import {
 	getPipelineWithStages,
+	listAllInterestsForOrg,
 	listLeadsByPipeline,
 	listOrgMembers,
 	listPipelineViewsForUser,
@@ -60,10 +61,11 @@ export default async function CrmPipelinePage({
 		pipelines.find((p) => p.isDefault) ||
 		pipelines[0];
 
-	const [pipelineData, views, members] = await Promise.all([
+	const [pipelineData, views, members, allInterests] = await Promise.all([
 		getPipelineWithStages(resolvedPipeline.id),
 		listPipelineViewsForUser(resolvedPipeline.id, session.user.id),
 		listOrgMembers(org.id),
+		listAllInterestsForOrg(org.id),
 	]);
 	if (!pipelineData) return notFound();
 
@@ -217,6 +219,7 @@ export default async function CrmPipelinePage({
 					stages={stages}
 					initialLeads={leadsForUi}
 					members={members}
+					allInterests={allInterests}
 				/>
 			)}
 		</PipelineShell>

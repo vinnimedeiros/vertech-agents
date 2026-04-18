@@ -71,6 +71,7 @@ const updateLeadSchema = z.object({
 	origin: z.string().trim().nullable().optional(),
 	assignedTo: z.string().nullable().optional(),
 	starred: z.boolean().optional(),
+	interests: z.array(z.string().trim().min(1)).optional(),
 });
 
 const moveLeadSchema = z.object({

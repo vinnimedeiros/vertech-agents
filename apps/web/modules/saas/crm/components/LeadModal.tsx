@@ -39,6 +39,7 @@ import {
 	PhoneCallIcon,
 	PhoneIcon,
 	SendIcon,
+	SparklesIcon,
 	StarIcon,
 	StickyNoteIcon,
 	ThermometerIcon,
@@ -70,6 +71,7 @@ import {
 	AlertDialogTitle,
 } from "@ui/components/alert-dialog";
 import { CurrencyField } from "./CurrencyField";
+import { InterestsPicker } from "./InterestsPicker";
 import { OriginPicker } from "./OriginPicker";
 
 // ============================================================
@@ -101,6 +103,7 @@ type LoadedLead = {
 	assignedTo: string | null;
 	stageId: string;
 	starred: boolean;
+	interests: string[];
 	createdAt: Date | string;
 	closedAt: Date | string | null;
 };
@@ -196,6 +199,8 @@ type LeadModalProps = {
 	/** Lista ordenada de leadIds visíveis — usada pra navegação prev/next */
 	leadIds?: string[];
 	onNavigate?: (leadId: string) => void;
+	/** Interesses já usados em outros leads da org (autocomplete) */
+	allInterests?: string[];
 };
 
 export function LeadModal({
@@ -207,6 +212,7 @@ export function LeadModal({
 	members,
 	leadIds,
 	onNavigate,
+	allInterests = [],
 }: LeadModalProps) {
 	const router = useRouter();
 	const [details, setDetails] = useState<LoadedDetails | null>(null);
@@ -271,11 +277,17 @@ export function LeadModal({
 
 	function patchLead(patch: Partial<LoadedLead>) {
 		if (!details) return;
+		// Optimistic update - atualiza UI imediatamente
+		const previous = details;
+		setDetails({
+			...details,
+			lead: { ...details.lead, ...patch },
+		});
 		startSaving(async () => {
 			try {
 				await updateLeadAction(
 					{
-						id: details.lead.id,
+						id: previous.lead.id,
 						...patch,
 						value:
 							patch.value !== undefined
@@ -286,8 +298,10 @@ export function LeadModal({
 					},
 					organizationSlug,
 				);
-				await refresh(details.lead.id);
+				await refresh(previous.lead.id);
 			} catch (err) {
+				// Reverte em caso de erro
+				setDetails(previous);
 				toast.error(
 					err instanceof Error ? err.message : "Falha ao salvar",
 				);
@@ -297,14 +311,20 @@ export function LeadModal({
 
 	function patchContact(patch: Partial<LoadedContact>) {
 		if (!details) return;
+		const previous = details;
+		setDetails({
+			...details,
+			contact: { ...details.contact, ...patch },
+		});
 		startSaving(async () => {
 			try {
 				await updateContactAction(
-					{ id: details.contact.id, ...patch },
+					{ id: previous.contact.id, ...patch },
 					organizationSlug,
 				);
-				await refresh(details.lead.id);
+				await refresh(previous.lead.id);
 			} catch (err) {
+				setDetails(previous);
 				toast.error(
 					err instanceof Error ? err.message : "Falha ao salvar",
 				);
@@ -591,6 +611,16 @@ export function LeadModal({
 														value: n as unknown as string | null,
 													})
 												}
+											/>
+										</FieldRow>
+
+										<FieldRow icon={SparklesIcon} label="Interesse">
+											<InterestsPicker
+												value={details.lead.interests ?? []}
+												onChange={(next) =>
+													patchLead({ interests: next })
+												}
+												suggestions={allInterests}
 											/>
 										</FieldRow>
 									</section>

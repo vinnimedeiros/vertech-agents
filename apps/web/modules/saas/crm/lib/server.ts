@@ -259,6 +259,25 @@ export const listActivitiesByLead = cache(async (leadId: string) => {
 });
 
 // ============================================================
+// Interesses da org (pra autocomplete no InterestsPicker)
+// ============================================================
+
+export const listAllInterestsForOrg = cache(
+	async (organizationId: string): Promise<string[]> => {
+		const rows = await db
+			.select({ interests: lead.interests })
+			.from(lead)
+			.where(eq(lead.organizationId, organizationId));
+		const set = new Set<string>();
+		for (const r of rows) {
+			const arr = r.interests as string[] | null;
+			if (arr) for (const i of arr) set.add(i);
+		}
+		return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+	},
+);
+
+// ============================================================
 // Org Members (pra filtro de assignee na Phase 04E.3+04E.4)
 // ============================================================
 

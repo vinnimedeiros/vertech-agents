@@ -176,6 +176,7 @@ export const lead = pgTable(
 		priority: leadPriorityEnum("priority").notNull().default("NORMAL"),
 		origin: text("origin"),
 		// Phase 04E: historico de entrada em cada stage { stageId: ISODate }
+		interests: text("interests").array().default([]).notNull(),
 		stageDates: json("stageDates")
 			.$type<Record<string, string>>()
 			.notNull()

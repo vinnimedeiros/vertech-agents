@@ -1,0 +1,1 @@
+ALTER TABLE "lead" ADD COLUMN "interests" text[] DEFAULT '{}' NOT NULL;

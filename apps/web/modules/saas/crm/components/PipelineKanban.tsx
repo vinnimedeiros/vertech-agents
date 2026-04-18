@@ -181,7 +181,7 @@ export function PipelineKanban({
 			>
 				<div
 					ref={scrollRef}
-					className="kanban-scroll -mx-4 flex items-start gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0"
+					className="kanban-scroll -mx-4 flex min-h-[calc(100vh-18rem)] items-start gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0"
 				>
 					{stages.map((stage) => (
 						<KanbanColumn

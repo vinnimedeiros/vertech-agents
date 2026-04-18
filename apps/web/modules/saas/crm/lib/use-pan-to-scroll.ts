@@ -49,6 +49,8 @@ export function usePanToScroll<T extends HTMLElement>(enabled = true) {
 			if (e.button !== 0) return;
 			if (isInteractive(e.target)) return;
 			if (!el) return;
+			// Impede selecao de texto / drag nativo que interfere no pan
+			e.preventDefault();
 			state.current = {
 				startX: e.pageX,
 				scrollLeft: el.scrollLeft,

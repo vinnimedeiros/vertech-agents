@@ -15,9 +15,14 @@ import {
 	pipelineView,
 	proposal,
 	sql,
+	statusTemplate,
 	user,
 } from "@repo/database";
 import { cache } from "react";
+import type {
+	TemplateMetadata,
+	TemplateStage,
+} from "./status-templates-data";
 import type { SortKey, ViewFiltersState, ViewMode } from "./view-filters";
 
 // ============================================================
@@ -257,6 +262,59 @@ export const listActivitiesByLead = cache(async (leadId: string) => {
 		.where(eq(leadActivity.leadId, leadId))
 		.orderBy(desc(leadActivity.createdAt));
 });
+
+// ============================================================
+// Status Templates (Phase 04F)
+// ============================================================
+
+export type StatusTemplateRow = {
+	id: string;
+	organizationId: string | null;
+	name: string;
+	description: string | null;
+	vertical: string | null;
+	stages: TemplateStage[];
+	metadata: TemplateMetadata | null;
+	isBuiltIn: boolean;
+	isPublic: boolean;
+	usageCount: number;
+	createdBy: string | null;
+};
+
+/**
+ * Lista templates disponíveis pra org:
+ * - built-in (organizationId = null) SEMPRE
+ * - templates custom da própria org
+ * Ordem: built-in primeiro (por name), depois custom (mais usados primeiro).
+ */
+export const listStatusTemplatesForOrg = cache(
+	async (organizationId: string): Promise<StatusTemplateRow[]> => {
+		const rows = await db
+			.select()
+			.from(statusTemplate)
+			.where(
+				or(
+					eq(statusTemplate.isBuiltIn, true),
+					eq(statusTemplate.organizationId, organizationId),
+				),
+			)
+			.orderBy(desc(statusTemplate.isBuiltIn), desc(statusTemplate.usageCount), asc(statusTemplate.name));
+
+		return rows.map((r) => ({
+			id: r.id,
+			organizationId: r.organizationId,
+			name: r.name,
+			description: r.description,
+			vertical: r.vertical,
+			stages: (r.stages ?? []) as TemplateStage[],
+			metadata: (r.metadata ?? null) as TemplateMetadata | null,
+			isBuiltIn: r.isBuiltIn,
+			isPublic: r.isPublic,
+			usageCount: r.usageCount,
+			createdBy: r.createdBy,
+		}));
+	},
+);
 
 // ============================================================
 // Interesses da org (pra autocomplete no InterestsPicker)

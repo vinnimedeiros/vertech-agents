@@ -14,6 +14,7 @@ import {
 	listOrgMembers,
 	listPipelineViewsForUser,
 	listPipelinesWithStats,
+	listStatusTemplatesForOrg,
 } from "@saas/crm/lib/server";
 import { type ViewState } from "@saas/crm/lib/view-filters";
 import {
@@ -61,12 +62,14 @@ export default async function CrmPipelinePage({
 		pipelines.find((p) => p.isDefault) ||
 		pipelines[0];
 
-	const [pipelineData, views, members, allInterests] = await Promise.all([
-		getPipelineWithStages(resolvedPipeline.id),
-		listPipelineViewsForUser(resolvedPipeline.id, session.user.id),
-		listOrgMembers(org.id),
-		listAllInterestsForOrg(org.id),
-	]);
+	const [pipelineData, views, members, allInterests, templates] =
+		await Promise.all([
+			getPipelineWithStages(resolvedPipeline.id),
+			listPipelineViewsForUser(resolvedPipeline.id, session.user.id),
+			listOrgMembers(org.id),
+			listAllInterestsForOrg(org.id),
+			listStatusTemplatesForOrg(org.id),
+		]);
 	if (!pipelineData) return notFound();
 
 	const activeView = queryViewId
@@ -177,6 +180,7 @@ export default async function CrmPipelinePage({
 			currentState={currentState}
 			baseState={baseState}
 			members={members}
+			templates={templates}
 			totalLeads={allLeadsCount}
 			visibleLeads={visibleLeadsCount}
 		>

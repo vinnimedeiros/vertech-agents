@@ -4,7 +4,11 @@ import { Button } from "@ui/components/button";
 import { FilterIcon, SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import { useViewState } from "../lib/use-view-state";
-import type { OrgMemberOption, PipelineViewRow } from "../lib/server";
+import type {
+	OrgMemberOption,
+	PipelineViewRow,
+	StatusTemplateRow,
+} from "../lib/server";
 import {
 	activeFilterCount,
 	type ViewState,
@@ -36,6 +40,7 @@ type PipelineShellProps = {
 	currentState: ViewState;
 	baseState: ViewState | null;
 	members: OrgMemberOption[];
+	templates: StatusTemplateRow[];
 	totalLeads: number;
 	visibleLeads: number;
 	children: React.ReactNode;
@@ -55,6 +60,7 @@ export function PipelineShell({
 	currentState,
 	baseState,
 	members,
+	templates,
 	totalLeads,
 	visibleLeads,
 	children,
@@ -82,6 +88,7 @@ export function PipelineShell({
 						organizationSlug={organizationSlug}
 						activePipelineId={pipelineId}
 						pipelines={pipelines}
+						templates={templates}
 					/>
 
 					<div className="h-5 w-px bg-border/60" />

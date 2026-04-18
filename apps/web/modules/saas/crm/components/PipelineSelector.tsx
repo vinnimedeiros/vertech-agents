@@ -29,6 +29,7 @@ type PipelineSelectorProps = {
 	organizationId: string;
 	activePipelineId: string | null;
 	pipelines: PipelineOption[];
+	templates: import("../lib/server").StatusTemplateRow[];
 };
 
 function formatCurrency(value: string): string {
@@ -50,6 +51,7 @@ export function PipelineSelector({
 	organizationId,
 	activePipelineId,
 	pipelines,
+	templates,
 }: PipelineSelectorProps) {
 	const router = useRouter();
 	const [manageOpen, setManageOpen] = useState(false);
@@ -147,6 +149,7 @@ export function PipelineSelector({
 					organizationId={organizationId}
 					organizationSlug={organizationSlug}
 					pipelines={pipelines}
+					templates={templates}
 					onClose={() => setManageOpen(false)}
 				/>
 			) : null}

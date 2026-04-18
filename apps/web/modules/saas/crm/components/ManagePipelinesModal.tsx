@@ -20,6 +20,7 @@ import {
 } from "@ui/components/select";
 import { cn } from "@ui/lib";
 import {
+	BookmarkPlusIcon,
 	CheckIcon,
 	Loader2Icon,
 	PencilIcon,
@@ -36,12 +37,16 @@ import {
 	setDefaultPipelineAction,
 	updatePipelineAction,
 } from "../lib/actions-pipeline";
+import type { StatusTemplateRow } from "../lib/server";
 import type { PipelineOption } from "./PipelineSelector";
+import { SaveAsTemplateDialog } from "./templates/SaveAsTemplateDialog";
+import { TemplateLibraryDialog } from "./templates/TemplateLibraryDialog";
 
 type ManagePipelinesModalProps = {
 	organizationId: string;
 	organizationSlug: string;
 	pipelines: PipelineOption[];
+	templates: StatusTemplateRow[];
 	onClose: () => void;
 };
 
@@ -49,9 +54,13 @@ export function ManagePipelinesModal({
 	organizationId,
 	organizationSlug,
 	pipelines,
+	templates,
 	onClose,
 }: ManagePipelinesModalProps) {
 	const [isPending, startTransition] = useTransition();
+	const [templateLibraryOpen, setTemplateLibraryOpen] = useState(false);
+	const [saveAsTemplateTarget, setSaveAsTemplateTarget] =
+		useState<PipelineOption | null>(null);
 	const [creating, setCreating] = useState(false);
 	const [newName, setNewName] = useState("");
 	const [editingId, setEditingId] = useState<string | null>(null);
@@ -257,8 +266,19 @@ export function ManagePipelinesModal({
 													setEditingId(p.id);
 													setEditName(p.name);
 												}}
+												title="Renomear"
 											>
 												<PencilIcon className="size-3.5" />
+											</Button>
+											<Button
+												type="button"
+												size="icon"
+												variant="ghost"
+												className="size-7"
+												onClick={() => setSaveAsTemplateTarget(p)}
+												title="Salvar como template"
+											>
+												<BookmarkPlusIcon className="size-3.5" />
 											</Button>
 											{!p.isDefault ? (
 												<Button
@@ -292,7 +312,7 @@ export function ManagePipelinesModal({
 											setNewName("");
 										}
 									}}
-									placeholder="Nome do pipeline"
+									placeholder="Nome do pipeline (em branco)"
 									className="h-7 flex-1 text-sm"
 									autoFocus
 								/>
@@ -324,14 +344,23 @@ export function ManagePipelinesModal({
 								</Button>
 							</div>
 						) : (
-							<button
-								type="button"
-								onClick={() => setCreating(true)}
-								className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-foreground/60 text-sm hover:bg-accent/40 hover:text-foreground"
-							>
-								<PlusIcon className="size-4" />
-								Novo pipeline
-							</button>
+							<div className="flex flex-col gap-1">
+								<button
+									type="button"
+									onClick={() => setTemplateLibraryOpen(true)}
+									className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-foreground/60 text-sm hover:bg-accent/40 hover:text-foreground"
+								>
+									<PlusIcon className="size-4" />
+									Novo pipeline com template
+								</button>
+								<button
+									type="button"
+									onClick={() => setCreating(true)}
+									className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-foreground/50 text-xs hover:bg-accent/40 hover:text-foreground"
+								>
+									<span className="ml-6">ou começar em branco</span>
+								</button>
+							</div>
 						)}
 					</div>
 
@@ -347,6 +376,31 @@ export function ManagePipelinesModal({
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			{/* Template library */}
+			<TemplateLibraryDialog
+				open={templateLibraryOpen}
+				onOpenChange={setTemplateLibraryOpen}
+				organizationId={organizationId}
+				organizationSlug={organizationSlug}
+				templates={templates}
+				onPipelineCreated={() => {
+					onClose();
+				}}
+			/>
+
+			{/* Salvar como template */}
+			{saveAsTemplateTarget && (
+				<SaveAsTemplateDialog
+					open={saveAsTemplateTarget !== null}
+					onOpenChange={(o) => {
+						if (!o) setSaveAsTemplateTarget(null);
+					}}
+					pipelineId={saveAsTemplateTarget.id}
+					pipelineName={saveAsTemplateTarget.name}
+					organizationSlug={organizationSlug}
+				/>
+			)}
 
 			{/* Delete confirmation dialog */}
 			<Dialog

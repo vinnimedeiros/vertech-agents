@@ -441,6 +441,17 @@ export const statusTemplate = pgTable(
 				}>
 			>()
 			.notNull(),
+		// Extras opcionais: iconKey (lucide icon name), persona sugerida pro agente comercial (Phase 09), ferramentas
+		metadata: json("metadata")
+			.$type<{
+				iconKey?: string;
+				suggestedAgent?: {
+					persona: string;
+					tone: string;
+					openingMessage: string;
+					tools: string[];
+				};
+			}>(),
 		isBuiltIn: boolean("isBuiltIn").notNull().default(false),
 		isPublic: boolean("isPublic").notNull().default(false),
 		usageCount: integer("usageCount").notNull().default(0),

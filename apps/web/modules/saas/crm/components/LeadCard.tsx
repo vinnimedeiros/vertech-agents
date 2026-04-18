@@ -11,6 +11,7 @@ import {
 	PhoneIcon,
 	UserIcon,
 } from "lucide-react";
+import { getOriginConfig } from "../lib/origins";
 import type { KanbanLead } from "./PipelineKanban";
 
 // ============================================================
@@ -33,18 +34,6 @@ const TEMPERATURE_BADGE: Record<
 		label: "FRIO",
 		className: "bg-sky-500 text-white",
 	},
-};
-
-/** Cores por origem conhecida. Outras origens usam fallback cinza. */
-const ORIGIN_BADGE: Record<string, string> = {
-	facebook: "bg-blue-600 text-white",
-	instagram: "bg-pink-600 text-white",
-	whatsapp: "bg-green-600 text-white",
-	tiktok: "bg-neutral-900 text-white",
-	linkedin: "bg-sky-700 text-white",
-	google: "bg-red-600 text-white",
-	site: "bg-purple-600 text-white",
-	indicacao: "bg-emerald-600 text-white",
 };
 
 const PRIORITY_COLOR: Record<KanbanLead["priority"], string> = {
@@ -99,9 +88,7 @@ export function LeadCard({
 
 	const title = lead.title ?? lead.contact.name;
 	const temp = TEMPERATURE_BADGE[lead.temperature];
-	const originBadgeClass = lead.origin
-		? ORIGIN_BADGE[lead.origin.toLowerCase()] ?? "bg-muted text-foreground"
-		: null;
+	const originConfig = getOriginConfig(lead.origin);
 
 	return (
 		<div
@@ -143,12 +130,12 @@ export function LeadCard({
 			) : null}
 
 			{/* Badges: temperatura + origem */}
-			{(lead.temperature || originBadgeClass) && (
+			{(lead.temperature || originConfig) && (
 				<div className="mt-2 flex flex-wrap items-center gap-1.5">
 					<Badge className={temp.className}>{temp.label}</Badge>
-					{lead.origin && originBadgeClass && (
-						<Badge className={originBadgeClass}>
-							{lead.origin.toUpperCase()}
+					{originConfig && (
+						<Badge className={cn(originConfig.bg, originConfig.text)}>
+							{originConfig.label}
 						</Badge>
 					)}
 				</div>

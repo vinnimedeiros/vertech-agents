@@ -69,6 +69,8 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@ui/components/alert-dialog";
+import { CurrencyField } from "./CurrencyField";
+import { OriginPicker } from "./OriginPicker";
 
 // ============================================================
 // Types
@@ -178,10 +180,6 @@ function formatActivityDate(date: Date | string): string {
 		day: "2-digit",
 		month: "short",
 	});
-}
-
-function formatCurrencyInput(value: string | null): string {
-	return value ?? "";
 }
 
 // ============================================================
@@ -577,32 +575,22 @@ export function LeadModal({
 										</FieldRow>
 
 										<FieldRow icon={GlobeIcon} label="Origem">
-											<InlineTextField
-												value={details.lead.origin ?? ""}
-												onSave={(v) =>
-													patchLead({ origin: v || null })
+											<OriginPicker
+												value={details.lead.origin}
+												onChange={(slug) =>
+													patchLead({ origin: slug })
 												}
-												placeholder="—"
-												className="text-sm"
 											/>
 										</FieldRow>
 
 										<FieldRow icon={DollarSignIcon} label="Valor">
-											<InlineTextField
-												value={formatCurrencyInput(details.lead.value)}
-												onSave={(v) => {
-													const n = v.trim() === "" ? null : Number(v);
-													if (n != null && Number.isNaN(n)) {
-														toast.error("Valor inválido");
-														return;
-													}
+											<CurrencyField
+												value={details.lead.value}
+												onSave={(n) =>
 													patchLead({
 														value: n as unknown as string | null,
-													});
-												}}
-												placeholder="R$ 0,00"
-												className="text-sm"
-												type="number"
+													})
+												}
 											/>
 										</FieldRow>
 									</section>

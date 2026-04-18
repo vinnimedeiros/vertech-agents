@@ -8,7 +8,7 @@ import {
 import { Input } from "@ui/components/input";
 import { cn } from "@ui/lib";
 import { Loader2Icon, PlusIcon } from "lucide-react";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
 	createContactAction,
@@ -83,8 +83,24 @@ export function KanbanColumn({
 	const [phone, setPhone] = useState("");
 	const [isPending, startTransition] = useTransition();
 	const nameRef = useRef<HTMLInputElement>(null);
+	const formRef = useRef<HTMLDivElement>(null);
 
 	const memberMap = new Map((members ?? []).map((m) => [m.userId, m]));
+
+	// Fecha o form ao clicar fora (como clicar em Cancelar)
+	useEffect(() => {
+		if (!creating) return;
+		function onPointerDown(e: PointerEvent) {
+			if (!formRef.current) return;
+			if (formRef.current.contains(e.target as Node)) return;
+			// Fecha sem salvar
+			setCreating(false);
+			setName("");
+			setPhone("");
+		}
+		document.addEventListener("pointerdown", onPointerDown);
+		return () => document.removeEventListener("pointerdown", onPointerDown);
+	}, [creating]);
 
 	function openForm() {
 		setCreating(true);
@@ -202,7 +218,10 @@ export function KanbanColumn({
 
 			{/* Adicionar novo lead (sempre abaixo dos cards) */}
 			{creating ? (
-				<div className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-card p-2 shadow-sm">
+				<div
+					ref={formRef}
+					className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-card p-2 shadow-sm"
+				>
 					<Input
 						ref={nameRef}
 						value={name}

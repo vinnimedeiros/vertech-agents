@@ -59,11 +59,11 @@ export function AppHeader({
 				>
 					<SearchIcon className="size-3 shrink-0 opacity-70" />
 					<span className="text-xs">Pesquisar</span>
-					<kbd className="hidden shrink-0 items-center gap-1 rounded border border-border/60 bg-muted/70 px-1 font-mono text-[10px] text-foreground/60 md:flex">
+					<kbd className="ml-auto hidden shrink-0 items-center gap-1 rounded border border-border/60 bg-muted/70 px-1 font-mono text-[10px] text-foreground/60 md:flex">
 						{shortcut}
 					</kbd>
 					<span
-						className="ml-auto flex shrink-0 items-center border-l border-border/40 pl-0.5"
+						className="ml-1.5 flex shrink-0 items-center border-l border-border/40 pl-1.5"
 						onClick={(e) => e.stopPropagation()}
 						onKeyDown={(e) => e.stopPropagation()}
 					>

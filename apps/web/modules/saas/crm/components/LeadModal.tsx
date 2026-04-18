@@ -19,7 +19,6 @@ import {
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
-	SelectValue,
 } from "@ui/components/select";
 import { Textarea } from "@ui/components/textarea";
 import { cn } from "@ui/lib";
@@ -453,14 +452,26 @@ export function LeadModal({
 									<section className="mt-6 grid grid-cols-2 gap-x-10 gap-y-3 text-sm">
 										{/* Esquerda */}
 										<FieldRow icon={CalendarIcon} label="Etapa no funil">
-											<div className="flex items-center gap-1">
+											<div className="flex items-center gap-1.5">
 												<Select
 													value={details.lead.stageId}
 													onValueChange={handleStageChange}
 													disabled={isSaving}
 												>
-													<SelectTrigger className="h-7 w-auto min-w-[140px] gap-2 border-0 bg-muted/40 text-xs uppercase tracking-wider hover:bg-muted">
-														<SelectValue />
+													<SelectTrigger
+														className="h-auto w-auto gap-1.5 rounded border-0 px-2 py-0.5 font-semibold text-[11px] uppercase tracking-wider text-white hover:opacity-90 [&>svg]:opacity-70"
+														style={{
+															backgroundColor:
+																stages.find(
+																	(s) => s.id === details.lead.stageId,
+																)?.color ?? "var(--color-muted)",
+														}}
+													>
+														<span className="whitespace-nowrap">
+															{stages.find(
+																(s) => s.id === details.lead.stageId,
+															)?.name ?? "—"}
+														</span>
 													</SelectTrigger>
 													<SelectContent>
 														{sortedStages.map((s) => (
@@ -483,7 +494,7 @@ export function LeadModal({
 															handleStageChange(nextNonClosingStage.id)
 														}
 														disabled={isSaving}
-														className="flex size-7 items-center justify-center rounded bg-sky-500/20 text-sky-500 hover:bg-sky-500/30"
+														className="flex size-7 shrink-0 items-center justify-center rounded bg-sky-500/20 text-sky-500 hover:bg-sky-500/30"
 														aria-label={`Mover para ${nextNonClosingStage.name}`}
 														title={`Próxima: ${nextNonClosingStage.name}`}
 													>
@@ -495,7 +506,7 @@ export function LeadModal({
 														type="button"
 														onClick={() => handleStageChange(wonStage.id)}
 														disabled={isSaving}
-														className="flex size-7 items-center justify-center rounded bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30"
+														className="flex size-7 shrink-0 items-center justify-center rounded bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30"
 														aria-label="Marcar como ganho"
 														title="Marcar como ganho"
 													>

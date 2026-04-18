@@ -269,12 +269,12 @@ export function KanbanColumn({
 							type="button"
 							onClick={handleCreate}
 							disabled={isPending || !name.trim()}
-							className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-foreground/80 transition-colors hover:bg-muted/70 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+							className="flex shrink-0 cursor-pointer items-center gap-1 rounded-sm bg-zinc-700 px-2.5 py-1 text-xs text-zinc-100 transition-colors hover:bg-zinc-600 dark:bg-zinc-200 dark:text-zinc-800 dark:hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{isPending ? (
-								<Loader2Icon className="size-3 animate-spin" />
+								<Loader2Icon className="size-3.5 animate-spin" />
 							) : (
-								<SaveIcon className="size-3" />
+								<SaveIcon className="size-3.5" />
 							)}
 							Salvar
 						</button>

@@ -150,7 +150,10 @@ export function InterestsPicker({
 										<button
 											key={s}
 											type="button"
-											onClick={() => addInterest(s)}
+											onMouseDown={(e) => {
+												e.preventDefault();
+												addInterest(s);
+											}}
 											className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-muted"
 										>
 											<span
@@ -172,7 +175,10 @@ export function InterestsPicker({
 					{canCreate && (
 						<button
 							type="button"
-							onClick={() => addInterest(q)}
+							onMouseDown={(e) => {
+								e.preventDefault();
+								addInterest(q);
+							}}
 							className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
 						>
 							<PlusIcon className="size-3.5 text-muted-foreground" />

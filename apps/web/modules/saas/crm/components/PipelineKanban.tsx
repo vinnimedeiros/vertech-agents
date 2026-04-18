@@ -12,6 +12,7 @@ import {
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { moveLeadToStageAction } from "../lib/actions";
+import { usePanToScroll } from "../lib/use-pan-to-scroll";
 import { KanbanColumn } from "./KanbanColumn";
 import { LeadCard } from "./LeadCard";
 import { LeadModal } from "./LeadModal";
@@ -88,6 +89,8 @@ export function PipelineKanban({
 			activationConstraint: { distance: 5 },
 		}),
 	);
+
+	const scrollRef = usePanToScroll<HTMLDivElement>();
 
 	const leadsByStage = useMemo(() => {
 		const map = new Map<string, KanbanLead[]>();
@@ -176,7 +179,10 @@ export function PipelineKanban({
 				onDragStart={handleDragStart}
 				onDragEnd={handleDragEnd}
 			>
-				<div className="-mx-4 flex items-start gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
+				<div
+					ref={scrollRef}
+					className="kanban-scroll -mx-4 flex items-start gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0"
+				>
 					{stages.map((stage) => (
 						<KanbanColumn
 							key={stage.id}

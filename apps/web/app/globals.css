@@ -41,6 +41,32 @@ input[cmdk-input] {
 	@apply border-none focus-visible:ring-0;
 }
 
+/* Scrollbar horizontal visível no Kanban (estilo fino mas sempre presente) */
+.kanban-scroll {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-border) transparent;
+}
+
+.kanban-scroll::-webkit-scrollbar {
+	height: 10px;
+}
+
+.kanban-scroll::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb {
+	background: var(--color-border);
+	border-radius: 9999px;
+	border: 2px solid transparent;
+	background-clip: padding-box;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb:hover {
+	background: var(--color-muted-foreground);
+	background-clip: padding-box;
+}
+
 /* Regra global: cursor pointer em tudo que é clicável */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),

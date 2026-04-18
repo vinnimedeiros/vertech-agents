@@ -88,8 +88,11 @@ export function InterestsPicker({
 						{interest}
 						<button
 							type="button"
-							onClick={() => removeInterest(idx)}
-							className="flex size-3 items-center justify-center rounded-full opacity-60 hover:bg-black/20 hover:opacity-100"
+							onMouseDown={(e) => {
+								e.preventDefault();
+								removeInterest(idx);
+							}}
+							className="flex size-3 cursor-pointer items-center justify-center rounded-full opacity-60 hover:bg-black/20 hover:opacity-100"
 							aria-label={`Remover ${interest}`}
 						>
 							<XIcon className="size-2.5" />
@@ -113,7 +116,7 @@ export function InterestsPicker({
 						{value.length === 0 ? "Adicionar" : ""}
 					</button>
 				</PopoverTrigger>
-				<PopoverContent align="start" className="w-72 p-0">
+				<PopoverContent align="start" className="w-72 p-0" withPortal={false}>
 					<div className="border-b p-2">
 						<input
 							type="text"
@@ -154,7 +157,7 @@ export function InterestsPicker({
 												e.preventDefault();
 												addInterest(s);
 											}}
-											className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-muted"
+											className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-muted"
 										>
 											<span
 												className={cn(
@@ -179,7 +182,7 @@ export function InterestsPicker({
 								e.preventDefault();
 								addInterest(q);
 							}}
-							className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+							className="flex w-full cursor-pointer items-center gap-2 border-t px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
 						>
 							<PlusIcon className="size-3.5 text-muted-foreground" />
 							<span>

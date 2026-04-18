@@ -69,9 +69,10 @@ export function OriginPicker({
 		setOpen(false);
 	}
 
-	function handleCreate() {
-		if (!canCreate) return;
-		onChange(normalizedQuery);
+	function handleCreate(q: string) {
+		const normalized = normalizeOriginSlug(q);
+		if (!normalized) return;
+		onChange(normalized);
 		setOpen(false);
 	}
 
@@ -99,7 +100,7 @@ export function OriginPicker({
 					)}
 				</button>
 			</PopoverTrigger>
-			<PopoverContent align="start" className="w-72 p-0">
+			<PopoverContent align="start" className="w-72 p-0" withPortal={false}>
 				<div className="border-b p-2">
 					<input
 						type="text"
@@ -111,7 +112,7 @@ export function OriginPicker({
 						onKeyDown={(e) => {
 							if (e.key === "Enter") {
 								e.preventDefault();
-								if (canCreate) handleCreate();
+								if (canCreate) handleCreate(query);
 								else if (filtered.length === 1) handleSelect(filtered[0].slug);
 							}
 						}}
@@ -130,9 +131,12 @@ export function OriginPicker({
 								<button
 									key={o.slug}
 									type="button"
-									onClick={() => handleSelect(o.slug)}
+									onMouseDown={(e) => {
+										e.preventDefault();
+										handleSelect(o.slug);
+									}}
 									className={cn(
-										"inline-flex items-center gap-1 rounded px-2 py-1 font-semibold text-[11px] uppercase tracking-wider transition-all",
+										"inline-flex cursor-pointer items-center gap-1 rounded px-2 py-1 font-semibold text-[11px] uppercase tracking-wider transition-all",
 										o.bg,
 										o.text,
 										selected
@@ -151,8 +155,11 @@ export function OriginPicker({
 				{canCreate && (
 					<button
 						type="button"
-						onClick={handleCreate}
-						className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+						onMouseDown={(e) => {
+							e.preventDefault();
+							handleCreate(query);
+						}}
+						className="flex w-full cursor-pointer items-center gap-2 border-t px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
 					>
 						<PlusIcon className="size-3.5 text-muted-foreground" />
 						<span>
@@ -164,11 +171,12 @@ export function OriginPicker({
 				{value && (
 					<button
 						type="button"
-						onClick={() => {
+						onMouseDown={(e) => {
+							e.preventDefault();
 							onChange(null);
 							setOpen(false);
 						}}
-						className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+						className="flex w-full cursor-pointer items-center gap-2 border-t px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
 					>
 						<XIcon className="size-3.5" />
 						Remover origem

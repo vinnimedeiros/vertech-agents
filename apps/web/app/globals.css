@@ -67,7 +67,10 @@ input[cmdk-input] {
 	background-clip: padding-box;
 }
 
-/* Regra global: cursor pointer em tudo que é clicável */
+/* Regra global: cursor pointer em tudo que é clicável.
+ * !important porque Tailwind v4 preflight agora define button { cursor: default }
+ * e queremos override consistente no produto inteiro.
+ */
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]),
 [role="tab"]:not([aria-disabled="true"]),
@@ -79,5 +82,5 @@ a[href],
 summary,
 label[for],
 select:not(:disabled) {
-	cursor: pointer;
+	cursor: pointer !important;
 }

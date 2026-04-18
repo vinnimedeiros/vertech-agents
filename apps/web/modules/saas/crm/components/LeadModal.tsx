@@ -48,6 +48,7 @@ import {
 	UsersIcon,
 	XIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
@@ -210,6 +211,7 @@ export function LeadModal({
 	leadIds,
 	onNavigate,
 }: LeadModalProps) {
+	const router = useRouter();
 	const [details, setDetails] = useState<LoadedDetails | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [isSaving, startSaving] = useTransition();
@@ -342,6 +344,7 @@ export function LeadModal({
 			toast.success("Lead excluído");
 			setDeleteOpen(false);
 			onOpenChange(false);
+			router.refresh();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Falha ao excluir");
 		}

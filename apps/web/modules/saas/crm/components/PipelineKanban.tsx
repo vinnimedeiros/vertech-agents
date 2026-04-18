@@ -9,7 +9,7 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { moveLeadToStageAction } from "../lib/actions";
 import { KanbanColumn } from "./KanbanColumn";
@@ -77,6 +77,11 @@ export function PipelineKanban({
 	const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [, startTransition] = useTransition();
+
+	// Sincroniza leads com os dados do server quando router.refresh() muda initialLeads
+	useEffect(() => {
+		setLeads(initialLeads);
+	}, [initialLeads]);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -171,7 +176,7 @@ export function PipelineKanban({
 				onDragStart={handleDragStart}
 				onDragEnd={handleDragEnd}
 			>
-				<div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
+				<div className="-mx-4 flex items-start gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:px-0">
 					{stages.map((stage) => (
 						<KanbanColumn
 							key={stage.id}

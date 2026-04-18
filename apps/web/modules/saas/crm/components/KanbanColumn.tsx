@@ -142,7 +142,7 @@ export function KanbanColumn({
 		<div
 			ref={setNodeRef}
 			className={cn(
-				"flex w-72 shrink-0 flex-col gap-3 rounded-xl p-3 transition-colors",
+				"flex w-72 shrink-0 flex-col gap-3 self-start rounded-xl p-3 transition-colors",
 			)}
 			style={{
 				backgroundColor: isOver ? hoverBgColor : bgColor,
@@ -165,7 +165,42 @@ export function KanbanColumn({
 				</span>
 			</header>
 
-			{/* Adicionar novo lead (link com cor da etapa) */}
+			{/* Cards */}
+			{leads.length > 0 && (
+				<SortableContext
+					items={leads.map((l) => l.id)}
+					strategy={verticalListSortingStrategy}
+				>
+					<div className="flex flex-col gap-2">
+						{leads.map((lead) => {
+							const days = computeDaysInStage(lead, stage.id);
+							const isStagnant =
+								stage.maxDays != null &&
+								stage.maxDays > 0 &&
+								days > stage.maxDays;
+							const responsible = lead.assignedTo
+								? memberMap.get(lead.assignedTo)
+								: null;
+							return (
+								<LeadCard
+									key={lead.id}
+									lead={lead}
+									stageColor={stage.color}
+									onOpen={onCardOpen ? () => onCardOpen(lead.id) : undefined}
+									daysInStage={days}
+									isStagnant={isStagnant}
+									responsibleName={
+										responsible?.name ?? responsible?.email ?? null
+									}
+									responsibleImage={responsible?.image ?? null}
+								/>
+							);
+						})}
+					</div>
+				</SortableContext>
+			)}
+
+			{/* Adicionar novo lead (sempre abaixo dos cards) */}
 			{creating ? (
 				<div className="flex flex-col gap-1.5 rounded-md border border-border/60 bg-card p-2 shadow-sm">
 					<Input
@@ -231,39 +266,6 @@ export function KanbanColumn({
 					Adicionar novo lead
 				</button>
 			)}
-
-			{/* Cards */}
-			<SortableContext
-				items={leads.map((l) => l.id)}
-				strategy={verticalListSortingStrategy}
-			>
-				<div className="flex flex-col gap-2">
-					{leads.map((lead) => {
-						const days = computeDaysInStage(lead, stage.id);
-						const isStagnant =
-							stage.maxDays != null &&
-							stage.maxDays > 0 &&
-							days > stage.maxDays;
-						const responsible = lead.assignedTo
-							? memberMap.get(lead.assignedTo)
-							: null;
-						return (
-							<LeadCard
-								key={lead.id}
-								lead={lead}
-								stageColor={stage.color}
-								onOpen={onCardOpen ? () => onCardOpen(lead.id) : undefined}
-								daysInStage={days}
-								isStagnant={isStagnant}
-								responsibleName={
-									responsible?.name ?? responsible?.email ?? null
-								}
-								responsibleImage={responsible?.image ?? null}
-							/>
-						);
-					})}
-				</div>
-			</SortableContext>
 		</div>
 	);
 }

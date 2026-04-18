@@ -373,6 +373,17 @@ export function LeadModal({
 				<DialogContent
 					className="flex h-[90vh] max-h-[90vh] w-[95vw] max-w-[1200px] flex-col gap-0 overflow-hidden p-0"
 					showCloseButton={false}
+					onInteractOutside={(e) => {
+						// Não fechar se o click foi em um Popover/DropdownMenu portaled (Origem, Interesse, etc)
+						const target = e.target as HTMLElement | null;
+						if (
+							target?.closest(
+								"[data-radix-popper-content-wrapper],[role='menu'],[role='listbox'],[role='dialog']:not([role='dialog'] [role='dialog'])",
+							)
+						) {
+							e.preventDefault();
+						}
+					}}
 				>
 					<DialogTitle className="sr-only">Detalhes do Lead</DialogTitle>
 

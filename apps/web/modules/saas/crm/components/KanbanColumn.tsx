@@ -243,13 +243,13 @@ export function KanbanColumn({
 			{creating ? (
 				<div
 					ref={formRef}
-					className="rounded-lg border border-border/60 bg-card p-3 shadow-sm"
+					className="overflow-hidden rounded-lg border border-border/60 bg-card p-3 shadow-sm"
 					onKeyDown={(e) => {
 						if (e.key === "Escape") resetForm();
 					}}
 				>
 					{/* Header: titulo editavel + botao salvar */}
-					<div className="mb-3 flex items-start justify-between gap-2">
+					<div className="mb-3 flex items-center gap-2">
 						<input
 							ref={nameRef}
 							type="text"
@@ -262,14 +262,14 @@ export function KanbanColumn({
 								}
 							}}
 							placeholder="Novo lead…"
-							className="flex-1 bg-transparent text-sm font-semibold text-foreground outline-none placeholder:text-foreground/40"
+							className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-foreground outline-none placeholder:text-foreground/40"
 							disabled={isPending}
 						/>
 						<button
 							type="button"
 							onClick={handleCreate}
 							disabled={isPending || !name.trim()}
-							className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] text-foreground/80 transition-colors hover:bg-muted/70 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+							className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-foreground/80 transition-colors hover:bg-muted/70 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{isPending ? (
 								<Loader2Icon className="size-3 animate-spin" />

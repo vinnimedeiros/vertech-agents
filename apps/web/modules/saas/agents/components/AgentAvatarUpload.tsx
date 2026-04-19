@@ -71,11 +71,25 @@ export function AgentAvatarUpload({
 		setUploading(true);
 		try {
 			const path = `agent-${agentId}/${uuid()}.png`;
-			const { signedUrl } = await getSignedUploadUrlMutation.mutateAsync({
-				path,
-				bucket: config.storage.bucketNames.avatars,
-			});
 
+			let signedUrl: string;
+			try {
+				const res = await getSignedUploadUrlMutation.mutateAsync({
+					path,
+					bucket: config.storage.bucketNames.avatars,
+				});
+				signedUrl = res.signedUrl;
+			} catch (err) {
+				console.error("[avatar-upload] signed url failed", err);
+				toast.error(
+					"Não foi possível obter URL de upload. Verifique se está logado.",
+				);
+				return;
+			}
+
+			// Content-Type: image/png — mesmo pattern do UserAvatarUpload e
+			// OrganizationLogoForm do boilerplate. Content-Type do presigned URL
+			// e assinado como image/jpeg mas o S3/Supabase aceita o mismatch.
 			const response = await fetch(signedUrl, {
 				method: "PUT",
 				body: croppedImageData,
@@ -83,14 +97,26 @@ export function AgentAvatarUpload({
 			});
 
 			if (!response.ok) {
-				throw new Error("Upload failed");
+				const text = await response.text().catch(() => "");
+				console.error(
+					"[avatar-upload] PUT failed",
+					response.status,
+					response.statusText,
+					text,
+				);
+				toast.error(
+					`Falha no upload (${response.status}). Abra o console pra detalhes.`,
+				);
+				return;
 			}
 
 			onChange(path);
 			toast.success("Avatar atualizado. Salve a aba pra confirmar.");
 		} catch (err) {
-			console.error(err);
-			toast.error("Não foi possível enviar a imagem.");
+			console.error("[avatar-upload] unexpected error", err);
+			const message =
+				err instanceof Error ? err.message : "Erro inesperado no upload.";
+			toast.error(message);
 		} finally {
 			setUploading(false);
 			setImage(null);

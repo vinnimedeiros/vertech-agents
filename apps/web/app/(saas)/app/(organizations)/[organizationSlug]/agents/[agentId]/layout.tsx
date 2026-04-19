@@ -39,14 +39,16 @@ export default async function AgentDetailLayout({
 
 			<AgentDetailHeader organizationSlug={organizationSlug} />
 
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
-				<aside className="lg:sticky lg:top-20 lg:self-start">
+			<div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr] lg:gap-0">
+				<aside className="lg:sticky lg:top-20 lg:self-start lg:pr-6">
 					<AgentSettingsMenu
 						organizationSlug={organizationSlug}
 						agentId={agent.id}
 					/>
 				</aside>
-				<section>{children}</section>
+				<section className="lg:border-border lg:border-l lg:pl-8">
+					{children}
+				</section>
 			</div>
 		</AgentProvider>
 	);

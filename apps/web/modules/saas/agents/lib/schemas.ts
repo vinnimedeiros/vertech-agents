@@ -15,11 +15,7 @@ export const agentStatusSchema = z.enum([
 export type AgentStatus = z.infer<typeof agentStatusSchema>;
 
 /** Generos suportados na aba Identidade. Persistido como varchar no DB. */
-export const agentGenderSchema = z.enum([
-	"FEMININE",
-	"MASCULINE",
-	"NEUTRAL",
-]);
+export const agentGenderSchema = z.enum(["FEMININE", "MASCULINE"]);
 export type AgentGender = z.infer<typeof agentGenderSchema>;
 
 /** Validacao do ID do modelo contra o registry curado. */

@@ -109,13 +109,15 @@ export function AgentAvatarUpload({
 				return;
 			}
 
-			// Content-Type: image/png — mesmo pattern do UserAvatarUpload e
-			// OrganizationLogoForm do boilerplate. Content-Type do presigned URL
-			// e assinado como image/jpeg mas o S3/Supabase aceita o mismatch.
+			// Content-Type DEVE bater com o que o presigned URL foi assinado
+			// no backend (image/jpeg em packages/storage/provider/s3/index.ts:61).
+			// Senao o Supabase Storage rejeita com 403 "SignatureDoesNotMatch".
+			// O blob vem do cropperjs como PNG bytes, mas o navegador nao
+			// reforca mime no PUT — header e que manda pra assinatura.
 			const response = await fetch(signedUrl, {
 				method: "PUT",
 				body: croppedImageData,
-				headers: { "Content-Type": "image/png" },
+				headers: { "Content-Type": "image/jpeg" },
 			});
 
 			if (!response.ok) {

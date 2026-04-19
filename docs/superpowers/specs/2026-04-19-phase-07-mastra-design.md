@@ -69,8 +69,8 @@ Ordem linear com **gate humano** (Vinni valida UI) entre cada uma:
 |---|---|
 | Framework AI | **Mastra** (sobre Vercel AI SDK) — confirmado em `Decisoes Arquiteturais.md`. **NUNCA** LangGraph/LangChain |
 | Providers suportados | **OpenAI + Anthropic**, todos os modelos disponíveis no AI SDK |
-| Modelo default | **`gpt-4.1-mini`** — ID exato a ser confirmado via context7 pelo @analyst antes do @dev tocar no `package.json` |
-| Storage de memória Mastra | **`@mastra/pg`** (oficial) — ID exato e API atuais a confirmar via context7. Fallback: `@mastra/libsql` sobre Postgres |
+| Modelo default | **`openai/gpt-4.1-mini`** — ID confirmado por Atlas em 07A.1 (`docs/phase-07/dependencies-confirmed.md`) |
+| Storage de memória Mastra | **`@mastra/pg`** (oficial, classe `PostgresStore`) — confirmado em 07A.1 |
 | Estrutura de tools | **3 registries separados** desde 07A: `commercialTools` (populado em 08), `architectTools` (stub em 07A, populado em 09), `orchestratorTools` (stub em 07A, populado em 10) |
 
 ### 3.2 Processamento de mensagens
@@ -79,10 +79,11 @@ Ordem linear com **gate humano** (Vinni valida UI) entre cada uma:
 |---|---|
 | Padrão de dispatch | **Queue durável com BullMQ + Redis** (não fire-and-forget) — alinhado com `feedback_escala_desde_dia_1.md` |
 | Tentativas | 3, com backoff exponencial (2s, 8s, 32s) |
-| DLQ | Dead Letter Queue inspecionável via Bull-Board em dev; via Superadmin em prod |
+| DLQ | Dead Letter Queue inspecionável via QueueDash em dev; via Superadmin em prod |
 | Concorrência | 5 jobs simultâneos por worker (configurável) |
 | Timeout | 60s por job (LLM típico < 5s; 60s é segurança) |
-| Idempotência | Job carrega `messageId` — worker aborta silenciosamente se mensagem já `SENT` |
+| Idempotência | `jobId: messageId` — BullMQ dedupe automaticamente em retries de webhook |
+| Serialização por conversa | `deduplication.id: 'conv:{conversationId}' + keepLastIfActive: true` — nativo OSS, elimina necessidade de lock Redis manual |
 | Rate limit | 30 mensagens/min por organization (rede de segurança contra abuso) |
 
 ### 3.3 Observabilidade (Health Tech)
@@ -93,7 +94,7 @@ Ordem linear com **gate humano** (Vinni valida UI) entre cada uma:
 | Endpoints em 07A | `queue`, `mastra`, `redis`, `database` |
 | Endpoints em 07 geral | `llm-providers` (OpenAI + Anthropic, latência, rate limit, custo acumulado) |
 | Gate de acesso | Role `superadmin` via middleware existente |
-| Bull-Board | Ativo em dev (`/admin/queues`), desativado em prod |
+| QueueDash | Ativo em dev (`/admin/queues`), desativado em prod |
 | Mastra Studio | `mastra dev` ativo em dev local, desativado em prod via env `MASTRA_STUDIO_ENABLED=false` |
 | UI consolidada | Phase 10c (nova) — fora desta spec |
 
@@ -118,7 +119,12 @@ const commercialAgent = new Agent({
     return filterTools(commercialTools, agent.enabledTools);  // subset habilitado
   },
   memory: new Memory({
-    options: { lastMessages: 20, observationalMemory: true },
+    storage: mastraStorage, // @mastra/pg PostgresStore
+    options: {
+      lastMessages: 20,
+      semanticRecall: { topK: 5, messageRange: { before: 2, after: 1 }, scope: 'resource' },
+      workingMemory: { enabled: true },
+    },
   }),
 });
 ```
@@ -151,7 +157,7 @@ Fluxo inbound:
 | `packages/health` | NOVO — contrato TypeScript e helpers de health check |
 | `packages/database` | EXPANDE — novas tabelas `agent` + `agent_version`, ajustes em `conversation` e `messageStatusEnum` |
 | `packages/whatsapp` | TOCA LEVE — implementar `emitConversationEvent` (hoje stub) pra chamar dispatcher da queue |
-| `apps/web` | EXPANDE — rotas API `/api/admin/health/*`, rotas `/agents/*` (07B), Bull-Board em `/admin/queues` (dev only) |
+| `apps/web` | EXPANDE — rotas API `/api/admin/health/*`, rotas `/agents/*` (07B), QueueDash em `/admin/queues` (dev only) |
 
 ### 4.1 Estrutura proposta `packages/ai`
 
@@ -287,7 +293,7 @@ Via migration separada:
 Nenhuma UI visual. Agente criado via seed SQL em `packages/database/seeds/agents-seed.ts`. Vinni valida via:
 - Celular pessoal conectado como lead
 - Terminal: query SQL direto pra conferir conversa armazenada
-- Bull-Board em `http://localhost:3000/admin/queues` (dev)
+- QueueDash em `http://localhost:3000/admin/queues` (dev)
 - `curl http://localhost:3000/api/admin/health/queue`
 
 ### 6.2 Sub-phase 07B — UI essencial (6 abas)
@@ -447,7 +453,7 @@ export type HealthCheckResult = {
 - Rotas `/api/admin/**` protegidas por `requireSuperadmin()` — reusa plugin admin do Better-Auth
 - Retorna `401` se não autenticado, `403` se não superadmin
 
-### 8.4 Bull-Board em dev
+### 8.4 QueueDash em dev
 
 - Montar em `apps/web/app/(admin)/admin/queues/page.tsx` usando `@bull-board/api` + `@bull-board/nextjs`
 - Só acessível em `NODE_ENV === 'development'` e com role superadmin
@@ -507,7 +513,7 @@ Vinni valida manualmente:
 4. ✅ Agente responde coerentemente em português (sem tools ainda, só conversa)
 5. ✅ Enviar segunda mensagem — agente lembra do contexto anterior
 6. ✅ Reiniciar servidor no meio de uma mensagem — verificar que o job reprocessa (não perde)
-7. ✅ Acessar Bull-Board em `/admin/queues` — ver job processado
+7. ✅ Acessar QueueDash em `/admin/queues` — ver job processado
 8. ✅ `curl /api/admin/health/queue` — retorna status `healthy` com métricas
 
 **Critérios técnicos automáticos:**
@@ -566,7 +572,7 @@ Antes do @dev implementar, @analyst DEVE confirmar via context7:
 3. **IDs dos modelos Anthropic** disponíveis no AI SDK: Claude Haiku 4.5 (`claude-haiku-4-5`), Claude Sonnet 4.6, Claude Opus 4.7
 4. **React Flow** versão atual + best practices de layout automático
 5. **BullMQ** versão atual + pattern de `groupKey` pra serialização por conversa
-6. **Bull-Board** versão + integração com Next.js App Router
+6. **QueueDash** versão + integração com Next.js App Router
 
 ---
 

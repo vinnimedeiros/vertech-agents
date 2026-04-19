@@ -13,7 +13,8 @@
 		"@types/node": "22.15.30",
 		"@types/pg": "^8.11.10",
 		"dotenv-cli": "^8.0.0",
-		"drizzle-kit": "^0.31.1"
+		"drizzle-kit": "^0.31.1",
+		"tsx": "^4.19.0"
 	},
 	"main": "./index.ts",
 	"name": "@repo/database",
@@ -22,7 +23,10 @@
 		"push": "dotenv -c -e ../../.env.local -- drizzle-kit push --config=./drizzle/drizzle.config.ts",
 		"migrate": "dotenv -c -e ../../.env.local -- drizzle-kit migrate --config=./drizzle/drizzle.config.ts",
 		"studio": "dotenv -c -e ../../.env.local -- drizzle-kit studio --config=./drizzle/drizzle.config.ts",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"seed:07a": "dotenv -c -e ../../.env.local -- tsx seeds/07a-agent-commercial.ts",
+		"seed:link": "dotenv -c -e ../../.env.local -- tsx seeds/link-agent-to-whatsapp.ts",
+		"seed:enable-ai": "dotenv -c -e ../../.env.local -- tsx seeds/enable-ai-on-conversation.ts"
 	},
 	"types": "./**/.tsx",
 	"version": "0.0.0"

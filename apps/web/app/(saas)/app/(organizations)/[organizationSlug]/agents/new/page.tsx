@@ -1,18 +1,29 @@
-import { ComingSoon } from "@saas/shared/components/ComingSoon";
+import { NewAgentForm } from "@saas/agents/components/NewAgentForm";
+import { getActiveOrganization } from "@saas/auth/lib/server";
 import { PageHeader } from "@saas/shared/components/PageHeader";
-import { WandSparklesIcon } from "lucide-react";
+import { notFound } from "next/navigation";
 
-export default function NewAgentPage() {
+export default async function NewAgentPage({
+	params,
+}: {
+	params: Promise<{ organizationSlug: string }>;
+}) {
+	const { organizationSlug } = await params;
+
+	const activeOrganization = await getActiveOrganization(organizationSlug);
+	if (!activeOrganization) {
+		notFound();
+	}
+
 	return (
 		<>
 			<PageHeader
 				title="Novo agente"
-				subtitle="Construa seu agente conversando com o Arquiteto"
+				subtitle="Configure o básico — você edita os detalhes depois"
 			/>
-			<ComingSoon
-				icon={WandSparklesIcon}
-				title="O Arquiteto em breve"
-				description="Converse com o Arquiteto para construir agentes comerciais por descrição, sem formulários. Ele pergunta, sugere e publica seu agente pronto para operar."
+			<NewAgentForm
+				organizationId={activeOrganization.id}
+				organizationSlug={organizationSlug}
 			/>
 		</>
 	);

@@ -29,3 +29,19 @@ export {
 	orchestratorTools,
 	type OrchestratorToolKey,
 } from "./tools/orchestrator";
+
+// Phase 07B: catalogo curado de modelos LLM. Pra uso em client components,
+// importar diretamente de `@repo/ai/models` (browser-safe, sem dependencia
+// server-only).
+export {
+	DEFAULT_MODEL_ID,
+	findModel,
+	getDefaultModelForProvider,
+	getModelLabel,
+	getModelsByProvider,
+	getProviderFromModel,
+	SUPPORTED_MODEL_IDS,
+	SUPPORTED_MODELS,
+	type SupportedModel,
+	type SupportedModelProvider,
+} from "./models";

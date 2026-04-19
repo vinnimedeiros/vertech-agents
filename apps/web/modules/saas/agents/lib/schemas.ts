@@ -153,3 +153,112 @@ export const updatePersonaInputSchema = personalitySchema.extend({
 	agentId: z.string().min(1),
 });
 export type UpdatePersonaInput = z.infer<typeof updatePersonaInputSchema>;
+
+// =============================================
+// Aba Negocio (Story 07B.5)
+// =============================================
+// Espelha o tipo AgentBusinessContext do schema. inviolableRules entra
+// aqui porque vive em agent.businessContext no DB (nao em personality).
+
+export const businessContextSchema = z.object({
+	industry: z
+		.string()
+		.trim()
+		.max(80, "Indústria pode ter no máximo 80 caracteres")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+	products: z
+		.string()
+		.trim()
+		.max(2000, "Texto muito longo (máx 2000 caracteres)")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+	pricing: z
+		.string()
+		.trim()
+		.max(500, "Texto muito longo (máx 500 caracteres)")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+	policies: z
+		.string()
+		.trim()
+		.max(1000, "Texto muito longo (máx 1000 caracteres)")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+	inviolableRules: z
+		.array(z.string().trim().min(1).max(200))
+		.max(20, "Máximo 20 regras"),
+});
+export type BusinessContextInput = z.infer<typeof businessContextSchema>;
+
+export const updateBusinessInputSchema = businessContextSchema.extend({
+	agentId: z.string().min(1),
+});
+export type UpdateBusinessInput = z.infer<typeof updateBusinessInputSchema>;
+
+// =============================================
+// Aba Conversas (Story 07B.6)
+// =============================================
+// Espelha AgentConversationStyle do schema.
+
+export const conversationStyleSchema = z.object({
+	greeting: z
+		.string()
+		.trim()
+		.max(300, "Saudação pode ter no máximo 300 caracteres")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+	qualificationQuestions: z
+		.array(z.string().trim().min(1).max(200))
+		.max(10, "Máximo 10 perguntas"),
+	objectionHandling: z
+		.string()
+		.trim()
+		.max(1000, "Texto muito longo (máx 1000 caracteres)")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+	handoffTriggers: z
+		.array(z.string().trim().min(1).max(150))
+		.max(10, "Máximo 10 gatilhos"),
+});
+export type ConversationStyleInput = z.infer<typeof conversationStyleSchema>;
+
+export const updateConversationInputSchema = conversationStyleSchema.extend({
+	agentId: z.string().min(1),
+});
+export type UpdateConversationInput = z.infer<
+	typeof updateConversationInputSchema
+>;
+
+// =============================================
+// Aba Modelo (Story 07B.7)
+// =============================================
+
+export const modelConfigSchema = z.object({
+	model: modelIdSchema,
+	temperature: z
+		.number()
+		.min(0, "Temperatura mínima é 0")
+		.max(2, "Temperatura máxima é 2"),
+	maxSteps: z
+		.number()
+		.int()
+		.min(1, "Mínimo 1 passo")
+		.max(20, "Máximo 20 passos"),
+});
+export type ModelConfigInput = z.infer<typeof modelConfigSchema>;
+
+export const updateModelInputSchema = modelConfigSchema.extend({
+	agentId: z.string().min(1),
+});
+export type UpdateModelInput = z.infer<typeof updateModelInputSchema>;
+
+// =============================================
+// Aba WhatsApp (Story 07B.8)
+// =============================================
+
+export const linkWhatsAppInputSchema = z.object({
+	agentId: z.string().min(1),
+	whatsappInstanceId: z.string().min(1),
+});
+export type LinkWhatsAppInput = z.infer<typeof linkWhatsAppInputSchema>;

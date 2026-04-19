@@ -7,9 +7,13 @@ import { revalidatePath } from "next/cache";
 import {
 	agentIdInputSchema,
 	createAgentInputSchema,
+	linkWhatsAppInputSchema,
 	renameAgentInputSchema,
 	toggleStatusInputSchema,
+	updateBusinessInputSchema,
+	updateConversationInputSchema,
 	updateIdentityInputSchema,
+	updateModelInputSchema,
 	updatePersonaInputSchema,
 } from "./schemas";
 
@@ -315,4 +319,149 @@ export async function updateAgentPersonaAction(
 		.where(eq(agent.id, data.agentId));
 
 	revalidateAgentDetail(organizationSlug, data.agentId);
+}
+
+// =============================================
+// UPDATE BUSINESS (aba Negocio - Story 07B.5)
+// =============================================
+
+export async function updateAgentBusinessContextAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = updateBusinessInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	if (row.status === "ARCHIVED") {
+		throw new Error("AGENT_ARCHIVED");
+	}
+
+	await db
+		.update(agent)
+		.set({
+			businessContext: {
+				industry: data.industry ?? undefined,
+				products: data.products ?? undefined,
+				pricing: data.pricing ?? undefined,
+				policies: data.policies ?? undefined,
+				inviolableRules: data.inviolableRules,
+			},
+			updatedAt: new Date(),
+		})
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
+}
+
+// =============================================
+// UPDATE CONVERSATION (aba Conversas - Story 07B.6)
+// =============================================
+
+export async function updateAgentConversationStyleAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = updateConversationInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	if (row.status === "ARCHIVED") {
+		throw new Error("AGENT_ARCHIVED");
+	}
+
+	await db
+		.update(agent)
+		.set({
+			conversationStyle: {
+				greeting: data.greeting ?? undefined,
+				qualificationQuestions: data.qualificationQuestions,
+				objectionHandling: data.objectionHandling ?? undefined,
+				handoffTriggers: data.handoffTriggers,
+			},
+			updatedAt: new Date(),
+		})
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
+}
+
+// =============================================
+// UPDATE MODEL (aba Modelo - Story 07B.7)
+// =============================================
+
+export async function updateAgentModelAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = updateModelInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	if (row.status === "ARCHIVED") {
+		throw new Error("AGENT_ARCHIVED");
+	}
+
+	await db
+		.update(agent)
+		.set({
+			model: data.model,
+			temperature: data.temperature,
+			maxSteps: data.maxSteps,
+			updatedAt: new Date(),
+		})
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
+}
+
+// =============================================
+// LINK / UNLINK WHATSAPP (aba WhatsApp - Story 07B.8)
+// =============================================
+
+export async function linkAgentToWhatsAppAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = linkWhatsAppInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	if (row.status === "ARCHIVED") {
+		throw new Error("AGENT_ARCHIVED");
+	}
+
+	await db
+		.update(agent)
+		.set({
+			whatsappInstanceId: data.whatsappInstanceId,
+			updatedAt: new Date(),
+		})
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
+}
+
+export async function unlinkAgentFromWhatsAppAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = agentIdInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	// Se o agente estava ACTIVE, pausa (sem WhatsApp nao faz sentido estar ativo)
+	const shouldPause = row.status === "ACTIVE";
+
+	await db
+		.update(agent)
+		.set({
+			whatsappInstanceId: null,
+			status: shouldPause ? "PAUSED" : row.status,
+			updatedAt: new Date(),
+		})
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
+	return { pausedByUnlink: shouldPause };
 }

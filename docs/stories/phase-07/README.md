@@ -4,7 +4,7 @@ Stories de execução da Phase 07 (sub-phases 07A, 07B, 07C), geradas pelo `@sm`
 
 ## Status atual
 
-**Sub-phase ativa:** 07B (UI essencial — 6 abas de edição)
+**Sub-phase ativa:** 07B (UI essencial — 6 abas de edição) — **8 stories implementadas, aguardando gate humano final**
 
 **Sub-phase 07A:** ✅ Concluída e pushed em `3458641` (2026-04-19). 15 commits distribuídos.
 

@@ -10,7 +10,22 @@ const nextConfig: NextConfig = {
 		"@repo/auth",
 		"@repo/database",
 		"@repo/utils",
+		"@repo/whatsapp",
 	],
+	// Pacotes Node-only que não devem ser bundlados pelo Turbopack/webpack.
+	// Baileys tem optional deps (jimp, sharp, link-preview-js) que só funcionam
+	// quando avaliadas em runtime Node — fora do bundle o require() segue nativo.
+	serverExternalPackages: [
+		"@whiskeysockets/baileys",
+		"@hapi/boom",
+		"pino",
+	],
+	experimental: {
+		serverActions: {
+			// Mídia do chat pode chegar a 25MB (ver lib/upload-actions.ts)
+			bodySizeLimit: "30mb",
+		},
+	},
 	images: {
 		remotePatterns: [
 			{

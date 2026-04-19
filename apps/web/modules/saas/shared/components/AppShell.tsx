@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@ui/lib";
+import { usePathname } from "next/navigation";
 import {
 	type PropsWithChildren,
 	useCallback,
@@ -11,6 +12,12 @@ import { AppHeader } from "./AppHeader";
 import { AppSidebar } from "./AppSidebar";
 import { CommandPalette } from "./CommandPalette";
 import { OrchestratorColumn } from "./OrchestratorColumn";
+
+/**
+ * Rotas que controlam a própria altura (não precisam de scroll no container da página).
+ * Cada painel interno dessas páginas gerencia seu próprio overflow.
+ */
+const FIXED_HEIGHT_ROUTES = ["/crm/chat"];
 
 const ORCHESTRATOR_STORAGE_KEY = "vertech:orchestrator-open";
 
@@ -48,10 +55,15 @@ export function AppShell({ children }: PropsWithChildren) {
 		}
 	}, []);
 
+	const pathname = usePathname();
+	const isFixedHeightPage = FIXED_HEIGHT_ROUTES.some((r) =>
+		pathname?.includes(r),
+	);
+
 	return (
 		<div
 			className={cn(
-				"flex min-h-dvh flex-col gap-[var(--shell-gap)] p-[var(--shell-gap)]",
+				"flex h-dvh flex-col gap-[var(--shell-gap)] overflow-hidden p-[var(--shell-gap)]",
 				"bg-[radial-gradient(farthest-corner_at_0%_0%,color-mix(in_oklch,var(--color-primary),transparent_95%)_0%,var(--color-background)_50%)]",
 				"dark:bg-[radial-gradient(farthest-corner_at_0%_0%,color-mix(in_oklch,var(--color-primary),transparent_90%)_0%,var(--color-background)_50%)]",
 			)}
@@ -66,7 +78,14 @@ export function AppShell({ children }: PropsWithChildren) {
 				<AppSidebar />
 
 				<main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-md border border-border/50 bg-card shadow-sm">
-					<div className="flex-1 overflow-y-auto p-4 md:p-6">
+					<div
+						className={cn(
+							"flex-1 p-4 md:p-6",
+							isFixedHeightPage
+								? "flex min-h-0 flex-col overflow-hidden"
+								: "overflow-y-auto",
+						)}
+					>
 						{children}
 					</div>
 				</main>

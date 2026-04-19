@@ -73,6 +73,15 @@ import {
 import { CurrencyField } from "./CurrencyField";
 import { InterestsPicker } from "./InterestsPicker";
 import { OriginPicker } from "./OriginPicker";
+import { AssigneePicker } from "./pickers/AssigneePicker";
+import {
+	PRIORITY_OPTIONS,
+	TEMPERATURE_OPTIONS,
+	type Priority,
+	type Temperature,
+} from "./pickers/lead-option-constants";
+import { PrioritySelect } from "./pickers/PrioritySelect";
+import { TemperatureSelect } from "./pickers/TemperatureSelect";
 
 // ============================================================
 // Types
@@ -88,8 +97,6 @@ export type LeadModalStage = {
 	category?: string | null;
 };
 
-type Temperature = "COLD" | "WARM" | "HOT";
-type Priority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
 
 type LoadedLead = {
 	id: string;
@@ -134,27 +141,6 @@ type LoadedDetails = {
 // ============================================================
 // Constants
 // ============================================================
-
-const TEMPERATURE_OPTIONS: {
-	value: Temperature;
-	label: string;
-	badgeClass: string;
-}[] = [
-	{ value: "HOT", label: "QUENTE", badgeClass: "bg-red-500 text-white" },
-	{ value: "WARM", label: "MORNO", badgeClass: "bg-amber-500 text-white" },
-	{ value: "COLD", label: "FRIO", badgeClass: "bg-sky-500 text-white" },
-];
-
-const PRIORITY_OPTIONS: {
-	value: Priority;
-	label: string;
-	colorClass: string;
-}[] = [
-	{ value: "URGENT", label: "Urgente", colorClass: "text-red-500" },
-	{ value: "HIGH", label: "Alta", colorClass: "text-orange-500" },
-	{ value: "NORMAL", label: "Normal", colorClass: "text-foreground/60" },
-	{ value: "LOW", label: "Baixa", colorClass: "text-foreground/40" },
-];
 
 const ACTIVITY_BUTTONS = [
 	{ type: "CALL" as const, label: "Ligação", icon: PhoneCallIcon },
@@ -807,171 +793,6 @@ function InlineTextField({
 		>
 			{value || placeholder || "—"}
 		</button>
-	);
-}
-
-// ============================================================
-// Assignee picker
-// ============================================================
-
-function AssigneePicker({
-	members,
-	value,
-	onChange,
-}: {
-	members: OrgMemberOption[];
-	value: string | null;
-	onChange: (userId: string | null) => void;
-}) {
-	const current = value ? members.find((m) => m.userId === value) : null;
-
-	const [open, setOpen] = useState(false);
-	return (
-		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild>
-				<button
-					type="button"
-					className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-0.5 text-sm hover:bg-muted"
-				>
-					{current ? (
-						<>
-							<Avatar className="size-5">
-								{current.image && <AvatarImage src={current.image} />}
-								<AvatarFallback className="bg-violet-500 text-[10px] text-white">
-									{(current.name ?? current.email ?? "?")
-										.slice(0, 1)
-										.toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<span>{current.name ?? current.email}</span>
-						</>
-					) : (
-						<span className="text-foreground/40">Atribuir…</span>
-					)}
-				</button>
-			</PopoverTrigger>
-			<PopoverContent align="start" className="w-56 p-1" withPortal={false}>
-				<div className="max-h-60 space-y-0.5 overflow-y-auto">
-					{members.map((m) => (
-						<button
-							key={m.userId}
-							type="button"
-							onMouseDown={(e) => {
-								e.preventDefault();
-								onChange(m.userId);
-								setOpen(false);
-							}}
-							className={cn(
-								"flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted",
-								value === m.userId && "bg-primary/10",
-							)}
-						>
-							<Avatar className="size-5">
-								{m.image && <AvatarImage src={m.image} />}
-								<AvatarFallback className="bg-violet-500 text-[10px] text-white">
-									{(m.name ?? m.email ?? "?").slice(0, 1).toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<span className="flex-1 truncate">
-								{m.name ?? m.email ?? "Usuário"}
-							</span>
-							{value === m.userId && <CheckIcon className="size-3.5" />}
-						</button>
-					))}
-					{value && (
-						<button
-							type="button"
-							onMouseDown={(e) => {
-								e.preventDefault();
-								onChange(null);
-								setOpen(false);
-							}}
-							className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted"
-						>
-							Remover responsável
-						</button>
-					)}
-				</div>
-			</PopoverContent>
-		</Popover>
-	);
-}
-
-// ============================================================
-// Priority / Temperature selects
-// ============================================================
-
-function PrioritySelect({
-	value,
-	onChange,
-}: {
-	value: Priority;
-	onChange: (p: Priority) => void;
-}) {
-	const current = PRIORITY_OPTIONS.find((p) => p.value === value);
-	return (
-		<Select value={value} onValueChange={(v) => onChange(v as Priority)}>
-			<SelectTrigger className="h-7 w-auto gap-2 border-0 bg-transparent px-1.5 hover:bg-muted">
-				<FlagIcon
-					className={cn(
-						"size-3.5",
-						current?.colorClass,
-						(value === "HIGH" || value === "URGENT") && "fill-current",
-					)}
-				/>
-				<span className="text-sm">{current?.label ?? "—"}</span>
-			</SelectTrigger>
-			<SelectContent withPortal={false}>
-				{PRIORITY_OPTIONS.map((p) => (
-					<SelectItem key={p.value} value={p.value}>
-						<span className="flex items-center gap-2">
-							<FlagIcon className={cn("size-3.5", p.colorClass)} />
-							{p.label}
-						</span>
-					</SelectItem>
-				))}
-			</SelectContent>
-		</Select>
-	);
-}
-
-function TemperatureSelect({
-	value,
-	onChange,
-}: {
-	value: Temperature;
-	onChange: (t: Temperature) => void;
-}) {
-	const current = TEMPERATURE_OPTIONS.find((t) => t.value === value);
-	return (
-		<Select value={value} onValueChange={(v) => onChange(v as Temperature)}>
-			<SelectTrigger className="h-7 w-auto gap-2 border-0 bg-transparent px-1.5 hover:bg-muted">
-				{current && (
-					<span
-						className={cn(
-							"inline-flex items-center rounded px-2 py-0.5 font-semibold text-[10px] uppercase tracking-wider",
-							current.badgeClass,
-						)}
-					>
-						{current.label}
-					</span>
-				)}
-			</SelectTrigger>
-			<SelectContent withPortal={false}>
-				{TEMPERATURE_OPTIONS.map((t) => (
-					<SelectItem key={t.value} value={t.value}>
-						<span
-							className={cn(
-								"inline-flex items-center rounded px-2 py-0.5 font-semibold text-[10px] uppercase tracking-wider",
-								t.badgeClass,
-							)}
-						>
-							{t.label}
-						</span>
-					</SelectItem>
-				))}
-			</SelectContent>
-		</Select>
 	);
 }
 

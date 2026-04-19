@@ -1,5 +1,5 @@
 import { createId as cuid } from "@paralleldrive/cuid2";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	boolean,
 	decimal,
@@ -10,6 +10,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
+	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
 import { organization, user } from "./postgres";
@@ -133,6 +134,17 @@ export const contact = pgTable(
 		tags: text("tags").array().notNull().default([]),
 		source: text("source"),
 		notes: text("notes"),
+		// Dados enriquecidos via WhatsApp quando aplicável
+		isBusiness: boolean("isBusiness").notNull().default(false),
+		businessCategory: text("businessCategory"),
+		businessHours: text("businessHours"),
+		businessWebsite: text("businessWebsite"),
+		businessDescription: text("businessDescription"),
+		// Sincronização da lista de contatos do celular conectado via Baileys.
+		// Contato com `lastSyncedAt` preenchido foi sincronizado do WhatsApp
+		// ao menos uma vez (pode ter sido criado por outros meios depois).
+		lastSyncedAt: timestamp("lastSyncedAt"),
+		promotedToLeadAt: timestamp("promotedToLeadAt"),
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 	},
@@ -140,6 +152,11 @@ export const contact = pgTable(
 		index("contact_organization_idx").on(table.organizationId),
 		index("contact_phone_idx").on(table.phone),
 		index("contact_email_idx").on(table.email),
+		// Upsert por telefone dentro da org (só quando há phone — múltiplos
+		// contatos sem phone continuam permitidos)
+		uniqueIndex("contact_org_phone_uniq")
+			.on(table.organizationId, table.phone)
+			.where(sql`${table.phone} IS NOT NULL`),
 	],
 );
 

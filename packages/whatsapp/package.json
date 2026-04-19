@@ -1,0 +1,26 @@
+{
+	"name": "@repo/whatsapp",
+	"version": "0.0.0",
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"scripts": {
+		"type-check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@repo/database": "workspace:*",
+		"@repo/events": "workspace:*",
+		"@repo/storage": "workspace:*",
+		"@whiskeysockets/baileys": "^6.7.9",
+		"@hapi/boom": "^10.0.1",
+		"pino": "^9.5.0",
+		"qrcode": "^1.5.4",
+		"@supabase/supabase-js": "^2.46.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@repo/tsconfig": "workspace:*",
+		"@types/node": "^22.15.30",
+		"@types/qrcode": "^1.5.5",
+		"typescript": "5.8.3"
+	}
+}

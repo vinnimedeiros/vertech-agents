@@ -9,6 +9,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
+	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
 import { contact } from "./crm";
@@ -99,6 +100,9 @@ export const conversation = pgTable(
 		lastMessageAt: timestamp("lastMessageAt"),
 		lastMessagePreview: text("lastMessagePreview"),
 		unreadCount: integer("unreadCount").notNull().default(0),
+		// Fixada no topo (ordenada por este timestamp DESC). Limite de 3 por org
+		// validado a nível de action. Null = não fixada.
+		pinnedAt: timestamp("pinnedAt"),
 
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
@@ -110,6 +114,13 @@ export const conversation = pgTable(
 		),
 		index("conversation_contact_idx").on(table.contactId),
 		index("conversation_last_message_idx").on(table.lastMessageAt),
+		// Uma conversa por par (contato, canal). Se a instância de WhatsApp for
+		// trocada (reconexão com número novo/mesmo número), a conversa existente
+		// é reusada e tem `channelInstanceId` atualizado no handler inbound.
+		uniqueIndex("conversation_contact_channel_uniq").on(
+			table.contactId,
+			table.channel,
+		),
 	],
 );
 

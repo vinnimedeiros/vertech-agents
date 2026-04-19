@@ -3,6 +3,7 @@
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
 import { cn } from "@ui/lib";
 import {
+	ContactIcon,
 	CalendarIcon,
 	FileTextIcon,
 	KanbanSquareIcon,
@@ -25,6 +26,7 @@ const TABS: TopbarTab[] = [
 	{ label: "Chat", path: "chat", icon: MessageSquareIcon },
 	{ label: "Pipeline", path: "pipeline", icon: KanbanSquareIcon },
 	{ label: "Agenda", path: "agenda", icon: CalendarIcon },
+	{ label: "Contatos WhatsApp", path: "contatos", icon: ContactIcon },
 	{ label: "Leads", path: "leads", icon: UsersIcon },
 	{ label: "Clientes", path: "clientes", icon: UserCheckIcon },
 	{ label: "Propostas", path: "propostas", icon: FileTextIcon },
@@ -42,7 +44,7 @@ export function CrmTopbar() {
 	const basePath = `/app/${activeOrganization.slug}/crm`;
 
 	return (
-		<nav className="no-scrollbar -mx-4 flex items-center gap-1 overflow-x-auto border-b px-4 md:mx-0 md:px-0">
+		<nav className="no-scrollbar -mx-4 flex shrink-0 items-center gap-1 overflow-x-auto border-b px-4 md:mx-0 md:px-0">
 			{TABS.map((tab) => {
 				const href = `${basePath}/${tab.path}`;
 				const isActive = pathname.startsWith(href);

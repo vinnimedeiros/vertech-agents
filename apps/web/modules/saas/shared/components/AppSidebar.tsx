@@ -43,7 +43,7 @@ export function AppSidebar() {
 			? [
 					{
 						label: "Comercial",
-						href: `${base}/crm/pipeline`,
+						href: `${base}/crm/chat`,
 						icon: BriefcaseBusinessIcon,
 						isActive: pathname.startsWith(`${base}/crm`),
 					},

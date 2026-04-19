@@ -8,6 +8,10 @@ import { getServerQueryClient } from "@shared/lib/server";
 import { notFound } from "next/navigation";
 import type { PropsWithChildren } from "react";
 
+// Boot do BaileysManager: movido pra /api/system/boot (chamado on-demand).
+// Executar no module scope do layout pode quebrar o bundler em dev do Turbopack
+// quando o Baileys avalia seus optional imports.
+
 export default async function OrganizationLayout({
 	children,
 	params,

@@ -64,6 +64,41 @@
       "when": 1776482526577,
       "tag": "0008_panoramic_salo",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776561383932,
+      "tag": "0009_clever_titanium_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776571034265,
+      "tag": "0010_awesome_quasimodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1776575571834,
+      "tag": "0011_steep_supreme_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1776580516396,
+      "tag": "0012_yummy_scorpion",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1776586021604,
+      "tag": "0013_condemned_mister_fear",
+      "breakpoints": true
     }
   ]
 }

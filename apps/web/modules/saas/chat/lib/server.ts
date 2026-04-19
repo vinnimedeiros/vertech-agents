@@ -12,7 +12,9 @@ import {
 	lt,
 	message,
 	or,
+	pipeline,
 	pipelineStage,
+	sql,
 } from "@repo/database";
 import { cache } from "react";
 
@@ -62,6 +64,7 @@ export type ConversationListItem = {
 	unreadCount: number;
 	assignedUserId: string | null;
 	isAIEnabled: boolean;
+	pinnedAt: Date | null;
 	contact: {
 		id: string;
 		name: string;
@@ -143,6 +146,7 @@ export const listConversationsForOrg = cache(
 				unreadCount: conversation.unreadCount,
 				assignedUserId: conversation.assignedUserId,
 				isAIEnabled: conversation.isAIEnabled,
+				pinnedAt: conversation.pinnedAt,
 				contact: {
 					id: contact.id,
 					name: contact.name,
@@ -156,6 +160,8 @@ export const listConversationsForOrg = cache(
 			.innerJoin(contact, eq(conversation.contactId, contact.id))
 			.where(and(...whereClauses))
 			.orderBy(
+				// Fixadas primeiro (NULLS LAST), depois por última mensagem
+				sql`${conversation.pinnedAt} DESC NULLS LAST`,
 				desc(conversation.lastMessageAt),
 				desc(conversation.createdAt),
 			);
@@ -180,6 +186,7 @@ export const getConversationDetail = cache(
 				assignedUserId: conversation.assignedUserId,
 				assignedAgentId: conversation.assignedAgentId,
 				isAIEnabled: conversation.isAIEnabled,
+				pinnedAt: conversation.pinnedAt,
 				contact: {
 					id: contact.id,
 					name: contact.name,
@@ -245,6 +252,74 @@ export const listMessages = cache(
 			caption: r.caption,
 			createdAt: r.createdAt,
 		}));
+	},
+);
+
+export type ContactForPanel = {
+	id: string;
+	name: string;
+	phone: string | null;
+	email: string | null;
+	company: string | null;
+	photoUrl: string | null;
+	isBusiness: boolean;
+	businessCategory: string | null;
+	businessHours: string | null;
+	businessWebsite: string | null;
+	businessDescription: string | null;
+};
+
+export const getContactForPanel = cache(
+	async (contactId: string): Promise<ContactForPanel | null> => {
+		const [row] = await db
+			.select({
+				id: contact.id,
+				name: contact.name,
+				phone: contact.phone,
+				email: contact.email,
+				company: contact.company,
+				photoUrl: contact.photoUrl,
+				isBusiness: contact.isBusiness,
+				businessCategory: contact.businessCategory,
+				businessHours: contact.businessHours,
+				businessWebsite: contact.businessWebsite,
+				businessDescription: contact.businessDescription,
+			})
+			.from(contact)
+			.where(eq(contact.id, contactId))
+			.limit(1);
+		return row ?? null;
+	},
+);
+
+export type DefaultPipelineForOrg = {
+	pipelineId: string;
+	firstStageId: string;
+};
+
+/**
+ * Retorna o pipeline default da org + primeiro stage. Usado pelo botão "Criar Lead"
+ * no painel direito do chat.
+ */
+export const getDefaultPipelineForOrg = cache(
+	async (organizationId: string): Promise<DefaultPipelineForOrg | null> => {
+		const [p] = await db
+			.select({ id: pipeline.id })
+			.from(pipeline)
+			.where(eq(pipeline.organizationId, organizationId))
+			.orderBy(desc(pipeline.isDefault), asc(pipeline.createdAt))
+			.limit(1);
+		if (!p) return null;
+
+		const [firstStage] = await db
+			.select({ id: pipelineStage.id })
+			.from(pipelineStage)
+			.where(eq(pipelineStage.pipelineId, p.id))
+			.orderBy(asc(pipelineStage.position))
+			.limit(1);
+		if (!firstStage) return null;
+
+		return { pipelineId: p.id, firstStageId: firstStage.id };
 	},
 );
 

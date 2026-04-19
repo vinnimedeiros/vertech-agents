@@ -105,3 +105,51 @@ export const updateIdentityInputSchema = identitySchema.extend({
 	agentId: z.string().min(1),
 });
 export type UpdateIdentityInput = z.infer<typeof updateIdentityInputSchema>;
+
+// =============================================
+// Aba Persona (Story 07B.4) — 4 eixos como enums
+// =============================================
+// Valores espelham exatamente o tipo AgentPersonality em
+// packages/database/drizzle/schema/agents.ts. O builder de instructions
+// da Phase 07A (packages/ai/src/mastra/instructions/builder.ts) consome
+// esses enums diretamente — zero conversao necessaria.
+
+export const toneSchema = z.enum([
+	"formal",
+	"semiformal",
+	"informal",
+	"descontraido",
+]);
+export type Tone = z.infer<typeof toneSchema>;
+
+export const formalitySchema = z.enum([
+	"voce_sem_girias",
+	"tu",
+	"vc_girias",
+	"formal",
+]);
+export type Formality = z.infer<typeof formalitySchema>;
+
+export const humorSchema = z.enum([
+	"sem_humor",
+	"seco",
+	"leve",
+	"descontraido",
+]);
+export type Humor = z.infer<typeof humorSchema>;
+
+export const empathyLevelSchema = z.enum(["baixa", "media", "alta"]);
+export type EmpathyLevel = z.infer<typeof empathyLevelSchema>;
+
+export const personalitySchema = z.object({
+	tone: toneSchema,
+	formality: formalitySchema,
+	humor: humorSchema,
+	empathyLevel: empathyLevelSchema,
+});
+export type PersonalityInput = z.infer<typeof personalitySchema>;
+
+export const updatePersonaInputSchema = personalitySchema.extend({
+	agentId: z.string().min(1),
+});
+export type UpdatePersonaInput = z.infer<typeof updatePersonaInputSchema>;

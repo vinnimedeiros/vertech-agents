@@ -10,6 +10,7 @@ import {
 	renameAgentInputSchema,
 	toggleStatusInputSchema,
 	updateIdentityInputSchema,
+	updatePersonaInputSchema,
 } from "./schemas";
 
 // =============================================
@@ -277,6 +278,38 @@ export async function updateAgentIdentityAction(
 			avatarUrl: data.avatarUrl,
 			gender: data.gender,
 			description: data.description,
+			updatedAt: new Date(),
+		})
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
+}
+
+// =============================================
+// UPDATE PERSONA (aba Persona — Story 07B.4)
+// =============================================
+
+export async function updateAgentPersonaAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = updatePersonaInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	if (row.status === "ARCHIVED") {
+		throw new Error("AGENT_ARCHIVED");
+	}
+
+	await db
+		.update(agent)
+		.set({
+			personality: {
+				tone: data.tone,
+				formality: data.formality,
+				humor: data.humor,
+				empathyLevel: data.empathyLevel,
+			},
 			updatedAt: new Date(),
 		})
 		.where(eq(agent.id, data.agentId));

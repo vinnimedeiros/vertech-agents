@@ -49,6 +49,8 @@ export type MessageType =
 	| "SYSTEM";
 export type MessageStatus =
 	| "PENDING"
+	| "QUEUED"
+	| "PROCESSING"
 	| "SENT"
 	| "DELIVERED"
 	| "READ"

@@ -120,6 +120,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.7
         version: 1.2.7(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@repo/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -135,6 +138,9 @@ importers:
       '@repo/events':
         specifier: workspace:*
         version: link:../../packages/events
+      '@repo/health':
+        specifier: workspace:*
+        version: link:../../packages/health
       '@repo/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -147,6 +153,9 @@ importers:
       '@repo/payments':
         specifier: workspace:*
         version: link:../../packages/payments
+      '@repo/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       '@repo/storage':
         specifier: workspace:*
         version: link:../../packages/storage

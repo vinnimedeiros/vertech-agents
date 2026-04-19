@@ -207,7 +207,7 @@ export function IdentityTab({ organizationSlug }: Props) {
 										/>
 									</FormControl>
 									<p className="text-foreground/60 text-xs">
-										Uso interno — não aparece pro cliente final.
+										Uso interno. Não aparece pro cliente final.
 									</p>
 									<FormMessage />
 								</FormItem>

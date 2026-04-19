@@ -84,7 +84,7 @@ export function PersonaTab({ organizationSlug }: Props) {
 			<div className="mb-6">
 				<h3 className="font-semibold text-foreground text-lg">Persona</h3>
 				<p className="mt-1 text-foreground/60 text-sm">
-					Como o agente soa nas conversas — escolha o jeito de falar em cada
+					Como o agente soa nas conversas. Escolha o jeito de falar em cada
 					um dos 4 eixos.
 				</p>
 			</div>

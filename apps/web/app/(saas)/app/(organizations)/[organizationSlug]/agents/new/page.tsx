@@ -19,7 +19,7 @@ export default async function NewAgentPage({
 		<>
 			<PageHeader
 				title="Novo agente"
-				subtitle="Configure o básico — você edita os detalhes depois"
+				subtitle="Configure o básico. Você edita os detalhes depois."
 			/>
 			<NewAgentForm
 				organizationId={activeOrganization.id}

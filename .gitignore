@@ -69,3 +69,6 @@ Thumbs.db
 
 # Design references (used during dev, not shipped)
 design-refs/
+
+# Editor temp files (Claude Code Write tool leaks *.tmp.* on Windows)
+*.tmp.*

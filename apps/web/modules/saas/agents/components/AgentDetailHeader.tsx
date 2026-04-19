@@ -18,16 +18,11 @@ import {
 import { toast } from "sonner";
 import { duplicateAgentAction, renameAgentAction } from "../lib/actions";
 import { useAgent } from "../lib/agent-context";
+import {
+	getAgentInitials,
+	resolveAgentAvatarUrl,
+} from "../lib/avatar-helpers";
 import { AgentStatusDropdown } from "./AgentStatusDropdown";
-
-function initials(name: string): string {
-	return name
-		.split(/\s+/)
-		.filter(Boolean)
-		.slice(0, 2)
-		.map((p) => p[0]?.toUpperCase() ?? "")
-		.join("");
-}
 
 type Props = {
 	organizationSlug: string;
@@ -118,15 +113,15 @@ export function AgentDetailHeader({ organizationSlug }: Props) {
 		<div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 			<div className="flex min-w-0 items-center gap-4">
 				<Avatar className="size-16 rounded-lg">
-					{agent.avatarUrl ? (
+					{resolveAgentAvatarUrl(agent.avatarUrl) ? (
 						<AvatarImage
-							src={agent.avatarUrl}
+							src={resolveAgentAvatarUrl(agent.avatarUrl) ?? undefined}
 							alt=""
 							className="rounded-lg"
 						/>
 					) : null}
 					<AvatarFallback className="rounded-lg bg-primary/10 text-primary">
-						{initials(agent.name) || "AG"}
+						{getAgentInitials(agent.name)}
 					</AvatarFallback>
 				</Avatar>
 

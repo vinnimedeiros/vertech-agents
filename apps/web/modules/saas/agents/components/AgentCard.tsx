@@ -3,6 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import { cn } from "@ui/lib";
 import { PhoneIcon, PhoneOffIcon } from "lucide-react";
 import Link from "next/link";
+import {
+	getAgentInitials,
+	resolveAgentAvatarUrl,
+} from "../lib/avatar-helpers";
 import type { AgentListRow } from "../lib/server";
 import { AgentCardActions } from "./AgentCardActions";
 import { AgentStatusBadge } from "./AgentStatusBadge";
@@ -13,15 +17,6 @@ type Props = {
 	whatsappInstanceName?: string | null;
 };
 
-function initials(name: string): string {
-	return name
-		.split(/\s+/)
-		.filter(Boolean)
-		.slice(0, 2)
-		.map((p) => p[0]?.toUpperCase() ?? "")
-		.join("");
-}
-
 export function AgentCard({
 	agent,
 	organizationSlug,
@@ -29,6 +24,7 @@ export function AgentCard({
 }: Props) {
 	const detailHref = `/app/${organizationSlug}/agents/${agent.id}`;
 	const hasWhatsApp = !!agent.whatsappInstanceId;
+	const avatarSrc = resolveAgentAvatarUrl(agent.avatarUrl);
 
 	return (
 		<div
@@ -48,15 +44,11 @@ export function AgentCard({
 			{/* Conteúdo visual — pointer-events-none pra não sequestrar clicks do Link */}
 			<div className="pointer-events-none relative z-10 flex items-start gap-3">
 				<Avatar className="size-12 shrink-0 rounded-lg">
-					{agent.avatarUrl ? (
-						<AvatarImage
-							src={agent.avatarUrl}
-							alt=""
-							className="rounded-lg"
-						/>
+					{avatarSrc ? (
+						<AvatarImage src={avatarSrc} alt="" className="rounded-lg" />
 					) : null}
 					<AvatarFallback className="rounded-lg bg-primary/10 text-primary">
-						{initials(agent.name) || "AG"}
+						{getAgentInitials(agent.name)}
 					</AvatarFallback>
 				</Avatar>
 				<div className="min-w-0 flex-1">

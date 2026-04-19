@@ -11,7 +11,7 @@ Stories de execução da Phase 07 (sub-phases 07A, 07B, 07C), geradas em 2026-04
 | # | Story | Agente | Status | Bloqueia |
 |---|---|---|---|---|
 | [07A.1](./07A.1.story.md) | Confirmação de dependências externas | `@analyst` | Draft | 07A.4, 07A.5, 07A.6 |
-| [07A.2](./07A.2.story.md) | Redis container no Coolify | `@devops` | Draft | 07A.4, 07A.7 |
+| [07A.2](./07A.2.story.md) | Redis em dev local (via Docker) | `@devops` | Draft | 07A.4, 07A.7 |
 | [07A.3](./07A.3.story.md) | Schema Drizzle 07A | `@data-engineer` | Draft | 07A.5, 07A.6, 07A.8 |
 | [07A.4](./07A.4.story.md) | Packages `queue` + `health` | `@dev` | Draft | 07A.5, 07A.6, 07A.7 |
 | [07A.5](./07A.5.story.md) | Mastra core (instance + agente) | `@dev` | Draft | 07A.6 |

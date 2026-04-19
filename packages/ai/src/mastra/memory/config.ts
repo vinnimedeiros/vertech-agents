@@ -4,13 +4,13 @@ import { getMastraStorage } from "../storage";
 /**
  * Factory pra Memory do agente comercial.
  *
- * Configuracao atualizada conforme divergencia aprovada por @architect
- * (Aria) em 2026-04-19: usar `semanticRecall` + `workingMemory` em vez
- * de `observationalMemory` (obsoleto).
+ * Phase 07A: configuracao minima sem vector store —
+ * - `lastMessages: 20` (janela de recencia)
+ * - `workingMemory` (resumo contextual persistente)
  *
- * - `lastMessages: 20` — janela de recencia
- * - `semanticRecall`: top-K retrieval semantico por thread
- * - `workingMemory`: resumo contextual persistente (nome, preferencias, etc)
+ * `semanticRecall` sera habilitado na Phase 08 junto com pgvector,
+ * porque requer vector store configurado (PgVector do @mastra/pg).
+ * Referencia: https://mastra.ai/en/docs/memory/semantic-recall
  *
  * Lazy init pra evitar side effects no import.
  */
@@ -22,11 +22,7 @@ export function getCommercialAgentMemory(): Memory {
 			storage: getMastraStorage(),
 			options: {
 				lastMessages: 20,
-				semanticRecall: {
-					topK: 5,
-					messageRange: { before: 2, after: 1 },
-					scope: "resource",
-				},
+				semanticRecall: false,
 				workingMemory: {
 					enabled: true,
 				},

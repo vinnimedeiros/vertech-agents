@@ -31,59 +31,52 @@ export function AgentCard({
 	const hasWhatsApp = !!agent.whatsappInstanceId;
 
 	return (
-		<Link
-			href={detailHref}
+		<div
 			className={cn(
 				"group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-4 text-left transition-all",
 				"hover:border-primary/50 hover:shadow-md",
+				"focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20",
 			)}
 		>
-			<div className="flex w-full items-start justify-between gap-2">
-				<div className="flex items-center gap-3 min-w-0">
-					<Avatar className="size-12 shrink-0 rounded-lg">
-						{agent.avatarUrl ? (
-							<AvatarImage
-								src={agent.avatarUrl}
-								alt=""
-								className="rounded-lg"
-							/>
-						) : null}
-						<AvatarFallback className="rounded-lg bg-primary/10 text-primary">
-							{initials(agent.name) || "AG"}
-						</AvatarFallback>
-					</Avatar>
-					<div className="min-w-0">
-						<h3 className="truncate font-semibold text-foreground text-sm">
-							{agent.name}
-						</h3>
-						<p className="truncate text-foreground/60 text-xs">
-							{agent.role || "Sem função definida"}
-						</p>
-					</div>
-				</div>
-				<div
-					// evita que o click do dropdown navegue pro detalhe via <Link>
-					onClick={(e) => e.preventDefault()}
-					onKeyDown={(e) => e.stopPropagation()}
-					role="presentation"
-				>
-					<AgentCardActions
-						agentId={agent.id}
-						agentName={agent.name}
-						status={agent.status}
-						organizationSlug={organizationSlug}
-					/>
+			{/* Link cobre toda a área do card — fica atrás do conteúdo mas recebe clicks */}
+			<Link
+				href={detailHref}
+				aria-label={`Ver detalhe de ${agent.name}`}
+				className="absolute inset-0 z-0 rounded-xl outline-hidden"
+			/>
+
+			{/* Conteúdo visual — pointer-events-none pra não sequestrar clicks do Link */}
+			<div className="pointer-events-none relative z-10 flex items-start gap-3">
+				<Avatar className="size-12 shrink-0 rounded-lg">
+					{agent.avatarUrl ? (
+						<AvatarImage
+							src={agent.avatarUrl}
+							alt=""
+							className="rounded-lg"
+						/>
+					) : null}
+					<AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+						{initials(agent.name) || "AG"}
+					</AvatarFallback>
+				</Avatar>
+				<div className="min-w-0 flex-1">
+					<h3 className="truncate font-semibold text-foreground text-sm">
+						{agent.name}
+					</h3>
+					<p className="truncate text-foreground/60 text-xs">
+						{agent.role || "Sem função definida"}
+					</p>
 				</div>
 			</div>
 
-			<div className="flex flex-wrap items-center gap-2">
+			<div className="pointer-events-none relative z-10 flex flex-wrap items-center gap-2">
 				<AgentStatusBadge status={agent.status} />
 				<span className="text-foreground/60 text-xs">
 					{getModelLabel(agent.model)}
 				</span>
 			</div>
 
-			<div className="flex items-center gap-2 text-foreground/60 text-xs">
+			<div className="pointer-events-none relative z-10 flex items-center gap-2 text-foreground/60 text-xs">
 				{hasWhatsApp ? (
 					<>
 						<PhoneIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -99,9 +92,20 @@ export function AgentCard({
 				)}
 			</div>
 
-			<span className="mt-auto text-[10px] text-foreground/40 uppercase tracking-wider">
+			<span className="pointer-events-none relative z-10 mt-auto text-[10px] text-foreground/40 uppercase tracking-wider">
 				v{agent.version}
 			</span>
-		</Link>
+
+			{/* Dropdown posicionado absolute sobre o Link — pointer-events-auto pra
+			    receber clicks, z mais alto pra ficar acima de tudo */}
+			<div className="absolute top-3 right-3 z-20">
+				<AgentCardActions
+					agentId={agent.id}
+					agentName={agent.name}
+					status={agent.status}
+					organizationSlug={organizationSlug}
+				/>
+			</div>
+		</div>
 	);
 }

@@ -7,7 +7,9 @@ import { revalidatePath } from "next/cache";
 import {
 	agentIdInputSchema,
 	createAgentInputSchema,
+	renameAgentInputSchema,
 	toggleStatusInputSchema,
+	updateIdentityInputSchema,
 } from "./schemas";
 
 // =============================================
@@ -219,4 +221,65 @@ export async function toggleAgentStatusAction(
 
 	revalidateAgentDetail(organizationSlug, data.agentId);
 	return { ok: true };
+}
+
+// =============================================
+// RENAME (inline edit do header — Story 07B.2)
+// =============================================
+
+/**
+ * Renomeia o agente. Usado pelo inline edit do nome no header do detalhe.
+ * Paridade 1:1 com o campo `name` da aba Identidade (que chama
+ * updateAgentIdentityAction com o form completo).
+ */
+export async function renameAgentAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = renameAgentInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	if (row.status === "ARCHIVED") {
+		throw new Error("AGENT_ARCHIVED");
+	}
+
+	await db
+		.update(agent)
+		.set({ name: data.name, updatedAt: new Date() })
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
+}
+
+// =============================================
+// UPDATE IDENTITY (aba Identidade completa — Story 07B.3)
+// Definida aqui porque a estrutura de actions vive em um unico arquivo.
+// =============================================
+
+export async function updateAgentIdentityAction(
+	input: unknown,
+	organizationSlug: string,
+) {
+	const user = await requireAuthed();
+	const data = updateIdentityInputSchema.parse(input);
+	const row = await loadAgentWithAccessGuard(user.id, data.agentId);
+
+	if (row.status === "ARCHIVED") {
+		throw new Error("AGENT_ARCHIVED");
+	}
+
+	await db
+		.update(agent)
+		.set({
+			name: data.name,
+			role: data.role,
+			avatarUrl: data.avatarUrl,
+			gender: data.gender,
+			description: data.description,
+			updatedAt: new Date(),
+		})
+		.where(eq(agent.id, data.agentId));
+
+	revalidateAgentDetail(organizationSlug, data.agentId);
 }

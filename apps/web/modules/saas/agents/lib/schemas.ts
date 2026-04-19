@@ -60,3 +60,52 @@ export const toggleStatusInputSchema = z.object({
 	to: z.enum(["ACTIVE", "PAUSED"]),
 });
 export type ToggleStatusInput = z.infer<typeof toggleStatusInputSchema>;
+
+// =============================================
+// Aba Identidade (Story 07B.3) — schema aqui porque o header da 07B.2
+// reusa via inline edit do nome (paridade 1:1 com a aba)
+// =============================================
+
+export const identitySchema = z.object({
+	name: z
+		.string()
+		.trim()
+		.min(2, "Nome precisa ter pelo menos 2 caracteres")
+		.max(80, "Nome pode ter no maximo 80 caracteres"),
+	role: z
+		.string()
+		.trim()
+		.max(80, "Funcao pode ter no maximo 80 caracteres")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+	avatarUrl: z
+		.string()
+		.url("URL invalida")
+		.nullable()
+		.or(z.literal("").transform(() => null)),
+	gender: agentGenderSchema,
+	description: z
+		.string()
+		.trim()
+		.max(500, "Descricao pode ter no maximo 500 caracteres")
+		.nullable()
+		.transform((v) => (v && v.length > 0 ? v : null)),
+});
+export type IdentityInput = z.infer<typeof identitySchema>;
+
+/** Input mais restrito pro inline edit do nome no header (so name). */
+export const renameAgentInputSchema = z.object({
+	agentId: z.string().min(1),
+	name: z
+		.string()
+		.trim()
+		.min(2, "Nome precisa ter pelo menos 2 caracteres")
+		.max(80, "Nome pode ter no maximo 80 caracteres"),
+});
+export type RenameAgentInput = z.infer<typeof renameAgentInputSchema>;
+
+/** Input completo da aba Identidade — consumido em 07B.3. */
+export const updateIdentityInputSchema = identitySchema.extend({
+	agentId: z.string().min(1),
+});
+export type UpdateIdentityInput = z.infer<typeof updateIdentityInputSchema>;

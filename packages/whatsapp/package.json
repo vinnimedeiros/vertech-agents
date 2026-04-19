@@ -9,6 +9,7 @@
 	"dependencies": {
 		"@repo/database": "workspace:*",
 		"@repo/events": "workspace:*",
+		"@repo/queue": "workspace:*",
 		"@repo/storage": "workspace:*",
 		"@whiskeysockets/baileys": "^6.7.9",
 		"@hapi/boom": "^10.0.1",

@@ -6,9 +6,13 @@
 	"types": "./index.ts",
 	"scripts": {
 		"type-check": "tsc --noEmit",
-		"test": "vitest run"
+		"test": "vitest run",
+		"worker:start": "tsx bin/worker.ts",
+		"worker:start:dev": "dotenv -c -e ../../.env.local -- tsx bin/worker.ts"
 	},
 	"dependencies": {
+		"@repo/ai": "workspace:*",
+		"@repo/database": "workspace:*",
 		"bullmq": "^5.34.0",
 		"ioredis": "^5.4.0",
 		"zod": "^3.25.55"
@@ -17,6 +21,8 @@
 		"@biomejs/biome": "1.9.4",
 		"@repo/tsconfig": "workspace:*",
 		"@types/node": "22.15.30",
+		"dotenv-cli": "^8.0.0",
+		"tsx": "^4.19.0",
 		"typescript": "5.8.3",
 		"vitest": "^4.1.4"
 	}

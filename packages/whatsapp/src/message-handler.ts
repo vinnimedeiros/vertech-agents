@@ -9,6 +9,7 @@ import {
 	whatsappInstance,
 } from "@repo/database";
 import { bus } from "@repo/events";
+import { dispatchAgentInvocation } from "@repo/queue";
 import type { WAMessage, WASocket } from "@whiskeysockets/baileys";
 import { enrichContactFromWhatsApp } from "./contact-enricher";
 import { parseMessageContent } from "./message-parser";
@@ -260,6 +261,65 @@ export async function handleIncomingMessage(
 			timestamp: now,
 		},
 	});
+
+	// Phase 07A: dispatch pra fila BullMQ se IA habilitada nesta conversa.
+	// Fire-and-forget — dispatch falhar nao deve quebrar recebimento da msg.
+	// O worker puxa o job e invoca o agente via invokeAgentForMessage.
+	await dispatchAgentInvocationIfAIEnabled({
+		conversationId,
+		messageId,
+		organizationId: inst.organizationId,
+	});
+}
+
+/**
+ * Verifica se a conversa tem IA habilitada e enfileira job pra invocar
+ * o agente comercial via worker BullMQ.
+ *
+ * Guards aplicados no invoker (07A.5 runtime):
+ * - status=SENT aborta (idempotencia)
+ * - isAIEnabled=false aborta
+ * - assignedAgentId=null aborta
+ * - agent.status!=ACTIVE aborta
+ *
+ * Serializacao por conversa via deduplication.id=conv:{conversationId}.
+ * Idempotencia via jobId=messageId.
+ */
+async function dispatchAgentInvocationIfAIEnabled(params: {
+	conversationId: string;
+	messageId: string;
+	organizationId: string;
+}): Promise<void> {
+	try {
+		const [conv] = await db
+			.select({
+				isAIEnabled: conversation.isAIEnabled,
+				assignedAgentId: conversation.assignedAgentId,
+			})
+			.from(conversation)
+			.where(eq(conversation.id, params.conversationId))
+			.limit(1);
+
+		if (!conv?.isAIEnabled || !conv.assignedAgentId) return;
+
+		// Marca message QUEUED antes de enfileirar (observabilidade)
+		await db
+			.update(message)
+			.set({ status: "QUEUED" })
+			.where(eq(message.id, params.messageId));
+
+		await dispatchAgentInvocation({
+			messageId: params.messageId,
+			conversationId: params.conversationId,
+			organizationId: params.organizationId,
+		});
+	} catch (err) {
+		console.error(
+			"[handleIncomingMessage] dispatch agent invocation falhou:",
+			err instanceof Error ? err.message : err,
+		);
+		// Nao re-lanca — webhook deve retornar 200 mesmo se fila falhar
+	}
 }
 
 function mapType(

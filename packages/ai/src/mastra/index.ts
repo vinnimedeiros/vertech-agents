@@ -6,7 +6,7 @@
  * - apps/web health endpoints (07A.7) — getMastra para trace/metrics
  */
 
-export { commercialAgent } from "./agents/commercial";
+export { getCommercialAgent } from "./agents/commercial";
 export { getCommercialAgentMemory } from "./memory/config";
 export { getMastra } from "./instance";
 export { getMastraStorage } from "./storage";
@@ -15,6 +15,7 @@ export type { AgentForInstructions } from "./instructions/builder";
 export {
 	invokeAgentForMessage,
 	type InvokeAgentForMessageInput,
+	type InvokeAgentResult,
 } from "./runtime/invoker";
 export {
 	architectTools,

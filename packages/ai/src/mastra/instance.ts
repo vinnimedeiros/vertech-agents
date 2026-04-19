@@ -1,5 +1,5 @@
 import { Mastra } from "@mastra/core";
-import { commercialAgent } from "./agents/commercial";
+import { getCommercialAgent } from "./agents/commercial";
 import { getMastraStorage } from "./storage";
 
 /**
@@ -10,7 +10,7 @@ import { getMastraStorage } from "./storage";
  * - orchestratorAgent adicionado em Phase 10
  *
  * Lazy init — evita side effects no import. Primeira chamada a
- * `getMastra()` cria a instancia e faz boot do storage.
+ * `getMastra()` cria a instancia, o agent e faz boot do storage.
  */
 let mastraInstance: Mastra | null = null;
 
@@ -18,7 +18,7 @@ export function getMastra(): Mastra {
 	if (!mastraInstance) {
 		mastraInstance = new Mastra({
 			agents: {
-				commercialAgent,
+				commercialAgent: getCommercialAgent(),
 			},
 			storage: getMastraStorage(),
 		});

@@ -23,11 +23,10 @@ import { useAgentForm } from "../lib/use-agent-form";
 import { AgentAvatarUpload } from "./AgentAvatarUpload";
 import { DirtyStateBanner } from "./DirtyStateBanner";
 
-const GENDER_OPTIONS: { value: AgentGender; label: string; helper: string }[] =
-	[
-		{ value: "FEMININE", label: "Feminino", helper: "ela/dela" },
-		{ value: "MASCULINE", label: "Masculino", helper: "ele/dele" },
-	];
+const GENDER_OPTIONS: { value: AgentGender; label: string }[] = [
+	{ value: "FEMININE", label: "Feminino" },
+	{ value: "MASCULINE", label: "Masculino" },
+];
 
 type Props = {
 	organizationSlug: string;
@@ -165,19 +164,11 @@ export function IdentityTab({ organizationSlug }: Props) {
 												disabled={isArchived}
 												onClick={() => field.onChange(opt.value)}
 												className={cn(
-													"min-w-28 flex-col gap-0 py-2",
+													"min-w-28",
 													selected && "ring-2 ring-primary/40",
 												)}
 											>
-												<span>{opt.label}</span>
-												<span
-													className={cn(
-														"text-xs",
-														selected ? "opacity-80" : "opacity-60",
-													)}
-												>
-													{opt.helper}
-												</span>
+												{opt.label}
 											</Button>
 										);
 									})}

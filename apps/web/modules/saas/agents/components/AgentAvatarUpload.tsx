@@ -2,8 +2,8 @@
 
 import { config } from "@repo/config";
 import { CropImageDialog } from "@saas/settings/components/CropImageDialog";
-import { useSignedUploadUrlMutation } from "@saas/shared/lib/api";
 import { Spinner } from "@shared/components/Spinner";
+import { apiClient } from "@shared/lib/api-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import { Button } from "@ui/components/button";
 import { CameraIcon } from "lucide-react";
@@ -47,7 +47,6 @@ export function AgentAvatarUpload({
 	const [uploading, setUploading] = useState(false);
 	const [cropDialogOpen, setCropDialogOpen] = useState(false);
 	const [image, setImage] = useState<File | null>(null);
-	const getSignedUploadUrlMutation = useSignedUploadUrlMutation();
 
 	const { getRootProps, getInputProps, open } = useDropzone({
 		onDrop: (acceptedFiles) => {
@@ -74,15 +73,35 @@ export function AgentAvatarUpload({
 
 			let signedUrl: string;
 			try {
-				const res = await getSignedUploadUrlMutation.mutateAsync({
-					path,
-					bucket: config.storage.bucketNames.avatars,
+				const response = await apiClient.uploads["signed-upload-url"].$post({
+					query: {
+						path,
+						bucket: config.storage.bucketNames.avatars,
+					},
 				});
-				signedUrl = res.signedUrl;
+
+				if (!response.ok) {
+					const body = await response.text().catch(() => "");
+					console.error(
+						"[avatar-upload] signed-upload-url failed",
+						response.status,
+						response.statusText,
+						body,
+					);
+					toast.error(
+						`Upload bloqueado (${response.status} ${response.statusText}). ${body.slice(0, 120)}`,
+					);
+					return;
+				}
+
+				const parsed = (await response.json()) as { signedUrl: string };
+				signedUrl = parsed.signedUrl;
 			} catch (err) {
-				console.error("[avatar-upload] signed url failed", err);
+				console.error("[avatar-upload] signed-upload-url threw", err);
 				toast.error(
-					"Não foi possível obter URL de upload. Verifique se está logado.",
+					err instanceof Error
+						? `Erro de rede: ${err.message}`
+						: "Erro de rede ao obter URL.",
 				);
 				return;
 			}

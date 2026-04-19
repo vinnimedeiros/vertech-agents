@@ -1,0 +1,27 @@
+name: vertech-agents-dev
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: vertech-redis-dev
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"  # bind apenas localhost (nunca expor na rede)
+    volumes:
+      - vertech-redis-data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy noeviction
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  vertech-redis-data:
+    name: vertech-redis-data

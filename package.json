@@ -11,7 +11,11 @@
 		"typecheck": "turbo type-check",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:ui": "vitest --ui"
+		"test:ui": "vitest --ui",
+		"redis:start": "docker compose -f docker-compose.dev.yml up -d redis",
+		"redis:stop": "docker compose -f docker-compose.dev.yml stop redis",
+		"redis:logs": "docker compose -f docker-compose.dev.yml logs -f redis",
+		"redis:cli": "docker compose -f docker-compose.dev.yml exec redis redis-cli"
 	},
 	"engines": {
 		"node": ">=20"

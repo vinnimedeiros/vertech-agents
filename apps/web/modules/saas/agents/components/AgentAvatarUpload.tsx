@@ -69,7 +69,10 @@ export function AgentAvatarUpload({
 
 		setUploading(true);
 		try {
-			const path = `agent-${agentId}/${uuid()}.png`;
+			// Path flat (sem `/`) pra bater com o pattern do UserAvatarUpload
+			// e OrganizationLogoForm — alguns setups de Supabase Storage rejeitam
+			// subdirs em signed upload URLs.
+			const path = `agent-${agentId}-${uuid()}.png`;
 
 			let signedUrl: string;
 			try {

@@ -12,6 +12,7 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
+import { agent } from "./agents";
 import { contact } from "./crm";
 import { organization, user } from "./postgres";
 
@@ -60,8 +61,16 @@ export const messageDirectionEnum = pgEnum("MessageDirection", [
 	"OUTBOUND",
 ]);
 
+// Phase 07A: QUEUED e PROCESSING adicionados pra visibilidade do fluxo BullMQ.
+// PENDING = criada mas sem decisao (ex: outbound draft humano)
+// QUEUED = enfileirada no BullMQ aguardando worker (inbound com IA habilitada)
+// PROCESSING = worker puxou, agente Mastra esta gerando resposta
+// SENT / DELIVERED / READ = pos-envio WhatsApp
+// FAILED = erro permanente (ja exauriu retry)
 export const messageStatusEnum = pgEnum("MessageStatus", [
 	"PENDING",
+	"QUEUED",
+	"PROCESSING",
 	"SENT",
 	"DELIVERED",
 	"READ",
@@ -89,8 +98,10 @@ export const conversation = pgTable(
 		channelInstanceId: text("channelInstanceId"),
 		status: conversationStatusEnum("status").notNull().default("NEW"),
 
-		// IA (preparação Phase 07)
-		assignedAgentId: text("assignedAgentId"),
+		// IA — Phase 07A: FK real com agent.id (antes era text solto)
+		assignedAgentId: text("assignedAgentId").references(() => agent.id, {
+			onDelete: "set null",
+		}),
 		isAIEnabled: boolean("isAIEnabled").notNull().default(false),
 		assignedUserId: text("assignedUserId").references(() => user.id, {
 			onDelete: "set null",
@@ -138,6 +149,11 @@ export const conversationRelations = relations(
 		assignee: one(user, {
 			fields: [conversation.assignedUserId],
 			references: [user.id],
+		}),
+		// Phase 07A: relation com agent quando IA habilitada
+		assignedAgent: one(agent, {
+			fields: [conversation.assignedAgentId],
+			references: [agent.id],
 		}),
 		messages: many(message),
 	}),

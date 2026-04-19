@@ -70,7 +70,7 @@ export function MessageBubble({ message }: Props) {
 						message.type === "TEXT" ? "rounded-2xl px-3 py-2" : "rounded-2xl p-2",
 						isOutbound
 							? isAgent
-								? "rounded-br-sm bg-violet-500/20 text-foreground border border-violet-500/30"
+								? "rounded-br-sm bg-violet-600 text-white shadow-sm"
 								: "rounded-br-sm bg-primary text-primary-foreground shadow-sm"
 							: "rounded-bl-sm bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-50",
 					)}

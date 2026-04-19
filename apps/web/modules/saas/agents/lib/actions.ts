@@ -1,6 +1,5 @@
 "use server";
 
-import { DEFAULT_MODEL_ID } from "@repo/ai/models";
 import { requireOrgAccess } from "@repo/auth";
 import { agent, db, eq } from "@repo/database";
 import { getSession } from "@saas/auth/lib/server";
@@ -221,6 +220,3 @@ export async function toggleAgentStatusAction(
 	revalidateAgentDetail(organizationSlug, data.agentId);
 	return { ok: true };
 }
-
-// Re-export do default pra ser usado no client (ex: NewAgentForm)
-export { DEFAULT_MODEL_ID };

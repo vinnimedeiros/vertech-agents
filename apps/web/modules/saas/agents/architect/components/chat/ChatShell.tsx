@@ -17,6 +17,12 @@ import type {
 	BusinessProfileRefineInput,
 	KnowledgeBaseRefineInput,
 } from "../../lib/inline-refinement-schemas";
+import type {
+	AgentBlueprintContent,
+	ArchitectArtifact as _Artifact,
+} from "../../lib/artifact-types";
+import type { BlueprintRefineInput } from "../../lib/blueprint-schema";
+import { ArtifactDialogRefinement } from "../artifacts/ArtifactDialogRefinement";
 import { ArtifactCard } from "../artifacts/ArtifactCard";
 import { ArchitectComposer } from "./ArchitectComposer";
 import { ArchitectHeader } from "./ArchitectHeader";
@@ -80,6 +86,9 @@ export function ChatShell({
 	const [approvingId, setApprovingId] = useState<string | null>(null);
 	const [expandedId, setExpandedId] = useState<string | null>(null);
 	const [refiningId, setRefiningId] = useState<string | null>(null);
+	const [blueprintDialogId, setBlueprintDialogId] = useState<string | null>(
+		null,
+	);
 	const menuRef = useRef<AttachmentMenuHandle>(null);
 
 	const { uploadFiles, uploadLink, removeAttachment, ensureSession } =
@@ -271,7 +280,7 @@ export function ChatShell({
 				return;
 			}
 			if (artifact.type === "AGENT_BLUEPRINT") {
-				toast.info("Refinamento do Blueprint chega na 09.8.");
+				setBlueprintDialogId(artifactId);
 				return;
 			}
 			toast.info("Resumo final não suporta edição direta.");
@@ -328,6 +337,42 @@ export function ChatShell({
 			"Descreva no chat a alteração que quer — o Arquiteto vai aplicar.",
 		);
 	}, []);
+
+	const handleBlueprintSave = useCallback(
+		async (artifactId: string, data: BlueprintRefineInput) => {
+			setRefiningId(artifactId);
+			try {
+				const res = await fetch(
+					`/api/architect/artifacts/${artifactId}/refine-blueprint`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(data),
+					},
+				);
+				if (!res.ok) {
+					const payload = (await res.json().catch(() => null)) as {
+						message?: string;
+					} | null;
+					throw new Error(
+						payload?.message ??
+							"Erro ao salvar o Blueprint.",
+					);
+				}
+				toast.success("Blueprint atualizado.");
+				setBlueprintDialogId(null);
+			} catch (err) {
+				toast.error(
+					err instanceof Error
+						? err.message
+						: "Erro ao salvar o Blueprint.",
+				);
+			} finally {
+				setRefiningId(null);
+			}
+		},
+		[],
+	);
 
 	const handleApproveArtifact = useCallback(async (artifactId: string) => {
 		setApprovingId(artifactId);
@@ -462,6 +507,34 @@ export function ChatShell({
 					</div>
 				) : null}
 			</MessagesArea>
+			{blueprintDialogId ? (
+				(() => {
+					const blueprintArtifact = artifacts.find(
+						(a) => a.id === blueprintDialogId,
+					);
+					if (
+						!blueprintArtifact ||
+						blueprintArtifact.type !== "AGENT_BLUEPRINT"
+					) {
+						return null;
+					}
+					return (
+						<ArtifactDialogRefinement
+							open
+							onOpenChange={(nextOpen) => {
+								if (!nextOpen) setBlueprintDialogId(null);
+							}}
+							initial={
+								blueprintArtifact.content as AgentBlueprintContent
+							}
+							isSaving={refiningId === blueprintDialogId}
+							onSave={(data) =>
+								handleBlueprintSave(blueprintDialogId, data)
+							}
+						/>
+					);
+				})()
+			) : null}
 			<div className="pointer-events-none absolute inset-x-0 bottom-0 z-10">
 				<div className="pointer-events-auto">
 					<ArchitectComposer

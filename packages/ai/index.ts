@@ -9,3 +9,6 @@ export * from "./lib";
 
 // Phase 07A: Mastra subsystem (agente comercial dinamico + memory + storage)
 export * from "./src/mastra";
+
+// Phase 08-alpha: RAG infrastructure (ingest + chunk + embed + retrieval)
+export * from "./src/rag";

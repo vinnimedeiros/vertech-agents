@@ -1,7 +1,7 @@
 ---
 type: checkpoint
 last_updated: 2026-04-19
-active_story: "Phase 08-alpha COMPLETA (5/5 Ready for Review) — próximo: gate humano Vinni + commit/push + Phase 09"
+active_story: "Phase 08-alpha COMPLETA + pushed + PR #1 aberto — próximo: review/merge + Phase 09"
 active_agent: dev
 project: vertech-agents
 tags:
@@ -11,15 +11,16 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-19 madrugada tarde (**Phase 08-alpha COMPLETA** — 5 stories Ready for Review, gate verdict PASS com observações)
-> **Agente ativo:** `@dev` (Neo) — HALT após entrega completa, aguardando gate humano do Vinni sobre a sub-phase
-> **Próximo passo:** Vinni valida gate report em `docs/qa/phase-08a-gate-report.md` + (recomendado) 1 upload manual end-to-end em dev + decisão sobre commit/push. Depois Phase 09.1 (Tela de boas-vindas).
+> **Última atualização:** 2026-04-20 madrugada (**Phase 08-alpha pushed + PR #1 aberto**)
+> **Agente ativo:** `@devops` (Operator) — HALT após push/PR, aguardando review
+> **Próximo passo:** Vinni revisa PR #1 → decide entre mergear tudo ou cherry-pick 9 commits 08-alpha → depois Phase 09.1 (Niobe passa 9.1 pro Neo, UI do Arquiteto)
+> **PR:** https://github.com/vinnimedeiros/vertech-agents/pull/1
 
 ## Contexto Ativo
 
 **O que está sendo feito agora:** **Phase 08-alpha COMPLETA** numa sessão maratona de madrugada. Todas as 5 stories (08A.1 até 08A.5) Ready for Review. Gate 08A.5 com verdict PASS com observações. Próximo: gate humano do Vinni + decisão de commit/push + Phase 09.
 
-**Branch atual:** `feature/phase-08a-09-architect` com 5 stories (08A.1–5) uncommitted. 07B v1 permanece em hold em `feature/07B.1-agents-list-and-new`.
+**Branch atual:** `feature/phase-08a-09-architect` — 9 commits 08-alpha + 5 carry-over 07B v1, **pushed pro origin**, PR #1 aberto contra `main`. 07B v1 permanece em hold em `feature/07B.1-agents-list-and-new` (duplicado carry-over aqui, decisão no merge se mantém ou cherry-pick).
 **Branch main:** atualizada até Phase 07A (commit `3458641`).
 **Status do DB:** 100% pronto (migrations 0000-0015 aplicadas em prod via MCP). Bucket `architect-uploads` criado em prod em 08A.4.
 **Status do backlog:** 15 stories definidas; **5/5 de 08-alpha entregues**, 10 Phase 09 a iniciar.
@@ -142,6 +143,22 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - **Coolify VPS:** destino de deploy quando CRM + Chat + WhatsApp + Agenda (Phase 11) estiverem prontos
 
 ## Ultimo Trabalho Realizado
+
+### Sessão 2026-04-20 madrugada (Operator consolida push + PR)
+
+**Push consolidado e PR aberto:**
+- 9 commits organizados por domínio em `feature/phase-08a-09-architect`:
+  1. docs foundational (ADR-001 + PRD v2 + specs Phase 09)
+  2. database schemas + migration 0015
+  3. chore deps (rag + mastra + zod + cheerio)
+  4-7. feat 08A.1-4 (rag, worker, tools, upload)
+  8. docs backlog + gate + checkpoint
+  9. style biome fixes 07B v1
+- Push: `origin/feature/phase-08a-09-architect` (branch nova no remote)
+- **PR #1 aberto** contra `main`: https://github.com/vinnimedeiros/vertech-agents/pull/1
+- Descrição estruturada com contexto estratégico, escopo por story, quality gates, observações do gate report, estrutura de commits + decisão de merge (tudo vs cherry-pick dos 9)
+- Pre-push final: 92/92 tests + typecheck 5 workspaces verde
+- CodeRabbit: skipped (opcional, pode ser rodado antes do merge)
 
 ### Sessão 2026-04-19 madrugada tarde (Neo entrega 08A.5 — Quality Gate 08-alpha)
 
@@ -361,24 +378,31 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - [x] ~~Neo implementa 08A.4 (upload endpoint + Storage bucket)~~ ✅ Ready for Review
 - [x] ~~Vinni aprova 08A.4 em confiança ("a")~~ ✅
 - [x] ~~Neo entrega 08A.5 (Quality Gate — gate report com verdict PASS com observações)~~ ✅ Ready for Review
-- [ ] **Gate humano Vinni sobre 08-alpha inteira:** ler gate report + (recomendado) 1 upload manual end-to-end em dev
-- [ ] @devops consolida push de ~55 arquivos (docs estratégicos + schemas + backlog + 08A.1-5)
-- [ ] (Opcional) CodeRabbit antes do push
-- [ ] Phase 09.1 (Niobe → Neo): Tela de boas-vindas + grid 7 templates + SessionHistory
+- [x] ~~@devops consolida push de ~55 arquivos em 9 commits organizados~~ ✅ pushed `feature/phase-08a-09-architect`
+- [x] ~~@devops abre PR #1 contra main~~ ✅ https://github.com/vinnimedeiros/vertech-agents/pull/1
+- [ ] **Vinni revisa PR #1:** ler summary + gate report + (recomendado) 1 upload manual end-to-end em dev
+- [ ] Vinni decide merge strategy no PR: mergear tudo (14 commits) vs cherry-pick dos 9 de 08-alpha
+- [ ] (Opcional) CodeRabbit antes do merge final
+- [ ] Phase 09.1 (Niobe → Neo): Tela de boas-vindas + grid 7 templates + SessionHistory — **pode começar em paralelo** enquanto PR aguarda review
 - [ ] `@devops` (Operator) consolida push no fim de 08-alpha e depois 09
 - [ ] Gate humano Vinni após 08-alpha concluída e após 09 concluída (antes de 07B-v2)
 
 ## Git Recente
 
 ```
+2999cbb style(agents-ui): biome auto-fix em componentes 07B v1
+eb40dac docs(phase-08a): backlog completo + gate report PASS + checkpoint atualizado
+0ed977c feat(phase-08a.4): upload endpoint + bucket Storage + rate limit
+817081c feat(phase-08a.3): architectTools registry com 8 tools + transacao atomica
+7d6b9c4 feat(phase-08a.2): BullMQ worker ingest-document + health endpoint agregado
+af44d1f feat(phase-08a.1): pipeline RAG (ingest + 6 extractors + query + summary)
+b46283f chore(deps): add rag + mastra + zod + cheerio pra Phase 08-alpha
+261036e feat(database): schemas RAG + architect-session + agents v2 + migration 0015
+c9ffd51 docs(phase-08a-09): ADR-001 Arquiteto vs Orquestrador + PRD v2 + specs Phase 09
 550cad7 docs(research): pesquisa Mercado Agentes fluxo Criar com Assistente
-31ad6a6 feat(phase-07b): 07B.5-8 - Negocio + Conversas + Modelo + WhatsApp
-2573edf style(phase-07b): remove travessao de textos de UI
-c1c5e25 chore: ignora *.tmp.* + remove tmp vazado
-e98d83d feat(phase-07b): 07B.4 - aba Persona (4 eixos com botoes de escolha)
 ```
 
-**Branch atual:** `feature/07B.1-agents-list-and-new`
+**Branch atual:** `feature/phase-08a-09-architect` (pushed, PR #1 aberto)
 **Branch main:** `main` (última em `3458641` = Phase 07A pushed)
 **Status uncommitted:**
 - 6 docs estratégicos: ADR-001 + PRD v2 + CHECKPOINT + UI Spec 09 + Research Deps + Tech Spec 09

@@ -1,7 +1,7 @@
 ---
 type: checkpoint
-last_updated: 2026-04-19
-active_story: "Phase 09.1 + 09.2 + 09.3 Ready for Review (branch paralela) — próximo: gate humano + 09.4"
+last_updated: 2026-04-20
+active_story: "Phase 09.4 Ready for Review (anexos no chat). Próximo: gate humano Vinni em /agents/new → testar upload PDF + URL + remover"
 active_agent: dev
 project: vertech-agents
 tags:
@@ -11,10 +11,10 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-20 manhã (**Phase 09.1 + 09.2 + 09.3 Ready for Review** em branch paralela `feature/phase-09-architect-ui`)
-> **Agente ativo:** `@dev` (Neo) — HALT após entrega, aguardando gate humano
-> **Próximo passo:** Vinni testa composer em dev (digitar, Enter, Shift+Enter, Cmd+K, over-limit) + decide 09.4 (AttachmentMenu + upload flow) ou commit/push pra PR #2
-> **PR aberto (08-alpha):** https://github.com/vinnimedeiros/vertech-agents/pull/1
+> **Última atualização:** 2026-04-20 (**Phase 09.4 Ready for Review — anexos no chat**, Neo entregou)
+> **Agente ativo:** `@dev` (Neo) — HALT após entrega, aguardando gate humano Vinni
+> **Próximo passo:** Vinni sobe dev, abre `/agents/new?template=saas`, clica no Paperclip (ou Cmd+K), testa anexar PDF + Link + remover + over-limit. Se aprovar, 09.5 pluga Mastra useChat pro agente conversar de verdade
+> **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI 09.1+09.2+09.3) https://github.com/vinnimedeiros/vertech-agents/pull/2 — 09.4 será commitada no mesmo branch e entra na PR #2
 
 ## Contexto Ativo
 
@@ -143,6 +143,30 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - **Coolify VPS:** destino de deploy quando CRM + Chat + WhatsApp + Agenda (Phase 11) estiverem prontos
 
 ## Ultimo Trabalho Realizado
+
+### Sessão 2026-04-20 (Neo entrega 09.4 — anexos funcionais no chat)
+
+**Story 09.4 Ready for Review:**
+- **Endpoint auxiliar:** `POST /api/architect/sessions` cria DRAFT lazy (templateId + org validados, mastraThreadId = sessionId, mastraResourceId = userId). Destrava flow end-to-end antes de 09.5 (Mastra useChat).
+- **Menu de anexos:** DropdownMenu com 3 opções (Arquivo 10MB / Imagem 5MB / Link). Cmd+K abre via ref forward. Inputs file hidden com accept filtrado por tipo. Limite de 5 anexos com disable das opções + toast.
+- **Hook `useFileUpload`:** cria sessão lazy, FormData multi-file, AbortController por lote, mapeia response por fileName (ordem Promise.allSettled instável), toast em erros de rede, filtra imagens client-side (server 08A.4 rejeita MIME img) com preview via `URL.createObjectURL`.
+- **Hook `useDocumentEvents`:** subscribe Supabase Realtime em `knowledge_document` filtrado por sessionId. Mapeia PENDING/PROCESSING/READY/ERROR pra states do mini-card (uploading/processing/indexed/error).
+- **`UrlAnchorDialog`:** Dialog com Input type=url, valida http(s), submit chama `uploadLink` (POST /upload-link já existia em 08A.4).
+- **Mini-cards:** `AttachmentPendingCard` (acima do textarea, status spinner/check/error + botão X hover) + `AttachmentMessageCard` (pra bubble da mensagem enviada em 09.5, stub exportado).
+- **Integração composer:** novo prop `attachmentSlot` + `attachments` + `onRemoveAttachment`. Guard de envio enquanto tem upload em andamento (`hasUploadingAttachment`). Placeholder muda pra "Aguardando processar anexos..." durante upload.
+- **ChatShell:** gerencia `sessionId` + `attachments` state, monta AttachmentMenu com ref, plugou os 2 hooks, toast via sonner.
+- **Divergências documentadas na story:** strings hardcoded pt-BR (pattern projeto), preview local de imagem adicionado ao escopo (AC Scope OUT relaxado), imagens não vão pro bucket até RAG suportar extractor.
+- **Gates:** `pnpm --filter @repo/web type-check` passa ✅ | Biome 0 errors (20 warnings useBlockStatements, baseline do projeto).
+- **8 arquivos novos + 3 modificados** em `apps/web/modules/saas/agents/architect/` + `apps/web/app/api/architect/sessions/`.
+
+### Sessão 2026-04-20 (Operator pusha Phase 09 + abre PR #2 stacked)
+
+**Branch pushed e PR #2 aberta:**
+- `git push -u origin feature/phase-09-architect-ui` OK (new branch no remote, upstream configurado)
+- PR #2 stacked contra `feature/phase-08a-09-architect` (base da PR #1) — não duplica os ~35K linhas já na PR #1. Review isola os 3 commits de Phase 09. Quando PR #1 mergear, GitHub ajusta #2 pra main automaticamente
+- Quality gates pré-push: `pnpm lint` e `pnpm typecheck` rodados. Erros de lint/typecheck presentes são **pré-existentes do boilerplate** (`packages/mail/emails/` JSX config, biome block-statements) — `git log main..HEAD -- packages/mail/ tooling/scripts/ packages/auth/` confirma que Phase 09 não tocou nesses pacotes. `@repo/web` passa typecheck sem erros
+- Body da PR detalha os 3 commits, arquivos por sub-phase, status honesto dos gates e follow-ups (mover `.playwright-mcp/` e `mercado-agentes-*.png` pra `docs/research/`)
+- PR URL: https://github.com/vinnimedeiros/vertech-agents/pull/2
 
 ### Sessão 2026-04-20 manhã (Neo entrega 09.3 — Composer funcional)
 
@@ -416,10 +440,15 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - [x] ~~@devops consolida push de ~55 arquivos em 9 commits organizados~~ ✅ pushed `feature/phase-08a-09-architect`
 - [x] ~~@devops abre PR #1 contra main~~ ✅ https://github.com/vinnimedeiros/vertech-agents/pull/1
 - [ ] **Vinni revisa PR #1:** ler summary + gate report + (recomendado) 1 upload manual end-to-end em dev
-- [ ] Vinni decide merge strategy no PR: mergear tudo (14 commits) vs cherry-pick dos 9 de 08-alpha
+- [ ] Vinni decide merge strategy no PR #1: mergear tudo (14 commits) vs cherry-pick dos 9 de 08-alpha
 - [ ] (Opcional) CodeRabbit antes do merge final
-- [ ] Phase 09.1 (Niobe → Neo): Tela de boas-vindas + grid 7 templates + SessionHistory — **pode começar em paralelo** enquanto PR aguarda review
-- [ ] `@devops` (Operator) consolida push no fim de 08-alpha e depois 09
+- [x] ~~Phase 09.1 (Niobe → Neo): Tela de boas-vindas + grid 7 templates + SessionHistory~~ ✅ Ready for Review + pushed
+- [x] ~~Phase 09.2 (Neo): Shell do chat `/agents/new`~~ ✅ Ready for Review + pushed
+- [x] ~~Phase 09.3 (Neo): Composer funcional + CharCounter + auto-resize hook~~ ✅ Ready for Review + pushed
+- [x] ~~@devops consolida push de Phase 09 e abre PR #2 stacked~~ ✅ https://github.com/vinnimedeiros/vertech-agents/pull/2
+- [ ] **Vinni revisa PR #2:** rodar dev, testar `/agents` + `/agents/new`, validar composer (Enter, Shift+Enter, Cmd+K, over-limit)
+- [ ] Phase 09.4 (Neo): AttachmentMenu + upload flow (Cmd+K no composer conecta ao bucket `architect-uploads`)
+- [ ] Follow-up housekeeping: mover `.playwright-mcp/*.yml` + `mercado-agentes-*.png` pra `docs/research/` + gitignore (PR separada)
 - [ ] Gate humano Vinni após 08-alpha concluída e após 09 concluída (antes de 07B-v2)
 
 ## Git Recente

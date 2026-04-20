@@ -8,14 +8,25 @@ import {
 	TooltipTrigger,
 } from "@ui/components/tooltip";
 import { cn } from "@ui/lib";
-import { ArrowUpIcon, Loader2Icon, PaperclipIcon } from "lucide-react";
-import { type KeyboardEvent, useCallback, useEffect, useState } from "react";
+import { ArrowUpIcon, Loader2Icon } from "lucide-react";
+import {
+	type KeyboardEvent,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useState,
+} from "react";
 import { useAutoResizeTextarea } from "../../hooks/useAutoResizeTextarea";
+import type { ArchitectAttachment } from "../../lib/attachment-helpers";
+import { AttachmentPendingCard } from "./AttachmentPendingCard";
 import { CharCounter } from "./CharCounter";
 
 type Props = {
 	onSend: (text: string) => void | Promise<void>;
 	onOpenAttachmentMenu?: () => void;
+	attachmentSlot?: ReactNode;
+	attachments?: ArchitectAttachment[];
+	onRemoveAttachment?: (id: string) => void;
 	disabled?: boolean;
 	blocked?: boolean;
 	maxChars?: number;
@@ -43,6 +54,9 @@ const MAX_ROWS = 8;
 export function ArchitectComposer({
 	onSend,
 	onOpenAttachmentMenu,
+	attachmentSlot,
+	attachments = [],
+	onRemoveAttachment,
 	disabled = false,
 	blocked = false,
 	maxChars = DEFAULT_MAX_CHARS,
@@ -69,8 +83,16 @@ export function ArchitectComposer({
 	const trimmed = value.trim();
 	const hasContent = trimmed.length > 0;
 	const isOverLimit = value.length >= maxChars;
+	const hasUploadingAttachment = attachments.some(
+		(a) => a.status === "uploading",
+	);
 	const canSubmit =
-		hasContent && !isOverLimit && !disabled && !blocked && !isSubmitting;
+		hasContent &&
+		!isOverLimit &&
+		!disabled &&
+		!blocked &&
+		!isSubmitting &&
+		!hasUploadingAttachment;
 
 	const send = useCallback(async () => {
 		if (!canSubmit) return;
@@ -105,7 +127,7 @@ export function ArchitectComposer({
 
 	const placeholder = !isOnline
 		? "Sem conexão. Suas mensagens vão ser enviadas quando voltar."
-		: blocked
+		: blocked || hasUploadingAttachment
 			? "Aguardando processar anexos..."
 			: "Digite sua mensagem...";
 
@@ -125,9 +147,22 @@ export function ArchitectComposer({
 		</Button>
 	);
 
+	const hasAttachments = attachments.length > 0;
+
 	return (
 		<div className="border-border border-t bg-background p-3 md:p-4">
 			<div className="mx-auto max-w-[800px]">
+				{hasAttachments ? (
+					<div className="mb-2 flex flex-wrap gap-2">
+						{attachments.map((attachment) => (
+							<AttachmentPendingCard
+								key={attachment.id}
+								attachment={attachment}
+								onRemove={(id) => onRemoveAttachment?.(id)}
+							/>
+						))}
+					</div>
+				) : null}
 				<div
 					className={cn(
 						"flex items-end gap-2 rounded-xl border bg-card p-2 transition-colors",
@@ -135,16 +170,7 @@ export function ArchitectComposer({
 						disabled && "opacity-60",
 					)}
 				>
-					<Button
-						variant="ghost"
-						size="icon"
-						disabled
-						onClick={onOpenAttachmentMenu}
-						aria-label="Anexar arquivo (em breve)"
-						className="size-9 shrink-0 self-end text-foreground/60"
-					>
-						<PaperclipIcon className="size-4" />
-					</Button>
+					{attachmentSlot}
 
 					<textarea
 						ref={textareaRef}

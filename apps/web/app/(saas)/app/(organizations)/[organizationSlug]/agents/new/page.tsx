@@ -83,6 +83,7 @@ export default async function NewArchitectChatPage({
 	return (
 		<ChatShell
 			organizationSlug={organizationSlug}
+			templateId={resolvedTemplate.id}
 			templateLabel={resolvedTemplate.label}
 			sessionId={resolvedSessionId}
 		/>

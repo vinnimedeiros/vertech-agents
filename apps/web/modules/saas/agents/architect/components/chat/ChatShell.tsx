@@ -18,6 +18,7 @@ import { ChatWelcomeCta } from "./ChatWelcomeCta";
 import { MessageBubble } from "./MessageBubble";
 import { MessagesArea } from "./MessagesArea";
 import { type ArchitectStage, StatusBar } from "./StatusBar";
+import { TypingIndicator } from "./TypingIndicator";
 
 /**
  * Texto-gatilho enviado ao clicar "Iniciar construção". Mensagem do user
@@ -210,37 +211,49 @@ export function ChatShell({
 	);
 	const composerBlocked = rateLimited || hasUploadingAttachment;
 
-	const renderedMessages = useMemo(() => {
-		if (messages.length === 0) return null;
-		return (messages as Message[])
-			.filter((msg) => {
-				// Esconde o trigger oculto que abriu a conversa —
-				// user não deve ver a instrução que foi mandada pro LLM.
-				if (
-					msg.role === "user" &&
-					msg.content === START_TRIGGER_TEXT
-				) {
-					return false;
-				}
-				return true;
-			})
-			.map((msg, idx, arr) => {
-				const isLast = idx === arr.length - 1;
-				const streaming =
-					isLoading && isLast && msg.role === "assistant";
-				return (
-					<MessageBubble
-						key={msg.id}
-						role={msg.role}
-						content={msg.content}
-						isStreaming={streaming}
-					/>
-				);
-			});
-	}, [messages, isLoading]);
+	const visibleMessages = useMemo(() => {
+		return (messages as Message[]).filter((msg) => {
+			// Esconde o trigger oculto que abriu a conversa —
+			// user não deve ver a instrução que foi mandada pro LLM.
+			if (msg.role === "user" && msg.content === START_TRIGGER_TEXT) {
+				return false;
+			}
+			return true;
+		});
+	}, [messages]);
 
-	const showInitialShimmer =
-		hasStarted && messages.length === 0 && (isStarting || isLoading);
+	const renderedMessages = useMemo(() => {
+		if (visibleMessages.length === 0) return null;
+		return visibleMessages.map((msg, idx, arr) => {
+			const isLast = idx === arr.length - 1;
+			const streaming = isLoading && isLast && msg.role === "assistant";
+			return (
+				<MessageBubble
+					key={msg.id}
+					role={msg.role}
+					content={msg.content}
+					isStreaming={streaming}
+				/>
+			);
+		});
+	}, [visibleMessages, isLoading]);
+
+	// Mostra balão "digitando" quando backend processa mas nenhum token
+	// do stream do Arquiteto chegou ainda. Cobre 3 casos:
+	// 1. Welcome trigger em voo (isStarting ou isLoading sem mensagens)
+	// 2. User mandou msg e está esperando resposta (last msg é user)
+	// 3. Stream começou mas assistant content ainda vazio
+	const showTypingIndicator = (() => {
+		if (!hasStarted) return false;
+		if (isStarting) return true;
+		if (!isLoading) return false;
+		if (visibleMessages.length === 0) return true;
+		const last = visibleMessages[visibleMessages.length - 1];
+		if (!last) return false;
+		if (last.role === "user") return true;
+		if (last.role === "assistant" && !last.content.trim()) return true;
+		return false;
+	})();
 
 	if (!hasStarted) {
 		return (
@@ -271,8 +284,9 @@ export function ChatShell({
 				isDirty={isDirty}
 			/>
 			<StatusBar currentStage={currentStage} doneStages={doneStages} />
-			<MessagesArea isLoadingInitial={showInitialShimmer}>
+			<MessagesArea isLoadingInitial={false}>
 				{renderedMessages}
+				{showTypingIndicator ? <TypingIndicator /> : null}
 				{chatError && !isLoading ? (
 					<div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-xs">
 						{chatError.message ||
@@ -287,10 +301,11 @@ export function ChatShell({
 						onOpenAttachmentMenu={() => menuRef.current?.open()}
 						attachments={attachments}
 						onRemoveAttachment={removeAttachment}
-						blocked={composerBlocked}
-						disabled={isLoading}
+						blocked={composerBlocked || showTypingIndicator}
+						disabled={isLoading || isStarting}
 						onStop={isLoading ? stop : undefined}
 						isStreaming={isLoading}
+						isWaitingReply={showTypingIndicator}
 						attachmentSlot={
 							<AttachmentMenu
 								ref={menuRef}

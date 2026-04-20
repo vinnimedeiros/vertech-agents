@@ -32,6 +32,7 @@ type Props = {
 	maxChars?: number;
 	onStop?: () => void;
 	isStreaming?: boolean;
+	isWaitingReply?: boolean;
 };
 
 const DEFAULT_MAX_CHARS = 4000;
@@ -64,6 +65,7 @@ export function ArchitectComposer({
 	maxChars = DEFAULT_MAX_CHARS,
 	onStop,
 	isStreaming = false,
+	isWaitingReply = false,
 }: Props) {
 	const [value, setValue] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -144,9 +146,13 @@ export function ArchitectComposer({
 
 	const placeholder = !isOnline
 		? "Sem conexão. Suas mensagens vão ser enviadas quando voltar."
-		: blocked || hasUploadingAttachment
-			? "Aguardando processar anexos..."
-			: "Digite sua mensagem...";
+		: isWaitingReply
+			? "Arquiteto está respondendo..."
+			: hasUploadingAttachment
+				? "Aguardando processar anexos..."
+				: blocked
+					? "Aguarde um instante..."
+					: "Digite sua mensagem...";
 
 	const sendButton =
 		isStreaming && onStop ? (

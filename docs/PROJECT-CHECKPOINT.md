@@ -1,7 +1,7 @@
 ---
 type: checkpoint
 last_updated: 2026-04-20
-active_story: "Phase 09.4 Ready for Review (anexos no chat). Próximo: gate humano Vinni em /agents/new → testar upload PDF + URL + remover"
+active_story: "Phase 09.5 Ready for Review (Mastra Architect Agent + chat streaming). Próximo: gate humano Vinni em /agents/new → conversar de verdade com Arquiteto"
 active_agent: dev
 project: vertech-agents
 tags:
@@ -11,10 +11,10 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-20 (**Phase 09.4 Ready for Review — anexos no chat**, Neo entregou)
+> **Última atualização:** 2026-04-20 (**Phase 09.5 Ready for Review — Arquiteto conversa de verdade**, Neo entregou)
 > **Agente ativo:** `@dev` (Neo) — HALT após entrega, aguardando gate humano Vinni
-> **Próximo passo:** Vinni sobe dev, abre `/agents/new?template=saas`, clica no Paperclip (ou Cmd+K), testa anexar PDF + Link + remover + over-limit. Se aprovar, 09.5 pluga Mastra useChat pro agente conversar de verdade
-> **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI 09.1+09.2+09.3) https://github.com/vinnimedeiros/vertech-agents/pull/2 — 09.4 será commitada no mesmo branch e entra na PR #2
+> **Próximo passo:** Vinni sobe dev, abre `/agents/new?template=clinical` (ou outro), conversa 3-5 turnos com Arquiteto, vê streaming token-by-token + StatusBar atualizar quando Arquiteto avança etapa. Se aprovar, 09.6 implementa cards de artefato inline.
+> **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI 09.1+09.2+09.3+09.4+09.5) https://github.com/vinnimedeiros/vertech-agents/pull/2 — 09.4+09.5 no mesmo branch
 
 ## Contexto Ativo
 
@@ -143,6 +143,25 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - **Coolify VPS:** destino de deploy quando CRM + Chat + WhatsApp + Agenda (Phase 11) estiverem prontos
 
 ## Ultimo Trabalho Realizado
+
+### Sessão 2026-04-20 (Neo entrega 09.5 — Arquiteto conversa de verdade)
+
+**Story 09.5 Ready for Review:**
+- **Working memory schema (`types/architect-working-memory.ts`):** Zod schema completo tech-spec § 3.1 com defaults pra todos os campos. Consumido pelo Memory do Mastra via `workingMemory.schema`.
+- **7 templates (`templates/{clinical,ecommerce,real-estate,info-product,saas,local-services,custom}.ts + index.ts`):** cada um com `promptInjection` por vertical (perguntas-chave, presets de técnicas comerciais, persona sugerida, emojis, capabilities).
+- **Instructions builder (`instructions/architect.ts`):** `buildArchitectInstructions(context)` monta system prompt pt-BR com persona + 4 etapas + regras de fluxo + tool narration + template injection + checklist atual + uploadedDocuments. Fonte do working memory no Agent callback: `agentCreationSession.draftSnapshot` + `knowledgeDocument` pra lista de docs.
+- **Memory config (`memory/architect.ts`):** PostgresStore singleton + PgVector (knowledge_chunk index) + embedder string `openai/text-embedding-3-small` + `lastMessages: 20` + `semanticRecall` HNSW dotproduct (params em `hnsw: {}` aninhado na API v1.25) + `workingMemory.schema` Zod.
+- **Architect Agent (`agents/architect.ts`):** `model: 'openai/gpt-4o'` (forte, tech-spec § 1.1), tools = `architectTools`, memory = `getArchitectAgentMemory()`, instructions dinâmicas via callback que consulta DB.
+- **Instance registration:** `getMastra()` agora registra `architectAgent` além do `commercialAgent`.
+- **Route handler (`/api/architect/chat/route.ts`):** POST com auth → rate limit 10/min por sessionId (`ARCHITECT_CHAT_LIMIT`) → ownership check (sessão DRAFT do user) → `RequestContext` populado (sessionId, userId, orgId, templateId, currentStage, attachmentIds, workingMemory placeholder) → `mastra.getAgent('architectAgent').stream()` com `memory: { thread, resource }` → retorna `result.textStream` como `Response text/plain`. Auto-save de `updatedAt` a cada turno.
+- **Hook `useArchitectChat`:** wrapper `useChat` de `ai/react` com `streamProtocol: 'text'` + `experimental_prepareRequestBody` injetando sessionId + attachmentIds (via ref pra permitir envio síncrono sem re-render). Handler 429 aciona callback `onRateLimited`. Exporta `sendWithAttachments(text, documentIds)`.
+- **Hook `useSessionEvents`:** subscribe Supabase Realtime em `agent_creation_session` filtrado por id. Quando `draftSnapshot.currentStage` muda (Arquiteto avança etapa via tool call), hook notifica shell → StatusBar marca etapa anterior como done + troca current.
+- **MessageBubble:** renderiza mensagens user (bubble direito bg-primary/5) e assistant (avatar Sparkles + texto corrido) com cursor piscando quando streaming.
+- **ChatShell integrado:** substitui handleSend stub pelo `sendWithAttachments` real, passa StatusBar dinâmico com `doneStages`, mostra toast de rate limit com countdown, MessagesArea renderiza `messages.map(MessageBubble)`, shimmer só no primeiro turn carregando.
+- **ArchitectComposer:** novo prop `onStop` + `isStreaming`. ESC durante stream aborta. Botão de enviar vira botão de parar (SquareIcon + variant=secondary) quando `isStreaming`.
+- **Gates:** `pnpm --filter @repo/web type-check` passa ✅ | `pnpm --filter @repo/ai type-check` passa ✅ | Biome 0 errors (36 warnings useBlockStatements, baseline do projeto).
+- **15 arquivos novos + 5 modificados** em `packages/ai/src/mastra/` e `apps/web/`.
+- **Commit:** `b7cb1f9`.
 
 ### Sessão 2026-04-20 (Neo entrega 09.4 — anexos funcionais no chat)
 

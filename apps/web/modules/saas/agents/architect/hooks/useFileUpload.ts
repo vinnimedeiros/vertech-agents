@@ -365,5 +365,6 @@ export function useFileUpload({
 		uploadFiles,
 		uploadLink,
 		removeAttachment,
+		ensureSession,
 	};
 }

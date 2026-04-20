@@ -1,7 +1,7 @@
 "use client";
 
 import { type Message, useChat } from "ai/react";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type UseArchitectChatOptions = {
 	sessionId?: string;
@@ -19,16 +19,17 @@ type ArchitectRequestBody = {
 /**
  * Hook do chat do Arquiteto (story 09.5, tech-spec § 7.2).
  *
- * Wrapper em torno do `useChat` do @ai-sdk/react com:
+ * Wrapper em torno do `useChat` do ai/react com:
  * - `streamProtocol: 'text'` pra consumir `textStream` puro que o route handler
  *   retorna (Mastra `result.textStream`)
  * - `experimental_prepareRequestBody` pra injetar `sessionId` e `attachmentIds`
- *   no payload a cada envio (o UI mantém `attachments` em state separado)
- * - Interceptação de 429 para acionar callback `onRateLimited` (UI mostra
- *   toast + countdown no composer)
+ *   no payload a cada envio
+ * - Interceptação de 429 para acionar callback `onRateLimited`
  *
- * `sendWithAttachments(text, attachmentIds)` é a API exposta ao consumer:
- * envia msg + lista de documentIds prontos na mesma chamada.
+ * Sessão pode ser criada depois do primeiro render (ensureSession lazy).
+ * Por isso sessionId é armazenado em `sessionIdRef` e pode ser atualizado
+ * via `setSessionId(id)` pelo parent — evita stale closure durante o mesmo
+ * ciclo de render.
  */
 export function useArchitectChat({
 	sessionId,
@@ -37,6 +38,11 @@ export function useArchitectChat({
 	onError,
 }: UseArchitectChatOptions) {
 	const pendingAttachmentIdsRef = useRef<string[]>([]);
+	const sessionIdRef = useRef<string | undefined>(sessionId);
+
+	useEffect(() => {
+		sessionIdRef.current = sessionId;
+	}, [sessionId]);
 
 	const chat = useChat({
 		api: "/api/architect/chat",
@@ -45,7 +51,7 @@ export function useArchitectChat({
 		streamProtocol: "text",
 		experimental_prepareRequestBody: ({ messages }) => {
 			const body: ArchitectRequestBody = {
-				sessionId: sessionId ?? "",
+				sessionId: sessionIdRef.current ?? "",
 				messages: messages as Message[],
 				attachmentIds: pendingAttachmentIdsRef.current,
 			};
@@ -80,8 +86,15 @@ export function useArchitectChat({
 
 	const append = chat.append;
 	const sendWithAttachments = useCallback(
-		async (text: string, attachmentIds: string[] = []) => {
-			if (!sessionId) {
+		async (
+			text: string,
+			attachmentIds: string[] = [],
+			sessionIdOverride?: string,
+		) => {
+			if (sessionIdOverride) {
+				sessionIdRef.current = sessionIdOverride;
+			}
+			if (!sessionIdRef.current) {
 				throw new Error(
 					"sessionId obrigatório — chamar ensureSession antes de enviar.",
 				);
@@ -96,7 +109,7 @@ export function useArchitectChat({
 				pendingAttachmentIdsRef.current = [];
 			}
 		},
-		[append, sessionId],
+		[append],
 	);
 
 	return {

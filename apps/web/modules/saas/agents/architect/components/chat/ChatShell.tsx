@@ -59,13 +59,14 @@ export function ChatShell({
 	const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
 	const menuRef = useRef<AttachmentMenuHandle>(null);
 
-	const { uploadFiles, uploadLink, removeAttachment } = useFileUpload({
-		organizationSlug,
-		templateId,
-		initialSessionId,
-		onSessionCreated: setSessionId,
-		onAttachmentsChange: setAttachments,
-	});
+	const { uploadFiles, uploadLink, removeAttachment, ensureSession } =
+		useFileUpload({
+			organizationSlug,
+			templateId,
+			initialSessionId,
+			onSessionCreated: setSessionId,
+			onAttachmentsChange: setAttachments,
+		});
 
 	useDocumentEvents({
 		sessionId,
@@ -136,7 +137,7 @@ export function ChatShell({
 	const rateLimited = rateLimitUntil !== null && Date.now() < rateLimitUntil;
 
 	const handleSend = async (text: string) => {
-		if (!sessionId || rateLimited) return;
+		if (rateLimited) return;
 		const readyIds = attachments
 			.filter(
 				(a) =>
@@ -148,7 +149,13 @@ export function ChatShell({
 			.map((a) => a.documentId as string);
 
 		try {
-			await sendWithAttachments(text, readyIds);
+			// Cria sessão DRAFT lazy se ainda não existe (primeira mensagem
+			// sem upload prévio). ensureSession é idempotente — cache via
+			// sessionIdRef do useFileUpload.
+			const activeSessionId = await ensureSession();
+			// Passa o id via override pra evitar stale closure: setSessionId
+			// do parent não propaga ainda no mesmo ciclo síncrono.
+			await sendWithAttachments(text, readyIds, activeSessionId);
 			setIsDirty(true);
 			// Anexos já foram referenciados na mensagem — limpa a lista local.
 			setAttachments([]);

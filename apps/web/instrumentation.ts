@@ -31,7 +31,11 @@ export async function register() {
 					"WhatsApp channel requer channelInstanceId e phone",
 				);
 			}
-			await whatsapp.sendText(info.channelInstanceId, info.phone, info.text);
+			await whatsapp.sendText(
+				info.channelInstanceId,
+				info.phone,
+				info.text,
+			);
 		});
 
 		console.log("[instrumentation] OutboundSender (WhatsApp) registrado");
@@ -52,14 +56,16 @@ export async function register() {
 	}
 
 	try {
-		const { startAgentInvocationWorker } = await import("@repo/queue");
+		const { startAgentInvocationWorker, startIngestDocumentWorker } =
+			await import("@repo/queue");
 		startAgentInvocationWorker();
+		startIngestDocumentWorker();
 		console.log(
-			"[instrumentation] agent-invocation worker iniciado inline (dev mode)",
+			"[instrumentation] agent-invocation + ingest-document workers iniciados inline (dev mode)",
 		);
 	} catch (err) {
 		console.error(
-			"[instrumentation] falha ao iniciar worker inline:",
+			"[instrumentation] falha ao iniciar workers inline:",
 			err instanceof Error ? err.message : err,
 		);
 	}

@@ -11,10 +11,7 @@ import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { v4 as uuid } from "uuid";
-import {
-	getAgentInitials,
-	resolveAgentAvatarUrl,
-} from "../lib/avatar-helpers";
+import { getAgentInitials, resolveAgentAvatarUrl } from "../lib/avatar-helpers";
 
 type Props = {
 	agentId: string;
@@ -76,7 +73,9 @@ export function AgentAvatarUpload({
 
 			let signedUrl: string;
 			try {
-				const response = await apiClient.uploads["signed-upload-url"].$post({
+				const response = await apiClient.uploads[
+					"signed-upload-url"
+				].$post({
 					query: {
 						path,
 						bucket: config.storage.bucketNames.avatars,
@@ -139,7 +138,9 @@ export function AgentAvatarUpload({
 		} catch (err) {
 			console.error("[avatar-upload] unexpected error", err);
 			const message =
-				err instanceof Error ? err.message : "Erro inesperado no upload.";
+				err instanceof Error
+					? err.message
+					: "Erro inesperado no upload.";
 			toast.error(message);
 		} finally {
 			setUploading(false);

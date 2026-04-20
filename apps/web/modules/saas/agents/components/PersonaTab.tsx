@@ -14,9 +14,9 @@ import {
 	type EmpathyLevel,
 	type Formality,
 	type Humor,
-	personalitySchema,
 	type PersonalityInput,
 	type Tone,
+	personalitySchema,
 } from "../lib/schemas";
 import { useAgentForm } from "../lib/use-agent-form";
 import { DirtyStateBanner } from "./DirtyStateBanner";
@@ -82,10 +82,12 @@ export function PersonaTab({ organizationSlug }: Props) {
 	return (
 		<div className="flex flex-col">
 			<div className="mb-6">
-				<h3 className="font-semibold text-foreground text-lg">Persona</h3>
+				<h3 className="font-semibold text-foreground text-lg">
+					Persona
+				</h3>
 				<p className="mt-1 text-foreground/60 text-sm">
-					Como o agente soa nas conversas. Escolha o jeito de falar em cada
-					um dos 4 eixos.
+					Como o agente soa nas conversas. Escolha o jeito de falar em
+					cada um dos 4 eixos.
 				</p>
 			</div>
 
@@ -133,7 +135,8 @@ export function PersonaTab({ organizationSlug }: Props) {
 									/>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Como o agente se refere ao contato (tu, você, senhor/senhora).
+									Como o agente se refere ao contato (tu,
+									você, senhor/senhora).
 								</p>
 								<FormMessage />
 							</FormItem>
@@ -156,7 +159,8 @@ export function PersonaTab({ organizationSlug }: Props) {
 									/>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Espaço que o agente dá pra leveza nas respostas.
+									Espaço que o agente dá pra leveza nas
+									respostas.
 								</p>
 								<FormMessage />
 							</FormItem>
@@ -179,7 +183,8 @@ export function PersonaTab({ organizationSlug }: Props) {
 									/>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Quanto o agente acolhe sentimentos antes de resolver.
+									Quanto o agente acolhe sentimentos antes de
+									resolver.
 								</p>
 								<FormMessage />
 							</FormItem>

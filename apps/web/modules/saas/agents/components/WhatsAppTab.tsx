@@ -58,9 +58,7 @@ export function WhatsAppTab({
 	const isArchived = agent.status === "ARCHIVED";
 	const hasLink = !!currentInstance;
 
-	const [selected, setSelected] = useState<string>(
-		currentInstance?.id ?? "",
-	);
+	const [selected, setSelected] = useState<string>(currentInstance?.id ?? "");
 	const [pending, startTransition] = useTransition();
 	const [unlinkOpen, setUnlinkOpen] = useState(false);
 
@@ -113,7 +111,9 @@ export function WhatsAppTab({
 	return (
 		<div className="flex flex-col gap-6">
 			<div>
-				<h3 className="font-semibold text-foreground text-lg">WhatsApp</h3>
+				<h3 className="font-semibold text-foreground text-lg">
+					WhatsApp
+				</h3>
 				<p className="mt-1 text-foreground/60 text-sm">
 					Conecte o agente a uma instância de WhatsApp pra começar a
 					responder mensagens.
@@ -160,10 +160,12 @@ export function WhatsAppTab({
 						</div>
 						<div>
 							<p className="font-semibold text-foreground">
-								Este agente não está vinculado a nenhuma instância
+								Este agente não está vinculado a nenhuma
+								instância
 							</p>
 							<p className="mt-1 text-foreground/60 text-sm">
-								Selecione uma instância pra começar a receber mensagens.
+								Selecione uma instância pra começar a receber
+								mensagens.
 							</p>
 						</div>
 					</CardContent>
@@ -190,7 +192,9 @@ export function WhatsAppTab({
 								{selectableInstances.map((i) => (
 									<SelectItem key={i.id} value={i.id}>
 										{i.name}
-										{i.phoneNumber ? ` · ${formatPhone(i.phoneNumber)}` : ""}
+										{i.phoneNumber
+											? ` · ${formatPhone(i.phoneNumber)}`
+											: ""}
 									</SelectItem>
 								))}
 							</SelectContent>
@@ -229,7 +233,9 @@ export function WhatsAppTab({
 			<AlertDialog open={unlinkOpen} onOpenChange={setUnlinkOpen}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Desvincular WhatsApp?</AlertDialogTitle>
+						<AlertDialogTitle>
+							Desvincular WhatsApp?
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							{agent.status === "ACTIVE"
 								? "O agente será pausado, já que sem WhatsApp não pode operar. Você pode reativar depois de vincular outra instância."

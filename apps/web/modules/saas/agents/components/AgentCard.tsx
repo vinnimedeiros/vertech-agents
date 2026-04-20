@@ -3,10 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import { cn } from "@ui/lib";
 import { PhoneIcon, PhoneOffIcon } from "lucide-react";
 import Link from "next/link";
-import {
-	getAgentInitials,
-	resolveAgentAvatarUrl,
-} from "../lib/avatar-helpers";
+import { getAgentInitials, resolveAgentAvatarUrl } from "../lib/avatar-helpers";
 import type { AgentListRow } from "../lib/server";
 import { AgentCardActions } from "./AgentCardActions";
 import { AgentStatusBadge } from "./AgentStatusBadge";
@@ -45,7 +42,11 @@ export function AgentCard({
 			<div className="pointer-events-none relative z-10 flex items-start gap-3">
 				<Avatar className="size-12 shrink-0 rounded-lg">
 					{avatarSrc ? (
-						<AvatarImage src={avatarSrc} alt="" className="rounded-lg" />
+						<AvatarImage
+							src={avatarSrc}
+							alt=""
+							className="rounded-lg"
+						/>
 					) : null}
 					<AvatarFallback className="rounded-lg bg-primary/10 text-primary">
 						{getAgentInitials(agent.name)}

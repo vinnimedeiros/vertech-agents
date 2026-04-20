@@ -190,8 +190,7 @@ export async function toggleAgentStatusAction(
 	input: unknown,
 	organizationSlug: string,
 ): Promise<
-	| { ok: true }
-	| { ok: false; code: "MISSING_FIELDS"; missing: string[] }
+	{ ok: true } | { ok: false; code: "MISSING_FIELDS"; missing: string[] }
 > {
 	const user = await requireAuthed();
 	const data = toggleStatusInputSchema.parse(input);

@@ -90,7 +90,9 @@ export function AgentCardActions({
 					);
 					return;
 				}
-				toast.success(to === "ACTIVE" ? "Agente ativado." : "Agente pausado.");
+				toast.success(
+					to === "ACTIVE" ? "Agente ativado." : "Agente pausado.",
+				);
 			} catch (err) {
 				console.error(err);
 				toast.error("Não foi possível atualizar o status.");
@@ -134,11 +136,15 @@ export function AgentCardActions({
 						Duplicar
 					</DropdownMenuItem>
 					{status === "ACTIVE" ? (
-						<DropdownMenuItem onSelect={() => handleToggle("PAUSED")}>
+						<DropdownMenuItem
+							onSelect={() => handleToggle("PAUSED")}
+						>
 							Pausar
 						</DropdownMenuItem>
 					) : status === "DRAFT" || status === "PAUSED" ? (
-						<DropdownMenuItem onSelect={() => handleToggle("ACTIVE")}>
+						<DropdownMenuItem
+							onSelect={() => handleToggle("ACTIVE")}
+						>
 							Ativar
 						</DropdownMenuItem>
 					) : null}
@@ -161,8 +167,8 @@ export function AgentCardActions({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Arquivar agente?</AlertDialogTitle>
 						<AlertDialogDescription>
-							O agente some da lista e é desvinculado do WhatsApp. Você pode
-							desarquivar depois pela tela de detalhe.
+							O agente some da lista e é desvinculado do WhatsApp.
+							Você pode desarquivar depois pela tela de detalhe.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

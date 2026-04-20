@@ -6,7 +6,6 @@ import {
 	eq,
 	inArray,
 	ne,
-	or,
 	whatsappInstance,
 } from "@repo/database";
 import { cache } from "react";

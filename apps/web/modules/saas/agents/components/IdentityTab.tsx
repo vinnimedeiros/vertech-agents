@@ -16,8 +16,8 @@ import { updateAgentIdentityAction } from "../lib/actions";
 import { useAgent } from "../lib/agent-context";
 import {
 	type AgentGender,
-	identitySchema,
 	type IdentityInput,
+	identitySchema,
 } from "../lib/schemas";
 import { useAgentForm } from "../lib/use-agent-form";
 import { AgentAvatarUpload } from "./AgentAvatarUpload";
@@ -68,14 +68,19 @@ export function IdentityTab({ organizationSlug }: Props) {
 	return (
 		<div className="flex flex-col">
 			<div className="mb-6">
-				<h3 className="font-semibold text-foreground text-lg">Identidade</h3>
+				<h3 className="font-semibold text-foreground text-lg">
+					Identidade
+				</h3>
 				<p className="mt-1 text-foreground/60 text-sm">
 					Como o agente se apresenta pras pessoas.
 				</p>
 			</div>
 
 			<Form {...form}>
-				<form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-6">
+				<form
+					onSubmit={(e) => e.preventDefault()}
+					className="flex flex-col gap-6"
+				>
 					{/* Avatar */}
 					<div className="flex flex-col gap-2">
 						<FormLabel>Avatar</FormLabel>
@@ -132,7 +137,8 @@ export function IdentityTab({ organizationSlug }: Props) {
 									/>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Ex: SDR, Atendimento comercial, Qualificador.
+									Ex: SDR, Atendimento comercial,
+									Qualificador.
 								</p>
 								<FormMessage />
 							</FormItem>
@@ -152,20 +158,28 @@ export function IdentityTab({ organizationSlug }: Props) {
 									aria-label="Gênero do agente"
 								>
 									{GENDER_OPTIONS.map((opt) => {
-										const selected = currentGender === opt.value;
+										const selected =
+											currentGender === opt.value;
 										return (
 											<Button
 												key={opt.value}
 												type="button"
-												variant={selected ? "primary" : "outline"}
+												variant={
+													selected
+														? "primary"
+														: "outline"
+												}
 												size="sm"
 												role="radio"
 												aria-checked={selected}
 												disabled={isArchived}
-												onClick={() => field.onChange(opt.value)}
+												onClick={() =>
+													field.onChange(opt.value)
+												}
 												className={cn(
 													"min-w-28",
-													selected && "ring-2 ring-primary/40",
+													selected &&
+														"ring-2 ring-primary/40",
 												)}
 											>
 												{opt.label}
@@ -174,7 +188,8 @@ export function IdentityTab({ organizationSlug }: Props) {
 									})}
 								</div>
 								<p className="text-foreground/60 text-xs">
-									Usado pra gerar pronomes corretos nas respostas do agente.
+									Usado pra gerar pronomes corretos nas
+									respostas do agente.
 								</p>
 								<FormMessage />
 							</FormItem>
@@ -207,7 +222,8 @@ export function IdentityTab({ organizationSlug }: Props) {
 										/>
 									</FormControl>
 									<p className="text-foreground/60 text-xs">
-										Uso interno. Não aparece pro cliente final.
+										Uso interno. Não aparece pro cliente
+										final.
 									</p>
 									<FormMessage />
 								</FormItem>

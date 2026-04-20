@@ -18,10 +18,7 @@ import {
 import { toast } from "sonner";
 import { duplicateAgentAction, renameAgentAction } from "../lib/actions";
 import { useAgent } from "../lib/agent-context";
-import {
-	getAgentInitials,
-	resolveAgentAvatarUrl,
-} from "../lib/avatar-helpers";
+import { getAgentInitials, resolveAgentAvatarUrl } from "../lib/avatar-helpers";
 import { AgentStatusDropdown } from "./AgentStatusDropdown";
 
 type Props = {
@@ -115,7 +112,10 @@ export function AgentDetailHeader({ organizationSlug }: Props) {
 				<Avatar className="size-16 rounded-lg">
 					{resolveAgentAvatarUrl(agent.avatarUrl) ? (
 						<AvatarImage
-							src={resolveAgentAvatarUrl(agent.avatarUrl) ?? undefined}
+							src={
+								resolveAgentAvatarUrl(agent.avatarUrl) ??
+								undefined
+							}
 							alt=""
 							className="rounded-lg"
 						/>
@@ -141,7 +141,8 @@ export function AgentDetailHeader({ organizationSlug }: Props) {
 						<h2
 							className={cn(
 								"truncate font-bold text-2xl lg:text-3xl",
-								!isArchived && "cursor-text rounded px-2 py-1 -mx-2 -my-1",
+								!isArchived &&
+									"cursor-text rounded px-2 py-1 -mx-2 -my-1",
 								!isArchived &&
 									"hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/30",
 							)}
@@ -151,7 +152,10 @@ export function AgentDetailHeader({ organizationSlug }: Props) {
 								if (!isArchived) setEditing(true);
 							}}
 							onKeyDown={(e) => {
-								if (!isArchived && (e.key === "Enter" || e.key === " ")) {
+								if (
+									!isArchived &&
+									(e.key === "Enter" || e.key === " ")
+								) {
 									e.preventDefault();
 									setEditing(true);
 								}
@@ -166,7 +170,8 @@ export function AgentDetailHeader({ organizationSlug }: Props) {
 						</h2>
 					)}
 					<p className="mt-1 truncate text-foreground/60 text-sm">
-						{agent.role || "Sem função definida"} · {getModelLabel(agent.model)}
+						{agent.role || "Sem função definida"} ·{" "}
+						{getModelLabel(agent.model)}
 					</p>
 				</div>
 			</div>

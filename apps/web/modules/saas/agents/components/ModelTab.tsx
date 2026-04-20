@@ -1,10 +1,10 @@
 "use client";
 
 import {
+	type SupportedModelProvider,
 	findModel,
 	getDefaultModelForProvider,
 	getModelsByProvider,
-	type SupportedModelProvider,
 } from "@repo/ai/models";
 import {
 	Form,
@@ -66,8 +66,7 @@ export function ModelTab({ organizationSlug }: Props) {
 	});
 
 	const currentModel = form.watch("model");
-	const currentProvider =
-		findModel(currentModel)?.provider ?? "openai";
+	const currentProvider = findModel(currentModel)?.provider ?? "openai";
 	const availableModels = getModelsByProvider(currentProvider);
 
 	const handleProviderChange = (newProvider: SupportedModelProvider) => {
@@ -79,7 +78,9 @@ export function ModelTab({ organizationSlug }: Props) {
 	return (
 		<div className="flex flex-col">
 			<div className="mb-6">
-				<h3 className="font-semibold text-foreground text-lg">Modelo</h3>
+				<h3 className="font-semibold text-foreground text-lg">
+					Modelo
+				</h3>
 				<p className="mt-1 text-foreground/60 text-sm">
 					Escolha o cérebro do agente e ajuste o estilo de resposta.
 				</p>
@@ -123,12 +124,19 @@ export function ModelTab({ organizationSlug }: Props) {
 									<SelectContent>
 										<SelectGroup>
 											<SelectLabel>
-												{currentProvider === "openai" ? "OpenAI" : "Anthropic"}
+												{currentProvider === "openai"
+													? "OpenAI"
+													: "Anthropic"}
 											</SelectLabel>
 											{availableModels.map((m) => (
-												<SelectItem key={m.id} value={m.id}>
+												<SelectItem
+													key={m.id}
+													value={m.id}
+												>
 													{m.label}
-													{m.isDefault ? " (recomendado)" : ""}
+													{m.isDefault
+														? " (recomendado)"
+														: ""}
 												</SelectItem>
 											))}
 										</SelectGroup>
@@ -159,8 +167,11 @@ export function ModelTab({ organizationSlug }: Props) {
 											value={[field.value]}
 											onValueChange={(vals) =>
 												field.onChange(
-													Math.round(((vals[0] ?? 0) + Number.EPSILON) * 10) /
-														10,
+													Math.round(
+														((vals[0] ?? 0) +
+															Number.EPSILON) *
+															10,
+													) / 10,
 												)
 											}
 											min={0}
@@ -176,8 +187,8 @@ export function ModelTab({ organizationSlug }: Props) {
 									</div>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Quanto maior, mais variadas e criativas as respostas. Na
-									dúvida, mantenha 0.7.
+									Quanto maior, mais variadas e criativas as
+									respostas. Na dúvida, mantenha 0.7.
 								</p>
 								<FormMessage />
 							</FormItem>
@@ -200,7 +211,9 @@ export function ModelTab({ organizationSlug }: Props) {
 										<Slider
 											value={[field.value]}
 											onValueChange={(vals) =>
-												field.onChange(Math.round(vals[0] ?? 1))
+												field.onChange(
+													Math.round(vals[0] ?? 1),
+												)
 											}
 											min={1}
 											max={20}
@@ -215,8 +228,8 @@ export function ModelTab({ organizationSlug }: Props) {
 									</div>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Quantas ferramentas o agente pode encadear numa mesma
-									resposta. Na dúvida, mantenha 10.
+									Quantas ferramentas o agente pode encadear
+									numa mesma resposta. Na dúvida, mantenha 10.
 								</p>
 								<FormMessage />
 							</FormItem>

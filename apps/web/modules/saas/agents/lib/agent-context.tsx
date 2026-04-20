@@ -1,7 +1,7 @@
 "use client";
 
 import type { agent as agentTable } from "@repo/database";
-import { createContext, type ReactNode, useContext } from "react";
+import { type ReactNode, createContext, useContext } from "react";
 
 type AgentRow = typeof agentTable.$inferSelect;
 

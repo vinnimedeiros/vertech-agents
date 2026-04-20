@@ -130,11 +130,15 @@ export function AgentStatusDropdown({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
 					{status === "ACTIVE" ? (
-						<DropdownMenuItem onSelect={() => handleToggle("PAUSED")}>
+						<DropdownMenuItem
+							onSelect={() => handleToggle("PAUSED")}
+						>
 							Pausar
 						</DropdownMenuItem>
 					) : (
-						<DropdownMenuItem onSelect={() => handleToggle("ACTIVE")}>
+						<DropdownMenuItem
+							onSelect={() => handleToggle("ACTIVE")}
+						>
 							Ativar
 						</DropdownMenuItem>
 					)}
@@ -156,8 +160,8 @@ export function AgentStatusDropdown({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Arquivar agente?</AlertDialogTitle>
 						<AlertDialogDescription>
-							O agente some da lista e é desvinculado do WhatsApp. Você pode
-							desarquivar depois.
+							O agente some da lista e é desvinculado do WhatsApp.
+							Você pode desarquivar depois.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

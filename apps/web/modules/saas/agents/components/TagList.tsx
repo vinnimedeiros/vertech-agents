@@ -64,7 +64,9 @@ export function TagList({
 	return (
 		<div className={cn("flex flex-col gap-2", className)}>
 			{value.length === 0 ? (
-				<p className="text-foreground/50 text-xs italic">{emptyLabel}</p>
+				<p className="text-foreground/50 text-xs italic">
+					{emptyLabel}
+				</p>
 			) : (
 				<ul className="flex flex-col gap-1.5">
 					{value.map((item, idx) => (
@@ -122,7 +124,8 @@ export function TagList({
 
 			{limitReached ? (
 				<p className="text-foreground/50 text-xs">
-					Limite de {maxItems} items atingido. Remova algum para adicionar mais.
+					Limite de {maxItems} items atingido. Remova algum para
+					adicionar mais.
 				</p>
 			) : null}
 		</div>

@@ -22,8 +22,18 @@ type MenuItem = {
 
 const ITEMS: MenuItem[] = [
 	{ id: "identity", label: "Identidade", icon: UserIcon, pathSuffix: "" },
-	{ id: "persona", label: "Persona", icon: SparklesIcon, pathSuffix: "/persona" },
-	{ id: "business", label: "Negócio", icon: BriefcaseIcon, pathSuffix: "/business" },
+	{
+		id: "persona",
+		label: "Persona",
+		icon: SparklesIcon,
+		pathSuffix: "/persona",
+	},
+	{
+		id: "business",
+		label: "Negócio",
+		icon: BriefcaseIcon,
+		pathSuffix: "/business",
+	},
 	{
 		id: "conversation",
 		label: "Conversas",
@@ -31,7 +41,12 @@ const ITEMS: MenuItem[] = [
 		pathSuffix: "/conversation",
 	},
 	{ id: "model", label: "Modelo", icon: CpuIcon, pathSuffix: "/model" },
-	{ id: "whatsapp", label: "WhatsApp", icon: PhoneIcon, pathSuffix: "/whatsapp" },
+	{
+		id: "whatsapp",
+		label: "WhatsApp",
+		icon: PhoneIcon,
+		pathSuffix: "/whatsapp",
+	},
 ];
 
 type Props = {

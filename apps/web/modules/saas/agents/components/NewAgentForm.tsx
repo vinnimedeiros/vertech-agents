@@ -1,11 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	DEFAULT_MODEL_ID,
-	getModelsByProvider,
 	type SupportedModelProvider,
+	getModelsByProvider,
 } from "@repo/ai/models";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@ui/components/button";
 import { Card, CardContent } from "@ui/components/card";
 import {
@@ -156,11 +156,20 @@ export function NewAgentForm({ organizationId, organizationSlug }: Props) {
 										<SelectContent>
 											{PROVIDERS.map((p) => (
 												<SelectGroup key={p.id}>
-													<SelectLabel>{p.label}</SelectLabel>
-													{getModelsByProvider(p.id).map((m) => (
-														<SelectItem key={m.id} value={m.id}>
+													<SelectLabel>
+														{p.label}
+													</SelectLabel>
+													{getModelsByProvider(
+														p.id,
+													).map((m) => (
+														<SelectItem
+															key={m.id}
+															value={m.id}
+														>
 															{m.label}
-															{m.isDefault ? " (recomendado)" : ""}
+															{m.isDefault
+																? " (recomendado)"
+																: ""}
 														</SelectItem>
 													))}
 												</SelectGroup>
@@ -179,7 +188,9 @@ export function NewAgentForm({ organizationId, organizationSlug }: Props) {
 								disabled={pending}
 								type="button"
 							>
-								<Link href={`/app/${organizationSlug}/agents`}>Cancelar</Link>
+								<Link href={`/app/${organizationSlug}/agents`}>
+									Cancelar
+								</Link>
 							</Button>
 							<Button type="submit" disabled={pending}>
 								{pending ? (

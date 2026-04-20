@@ -52,10 +52,12 @@ export function BusinessTab({ organizationSlug }: Props) {
 	return (
 		<div className="flex flex-col">
 			<div className="mb-6">
-				<h3 className="font-semibold text-foreground text-lg">Negócio</h3>
+				<h3 className="font-semibold text-foreground text-lg">
+					Negócio
+				</h3>
 				<p className="mt-1 text-foreground/60 text-sm">
-					O que o agente sabe sobre o seu negócio (indústria, produtos,
-					políticas) e as regras que ele nunca pode quebrar.
+					O que o agente sabe sobre o seu negócio (indústria,
+					produtos, políticas) e as regras que ele nunca pode quebrar.
 				</p>
 			</div>
 
@@ -92,7 +94,9 @@ export function BusinessTab({ organizationSlug }: Props) {
 							return (
 								<FormItem>
 									<div className="flex items-center justify-between">
-										<FormLabel>Produtos e serviços</FormLabel>
+										<FormLabel>
+											Produtos e serviços
+										</FormLabel>
 										<span className="text-foreground/40 text-xs">
 											{length} / 2000
 										</span>
@@ -122,7 +126,9 @@ export function BusinessTab({ organizationSlug }: Props) {
 							return (
 								<FormItem>
 									<div className="flex items-center justify-between">
-										<FormLabel>Política de preços</FormLabel>
+										<FormLabel>
+											Política de preços
+										</FormLabel>
 										<span className="text-foreground/40 text-xs">
 											{length} / 500
 										</span>
@@ -152,7 +158,9 @@ export function BusinessTab({ organizationSlug }: Props) {
 							return (
 								<FormItem>
 									<div className="flex items-center justify-between">
-										<FormLabel>Políticas importantes</FormLabel>
+										<FormLabel>
+											Políticas importantes
+										</FormLabel>
 										<span className="text-foreground/40 text-xs">
 											{length} / 1000
 										</span>
@@ -192,8 +200,8 @@ export function BusinessTab({ organizationSlug }: Props) {
 									/>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Regras que o agente NUNCA pode quebrar, mesmo se o cliente
-									insistir.
+									Regras que o agente NUNCA pode quebrar,
+									mesmo se o cliente insistir.
 								</p>
 								<FormMessage />
 							</FormItem>

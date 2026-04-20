@@ -50,10 +50,12 @@ export function ConversationTab({ organizationSlug }: Props) {
 	return (
 		<div className="flex flex-col">
 			<div className="mb-6">
-				<h3 className="font-semibold text-foreground text-lg">Conversas</h3>
+				<h3 className="font-semibold text-foreground text-lg">
+					Conversas
+				</h3>
 				<p className="mt-1 text-foreground/60 text-sm">
-					Como o agente aborda a conversa: saudação, qualificação, objeções
-					e quando chama humano.
+					Como o agente aborda a conversa: saudação, qualificação,
+					objeções e quando chama humano.
 				</p>
 			</div>
 
@@ -110,8 +112,8 @@ export function ConversationTab({ organizationSlug }: Props) {
 									/>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Perguntas que o agente faz pra entender o cliente antes de
-									oferecer algo. Máximo 10.
+									Perguntas que o agente faz pra entender o
+									cliente antes de oferecer algo. Máximo 10.
 								</p>
 								<FormMessage />
 							</FormItem>
@@ -126,7 +128,9 @@ export function ConversationTab({ organizationSlug }: Props) {
 							return (
 								<FormItem>
 									<div className="flex items-center justify-between">
-										<FormLabel>Tratamento de objeções</FormLabel>
+										<FormLabel>
+											Tratamento de objeções
+										</FormLabel>
 										<span className="text-foreground/40 text-xs">
 											{length} / 1000
 										</span>
@@ -153,7 +157,9 @@ export function ConversationTab({ organizationSlug }: Props) {
 						name="handoffTriggers"
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Gatilhos de handoff humano</FormLabel>
+								<FormLabel>
+									Gatilhos de handoff humano
+								</FormLabel>
 								<FormControl>
 									<TagList
 										value={field.value}
@@ -166,9 +172,10 @@ export function ConversationTab({ organizationSlug }: Props) {
 									/>
 								</FormControl>
 								<p className="text-foreground/60 text-xs">
-									Situações que transferem pra humano. Ex: cliente pedir
-									humano, pergunta sobre valor fora das políticas, situação
-									emocional delicada.
+									Situações que transferem pra humano. Ex:
+									cliente pedir humano, pergunta sobre valor
+									fora das políticas, situação emocional
+									delicada.
 								</p>
 								<FormMessage />
 							</FormItem>

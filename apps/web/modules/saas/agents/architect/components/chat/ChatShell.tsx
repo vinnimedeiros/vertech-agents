@@ -191,12 +191,14 @@ export function ChatShell({
 		};
 	}, [sessionId]);
 
+
 	const {
 		messages,
 		isLoading,
 		error: chatError,
 		stop,
 		sendWithAttachments,
+		setMessages,
 	} = useArchitectChat({
 		sessionId,
 		onRateLimited: (retryAfter, message) => {
@@ -213,6 +215,48 @@ export function ChatShell({
 			);
 		},
 	});
+
+	// Hidrata histórico de mensagens quando retoma sessão existente
+	// (initialSessionId passado via ?session=xxx). Uma única vez no mount.
+	useEffect(() => {
+		if (!initialSessionId) return;
+		let aborted = false;
+		(async () => {
+			try {
+				const res = await fetch(
+					`/api/architect/sessions/${initialSessionId}/messages`,
+				);
+				if (!res.ok) return;
+				const data = (await res.json()) as {
+					messages?: Array<{
+						id: string;
+						role: "user" | "assistant";
+						content: string;
+						createdAt: string;
+					}>;
+				};
+				if (aborted) return;
+				const history = (data.messages ?? []).filter(
+					(m) => m.content !== START_TRIGGER_TEXT,
+				);
+				if (history.length > 0) {
+					setMessages(
+						history.map((m) => ({
+							id: m.id,
+							role: m.role,
+							content: m.content,
+							createdAt: new Date(m.createdAt),
+						})) as Message[],
+					);
+				}
+			} catch {
+				// silencioso
+			}
+		})();
+		return () => {
+			aborted = true;
+		};
+	}, [initialSessionId, setMessages]);
 
 	const rateLimited = rateLimitUntil !== null && Date.now() < rateLimitUntil;
 

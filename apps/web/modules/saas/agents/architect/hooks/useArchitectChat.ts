@@ -44,9 +44,14 @@ export function useArchitectChat({
 		sessionIdRef.current = sessionId;
 	}, [sessionId]);
 
+	// NÃO passamos `id: sessionId` pro useChat intencionalmente: sessionId
+	// pode começar undefined (Welcome state) e virar um valor real após
+	// ensureSession. Se usarmos como id do useChat, a instância remonta
+	// e perde as mensagens do primeiro turn. sessionId viaja só no body
+	// (via prepareRequestBody + ref). Para retomada de sessão, usamos
+	// initialMessages hidratado externamente pelo parent.
 	const chat = useChat({
 		api: "/api/architect/chat",
-		id: sessionId,
 		initialMessages,
 		streamProtocol: "text",
 		experimental_prepareRequestBody: ({ messages }) => {

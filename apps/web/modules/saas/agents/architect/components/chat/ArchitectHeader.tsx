@@ -5,7 +5,9 @@ import { ArrowLeftIcon, ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { ExitDialog } from "./ExitDialog";
+import { OfflineBadge } from "./OfflineBadge";
 
 type Props = {
 	organizationSlug: string;
@@ -29,6 +31,7 @@ export function ArchitectHeader({
 }: Props) {
 	const router = useRouter();
 	const [dialogOpen, setDialogOpen] = useState(false);
+	const isOnline = useOnlineStatus();
 	const welcomeHref = `/app/${organizationSlug}/agents`;
 
 	const attemptExit = (e?: React.MouseEvent) => {
@@ -71,19 +74,22 @@ export function ArchitectHeader({
 					</span>
 				</nav>
 
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => {
-						if (isDirty) {
-							setDialogOpen(true);
-						} else {
-							router.push(welcomeHref);
-						}
-					}}
-				>
-					Salvar e sair
-				</Button>
+				<div className="flex items-center gap-3">
+					{!isOnline ? <OfflineBadge /> : null}
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => {
+							if (isDirty) {
+								setDialogOpen(true);
+							} else {
+								router.push(welcomeHref);
+							}
+						}}
+					>
+						Salvar e sair
+					</Button>
+				</div>
 			</header>
 
 			<ExitDialog

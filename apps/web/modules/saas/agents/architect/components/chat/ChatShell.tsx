@@ -26,6 +26,7 @@ import type { BlueprintRefineInput } from "../../lib/blueprint-schema";
 import { ArtifactDialogRefinement } from "../artifacts/ArtifactDialogRefinement";
 import { CreateAgentCTA } from "../diagram/CreateAgentCTA";
 import { FlowDiagramPreview } from "../diagram/FlowDiagramPreview";
+import { RateLimitCountdown } from "./RateLimitCountdown";
 import { ArtifactCard } from "../artifacts/ArtifactCard";
 import { ArchitectComposer } from "./ArchitectComposer";
 import { ArchitectHeader } from "./ArchitectHeader";
@@ -613,6 +614,11 @@ export function ChatShell({
 			) : null}
 			<div className="pointer-events-none absolute inset-x-0 bottom-0 z-10">
 				<div className="pointer-events-auto">
+					{rateLimitUntil ? (
+						<div className="mx-auto flex max-w-[800px] justify-center px-3 pb-1">
+							<RateLimitCountdown untilMs={rateLimitUntil} />
+						</div>
+					) : null}
 					<ArchitectComposer
 						onSend={handleSend}
 						onOpenAttachmentMenu={() => menuRef.current?.open()}

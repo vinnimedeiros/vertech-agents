@@ -1,7 +1,7 @@
 ---
 type: checkpoint
 last_updated: 2026-04-20
-active_story: "Phase 09.5 Ready for Review (Mastra Architect Agent + chat streaming). Próximo: gate humano Vinni em /agents/new → conversar de verdade com Arquiteto"
+active_story: "Phase 09 COMPLETA (10/10 stories Ready for Review). Próximo: gate humano Vinni end-to-end + merge da PR #2 → destrava Phase 07B-v2"
 active_agent: dev
 project: vertech-agents
 tags:
@@ -11,10 +11,10 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-20 (**Phase 09.5 Ready for Review — Arquiteto conversa de verdade**, Neo entregou)
-> **Agente ativo:** `@dev` (Neo) — HALT após entrega, aguardando gate humano Vinni
-> **Próximo passo:** Vinni sobe dev, abre `/agents/new?template=clinical` (ou outro), conversa 3-5 turnos com Arquiteto, vê streaming token-by-token + StatusBar atualizar quando Arquiteto avança etapa. Se aprovar, 09.6 implementa cards de artefato inline.
-> **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI 09.1+09.2+09.3+09.4+09.5) https://github.com/vinnimedeiros/vertech-agents/pull/2 — 09.4+09.5 no mesmo branch
+> **Última atualização:** 2026-04-20 (**Phase 09 COMPLETA — 10/10 stories Ready for Review**, Neo entregou tudo em sequência)
+> **Agente ativo:** `@dev` (Neo) — HALT aguardando gate humano Vinni end-to-end
+> **Próximo passo:** Vinni testa fluxo completo: /agents/new?template=clinical → welcome CTA → conversa 5-10 turnos → artefatos geram cards → refina inline (Perfil/Conhecimento) ou Dialog (Blueprint) → aprova → Resumo Final + FlowDiagram → "Criar agente" → redirect. Se aprovar, merge PR #2 destrava Phase 07B-v2.
+> **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI completa 09.1→09.10) https://github.com/vinnimedeiros/vertech-agents/pull/2
 
 ## Contexto Ativo
 
@@ -143,6 +143,33 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - **Coolify VPS:** destino de deploy quando CRM + Chat + WhatsApp + Agenda (Phase 11) estiverem prontos
 
 ## Ultimo Trabalho Realizado
+
+### Sessão 2026-04-20 (Neo entrega 09.6→09.10 — Phase 09 COMPLETA)
+
+**Stories 09.6 até 09.10 Ready for Review numa sessão maratona:**
+
+- **09.6 ArtifactCard inline:** 4 renderers (BusinessProfile/AgentBlueprint/KnowledgeBase/FinalSummary) + card base com 3 estados (generated/regenerated/approved) + 3 ações (Refinar/Chat/Aprovar) + keyboard R/C/A + a11y. Realtime subscribe em `agent_artifact` via `useArtifactEvents`. Endpoints: GET `/api/architect/artifacts?sessionId=xxx` (hidratação retomada) + POST `/api/architect/artifacts/[id]/approve` (marca APPROVED + avança draftSnapshot.currentStage). Commit `b28cc0e`.
+
+- **09.7 Refinamento inline:** Forms estruturados pros 2 tipos simples (BusinessProfile 5 campos + KnowledgeBase docs+notas). Zod schemas. Reuso TagList 07B. Endpoint POST `/api/architect/artifacts/[id]/refine` atualiza content direto (sem LLM), incrementa version, marca REGENERATED. Remove docs desassocia sessionId. Commit `[09.7]`.
+
+- **09.8 Blueprint Dialog:** Single-file Dialog com Accordion 7 seções (Identidade GenderPill / Personalidade 4 sliders / Anti-patterns TagList / Técnicas 6 checkboxes + intensity select / Emojis modo+curated list / Voz toggle+provider+voiceId+mode / Capabilities 5 checkboxes). Validação Zod. POST `/api/architect/artifacts/[id]/refine-blueprint`. Voice Qwen com badge "em breve". Commit `[09.8]`.
+
+- **09.9 FlowDiagram + publishAgentFromSession:** Extraído `publishAgentFromSessionCore` do tool (pub em packages/ai) pra reuso via route handler. Install `@xyflow/react` + `@dagrejs/dagre`. FlowDiagramPreview readonly com Dagre TB layout (Agente → Capabilities). CreateAgentCTA com estados idle/publishing. POST `/api/architect/sessions/[id]/publish` valida FINAL_SUMMARY APPROVED + hidrata working memory + chama core (transação 10 steps). Redirect pra `/app/[slug]/agents/[id]` pós-sucesso (placeholder até 07B-v2). Commit `5a0c5b8`.
+
+- **09.10 Estados offline + rate limit (parcial):** `useOnlineStatus` hook. OfflineBadge vermelho pulsante no header. RateLimitCountdown component 1s tick auto-dismiss acima do composer. E2E tests Playwright + queue offline + QA gate report ficam pra iteração com Oracle. Commit `3234120`.
+
+**Fluxo end-to-end agora funcional:**
+1. `/agents` (09.1) → escolhe template
+2. `/agents/new?template=X` → Welcome CTA
+3. Click "Iniciar construção" → typing indicator → Arquiteto se apresenta
+4. Conversa natural, typing indicator entre turnos
+5. Arquiteto gera artefatos → cards aparecem inline via Realtime
+6. User refina inline (Perfil/Conhecimento) ou Dialog (Blueprint)
+7. User aprova card → stage avança → StatusBar atualiza
+8. Resumo Final aprovado → FlowDiagram + "Criar agente" CTA
+9. Click CTA → transação atômica → agente criado em DRAFT + redirect
+
+**Gates:** Typecheck `@repo/ai` + `@repo/web` passam ✅ | Biome 0 errors (36 warnings baseline).
 
 ### Sessão 2026-04-20 (Neo entrega 09.5 — Arquiteto conversa de verdade)
 

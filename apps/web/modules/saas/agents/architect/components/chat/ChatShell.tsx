@@ -1,16 +1,19 @@
 "use client";
 
 import type { Message } from "ai/react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useArchitectChat } from "../../hooks/useArchitectChat";
+import { useArtifactEvents } from "../../hooks/useArtifactEvents";
 import { useDocumentEvents } from "../../hooks/useDocumentEvents";
 import { useFileUpload } from "../../hooks/useFileUpload";
 import { useSessionEvents } from "../../hooks/useSessionEvents";
+import type { ArchitectArtifact } from "../../lib/artifact-types";
 import {
 	type ArchitectAttachment,
 	MAX_ATTACHMENTS,
 } from "../../lib/attachment-helpers";
+import { ArtifactCard } from "../artifacts/ArtifactCard";
 import { ArchitectComposer } from "./ArchitectComposer";
 import { ArchitectHeader } from "./ArchitectHeader";
 import { AttachmentMenu, type AttachmentMenuHandle } from "./AttachmentMenu";
@@ -69,7 +72,10 @@ export function ChatShell({
 	const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
 	const [hasStarted, setHasStarted] = useState(!!initialSessionId);
 	const [isStarting, setIsStarting] = useState(false);
+	const [artifacts, setArtifacts] = useState<ArchitectArtifact[]>([]);
+	const [approvingId, setApprovingId] = useState<string | null>(null);
 	const menuRef = useRef<AttachmentMenuHandle>(null);
+	const composerFocusRef = useRef<(text: string) => void>(() => {});
 
 	const { uploadFiles, uploadLink, removeAttachment, ensureSession } =
 		useFileUpload({
@@ -122,6 +128,46 @@ export function ChatShell({
 			});
 		}, []),
 	});
+
+	useArtifactEvents({
+		sessionId,
+		onInsert: useCallback((artifact) => {
+			setArtifacts((prev) => {
+				if (prev.some((a) => a.id === artifact.id)) return prev;
+				return [...prev, artifact];
+			});
+		}, []),
+		onUpdate: useCallback((artifact) => {
+			setArtifacts((prev) =>
+				prev.map((a) => (a.id === artifact.id ? artifact : a)),
+			);
+		}, []),
+	});
+
+	// Hidrata artefatos na retomada de sessão — Realtime cobre INSERT/UPDATE
+	// durante a conversa, mas a lista inicial tem que vir via fetch.
+	useEffect(() => {
+		if (!sessionId) return;
+		let aborted = false;
+		(async () => {
+			try {
+				const res = await fetch(
+					`/api/architect/artifacts?sessionId=${sessionId}`,
+				);
+				if (!res.ok) return;
+				const data = (await res.json()) as {
+					artifacts?: ArchitectArtifact[];
+				};
+				if (aborted) return;
+				setArtifacts(data.artifacts ?? []);
+			} catch {
+				// silencioso — UI degrada graciosamente sem histórico de artefatos
+			}
+		})();
+		return () => {
+			aborted = true;
+		};
+	}, [sessionId]);
 
 	const {
 		messages,
@@ -206,6 +252,53 @@ export function ChatShell({
 		toast.error(`Máximo de ${MAX_ATTACHMENTS} anexos por mensagem.`);
 	};
 
+	const handleRefineArtifact = useCallback((artifactId: string) => {
+		// Placeholder até 09.7/09.8 entrarem. Por enquanto, alerta + foca
+		// composer pra user mandar alteração via chat.
+		toast.info(
+			"Refinamento inline chega na 09.7. Por enquanto, descreve a alteração no chat.",
+		);
+		composerFocusRef.current?.("");
+	}, []);
+
+	const handleChatChangeArtifact = useCallback(
+		(_artifactId: string) => {
+			// Foca composer com placeholder sugestivo. User digita a alteração
+			// e Arquiteto aciona refineArtifact no próximo turn.
+			composerFocusRef.current?.(
+				"Quero alterar o seguinte: ",
+			);
+		},
+		[],
+	);
+
+	const handleApproveArtifact = useCallback(async (artifactId: string) => {
+		setApprovingId(artifactId);
+		try {
+			const res = await fetch(
+				`/api/architect/artifacts/${artifactId}/approve`,
+				{ method: "POST" },
+			);
+			if (!res.ok) {
+				const data = (await res
+					.json()
+					.catch(() => null)) as { message?: string } | null;
+				throw new Error(
+					data?.message ?? "Não consegui aprovar o artefato.",
+				);
+			}
+			toast.success("Artefato aprovado. Vamos pra próxima etapa.");
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: "Erro ao aprovar artefato.",
+			);
+		} finally {
+			setApprovingId(null);
+		}
+	}, []);
+
 	const hasUploadingAttachment = attachments.some(
 		(a) => a.status === "uploading",
 	);
@@ -286,6 +379,20 @@ export function ChatShell({
 			<StatusBar currentStage={currentStage} doneStages={doneStages} />
 			<MessagesArea isLoadingInitial={false}>
 				{renderedMessages}
+				{artifacts.length > 0 ? (
+					<div className="flex flex-col gap-3">
+						{artifacts.map((artifact) => (
+							<ArtifactCard
+								key={artifact.id}
+								artifact={artifact}
+								isApproving={approvingId === artifact.id}
+								onRefine={handleRefineArtifact}
+								onChatChange={handleChatChangeArtifact}
+								onApprove={handleApproveArtifact}
+							/>
+						))}
+					</div>
+				) : null}
 				{showTypingIndicator ? <TypingIndicator /> : null}
 				{chatError && !isLoading ? (
 					<div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-xs">

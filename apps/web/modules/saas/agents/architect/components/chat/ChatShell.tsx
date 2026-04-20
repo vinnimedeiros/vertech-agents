@@ -20,9 +20,12 @@ import type {
 import type {
 	AgentBlueprintContent,
 	ArchitectArtifact as _Artifact,
+	FinalSummaryContent,
 } from "../../lib/artifact-types";
 import type { BlueprintRefineInput } from "../../lib/blueprint-schema";
 import { ArtifactDialogRefinement } from "../artifacts/ArtifactDialogRefinement";
+import { CreateAgentCTA } from "../diagram/CreateAgentCTA";
+import { FlowDiagramPreview } from "../diagram/FlowDiagramPreview";
 import { ArtifactCard } from "../artifacts/ArtifactCard";
 import { ArchitectComposer } from "./ArchitectComposer";
 import { ArchitectHeader } from "./ArchitectHeader";
@@ -87,6 +90,10 @@ export function ChatShell({
 	const [expandedId, setExpandedId] = useState<string | null>(null);
 	const [refiningId, setRefiningId] = useState<string | null>(null);
 	const [blueprintDialogId, setBlueprintDialogId] = useState<string | null>(
+		null,
+	);
+	const [isPublishing, setIsPublishing] = useState(false);
+	const [publishedAgentId, setPublishedAgentId] = useState<string | null>(
 		null,
 	);
 	const menuRef = useRef<AttachmentMenuHandle>(null);
@@ -338,6 +345,43 @@ export function ChatShell({
 		);
 	}, []);
 
+	const handlePublishAgent = useCallback(async () => {
+		if (!sessionId || isPublishing) return;
+		setIsPublishing(true);
+		try {
+			const res = await fetch(
+				`/api/architect/sessions/${sessionId}/publish`,
+				{ method: "POST" },
+			);
+			const data = (await res.json().catch(() => null)) as {
+				agent?: { id: string; name: string };
+				error?: string;
+				message?: string;
+			} | null;
+			if (!res.ok || !data?.agent) {
+				throw new Error(
+					data?.message ?? "Não consegui criar o agente.",
+				);
+			}
+			toast.success(
+				`Agente ${data.agent.name} criado. Redirecionando...`,
+			);
+			setPublishedAgentId(data.agent.id);
+			// Aguarda 1s pra toast aparecer antes de redirect.
+			setTimeout(() => {
+				window.location.href = `/app/${organizationSlug}/agents/${data.agent?.id}`;
+			}, 1000);
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: "Erro ao criar agente. Tente novamente.",
+			);
+		} finally {
+			setIsPublishing(false);
+		}
+	}, [sessionId, isPublishing, organizationSlug]);
+
 	const handleBlueprintSave = useCallback(
 		async (artifactId: string, data: BlueprintRefineInput) => {
 			setRefiningId(artifactId);
@@ -483,20 +527,52 @@ export function ChatShell({
 				{renderedMessages}
 				{artifacts.length > 0 ? (
 					<div className="flex flex-col gap-3">
-						{artifacts.map((artifact) => (
-							<ArtifactCard
-								key={artifact.id}
-								artifact={artifact}
-								isApproving={approvingId === artifact.id}
-								isRefining={refiningId === artifact.id}
-								isExpanded={expandedId === artifact.id}
-								onRefine={handleRefineArtifact}
-								onChatChange={handleChatChangeArtifact}
-								onApprove={handleApproveArtifact}
-								onRefineSave={handleRefineSave}
-								onRefineCancel={handleRefineCancel}
-							/>
-						))}
+						{artifacts.map((artifact) => {
+							const isFinalSummary =
+								artifact.type === "FINAL_SUMMARY";
+							const showCreationBlock =
+								isFinalSummary &&
+								artifact.status === "APPROVED";
+							return (
+								<div
+									key={artifact.id}
+									className="flex flex-col gap-3"
+								>
+									<ArtifactCard
+										artifact={artifact}
+										isApproving={
+											approvingId === artifact.id
+										}
+										isRefining={refiningId === artifact.id}
+										isExpanded={expandedId === artifact.id}
+										onRefine={handleRefineArtifact}
+										onChatChange={handleChatChangeArtifact}
+										onApprove={handleApproveArtifact}
+										onRefineSave={handleRefineSave}
+										onRefineCancel={handleRefineCancel}
+									/>
+									{showCreationBlock ? (
+										<div className="max-w-[640px]">
+											<FlowDiagramPreview
+												finalSummary={
+													artifact.content as FinalSummaryContent
+												}
+											/>
+											<CreateAgentCTA
+												agentName={
+													(
+														artifact.content as FinalSummaryContent
+													).agentName
+												}
+												isPublishing={isPublishing}
+												disabled={!!publishedAgentId}
+												onClick={handlePublishAgent}
+											/>
+										</div>
+									) : null}
+								</div>
+							);
+						})}
 					</div>
 				) : null}
 				{showTypingIndicator ? <TypingIndicator /> : null}

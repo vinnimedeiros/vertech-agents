@@ -28,7 +28,12 @@ export { acknowledgeUpload } from "./architect/acknowledge-upload";
 export { approveArtifact } from "./architect/approve-artifact";
 export { generateArtifact } from "./architect/generate-artifact";
 export { getDocumentKnowledge } from "./architect/get-document-knowledge";
-export { publishAgentFromSession } from "./architect/publish-agent";
+export {
+	publishAgentFromSession,
+	publishAgentFromSessionCore,
+	type PublishAgentCoreInput,
+	type PublishAgentCoreResult,
+} from "./architect/publish-agent";
 export { refineArtifact } from "./architect/refine-artifact";
 export { searchChunks } from "./architect/search-chunks";
 export { updateAgentStructurally } from "./architect/update-agent-structurally";

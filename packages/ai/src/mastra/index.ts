@@ -38,7 +38,10 @@ export {
 } from "./runtime/invoker";
 export {
 	architectTools,
+	publishAgentFromSessionCore,
 	type ArchitectToolKey,
+	type PublishAgentCoreInput,
+	type PublishAgentCoreResult,
 } from "./tools/architect";
 export {
 	commercialTools,

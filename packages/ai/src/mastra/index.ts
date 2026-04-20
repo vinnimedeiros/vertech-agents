@@ -6,12 +6,30 @@
  * - apps/web health endpoints (07A.7) — getMastra para trace/metrics
  */
 
+export { RequestContext } from "@mastra/core/request-context";
+export { getArchitectAgent } from "./agents/architect";
 export { getCommercialAgent } from "./agents/commercial";
+export { getArchitectAgentMemory } from "./memory/architect";
 export { getCommercialAgentMemory } from "./memory/config";
 export { getMastra } from "./instance";
 export { getMastraStorage } from "./storage";
 export { buildInstructions } from "./instructions/builder";
 export type { AgentForInstructions } from "./instructions/builder";
+export {
+	buildArchitectInstructions,
+	type ArchitectInstructionsContext,
+	ARCHITECT_TEMPLATE_IDS,
+} from "./instructions/architect";
+export {
+	ARCHITECT_TEMPLATE_REGISTRY,
+	getArchitectTemplate,
+	type ArchitectTemplate,
+	type ArchitectTemplateId,
+} from "./templates";
+export {
+	architectWorkingMemorySchema,
+	type ArchitectWorkingMemorySchema,
+} from "./types/architect-working-memory";
 export {
 	invokeAgentForMessage,
 	type InvokeAgentForMessageInput,

@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import type { Message } from "ai/react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useArchitectChat } from "../../hooks/useArchitectChat";
 import { useDocumentEvents } from "../../hooks/useDocumentEvents";
 import { useFileUpload } from "../../hooks/useFileUpload";
+import { useSessionEvents } from "../../hooks/useSessionEvents";
 import {
 	type ArchitectAttachment,
 	MAX_ATTACHMENTS,
@@ -11,6 +14,7 @@ import {
 import { ArchitectComposer } from "./ArchitectComposer";
 import { ArchitectHeader } from "./ArchitectHeader";
 import { AttachmentMenu, type AttachmentMenuHandle } from "./AttachmentMenu";
+import { MessageBubble } from "./MessageBubble";
 import { MessagesArea } from "./MessagesArea";
 import { type ArchitectStage, StatusBar } from "./StatusBar";
 
@@ -23,18 +27,19 @@ type Props = {
 };
 
 /**
- * Shell completo do chat do Arquiteto (story 09.2 + 09.3 + 09.4).
+ * Shell completo do chat do Arquiteto (stories 09.2 + 09.3 + 09.4 + 09.5).
  *
- * Além do layout de 4 zonas (header, status, mensagens, composer), este
- * shell gerencia o ciclo de vida dos anexos do composer:
- * - Estado `attachments` (mini-cards pré-envio) em memória local
- * - Cria sessão DRAFT lazy no primeiro upload via useFileUpload
- * - Subscribe Realtime em knowledge_document via useDocumentEvents (atualiza
- *   status processing → indexed sem polling)
- * - Passa ref pro AttachmentMenu pro composer abrir via Cmd/Ctrl+K
+ * Orquestra:
+ * - Estado local de `attachments` (mini-cards pré-envio) via useFileUpload
+ * - Streaming token-by-token via useArchitectChat (AI SDK v4 `useChat` com
+ *   `streamProtocol: 'text'` apontado pra /api/architect/chat)
+ * - StatusBar dinâmica via useSessionEvents (Realtime em
+ *   agent_creation_session.draftSnapshot.currentStage)
+ * - Status de upload via useDocumentEvents (Realtime em knowledge_document)
  *
- * `onSend` aqui é stub até 09.5 (Mastra `useChat`) plugar envio real com os
- * attachments serializados no payload.
+ * `handleSend` é stub até o envio aqui: ele chama `sendWithAttachments` do
+ * useArchitectChat, passando os documentIds READY/indexed dos anexos. Remove
+ * da lista local após envio pra evitar re-enviar os mesmos ids.
  */
 export function ChatShell({
 	organizationSlug,
@@ -44,11 +49,14 @@ export function ChatShell({
 	initialStage = "ideation",
 }: Props) {
 	const [isDirty, setIsDirty] = useState(false);
-	const [currentStage] = useState<ArchitectStage>(initialStage);
+	const [currentStage, setCurrentStage] =
+		useState<ArchitectStage>(initialStage);
+	const [doneStages, setDoneStages] = useState<ArchitectStage[]>([]);
 	const [sessionId, setSessionId] = useState<string | undefined>(
 		initialSessionId,
 	);
 	const [attachments, setAttachments] = useState<ArchitectAttachment[]>([]);
+	const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
 	const menuRef = useRef<AttachmentMenuHandle>(null);
 
 	const { uploadFiles, uploadLink, removeAttachment } = useFileUpload({
@@ -86,19 +94,99 @@ export function ChatShell({
 		}, []),
 	});
 
+	useSessionEvents({
+		sessionId,
+		onSessionChange: useCallback((payload) => {
+			const nextStage = payload.draftSnapshot?.currentStage;
+			if (!nextStage) return;
+			setCurrentStage((prev) => {
+				if (prev === nextStage) return prev;
+				setDoneStages((done) => {
+					if (done.includes(prev)) return done;
+					return [...done, prev];
+				});
+				return nextStage as ArchitectStage;
+			});
+		}, []),
+	});
+
+	const {
+		messages,
+		isLoading,
+		error: chatError,
+		stop,
+		sendWithAttachments,
+	} = useArchitectChat({
+		sessionId,
+		onRateLimited: (retryAfter, message) => {
+			toast.error(message);
+			setRateLimitUntil(Date.now() + retryAfter * 1000);
+			window.setTimeout(() => {
+				setRateLimitUntil(null);
+			}, retryAfter * 1000);
+		},
+		onError: (err) => {
+			if (err.name === "AbortError") return;
+			toast.error(
+				err.message || "Erro inesperado. Tente de novo em instantes.",
+			);
+		},
+	});
+
+	const rateLimited = rateLimitUntil !== null && Date.now() < rateLimitUntil;
+
 	const handleSend = async (text: string) => {
-		console.info("[architect-composer] send stub (09.5 implementa)", {
-			text,
-			attachmentIds: attachments
-				.filter((a) => a.documentId)
-				.map((a) => a.documentId),
-		});
-		setIsDirty(true);
+		if (!sessionId || rateLimited) return;
+		const readyIds = attachments
+			.filter(
+				(a) =>
+					a.documentId &&
+					(a.status === "ready" ||
+						a.status === "indexed" ||
+						a.status === "processing"),
+			)
+			.map((a) => a.documentId as string);
+
+		try {
+			await sendWithAttachments(text, readyIds);
+			setIsDirty(true);
+			// Anexos já foram referenciados na mensagem — limpa a lista local.
+			setAttachments([]);
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: "Não consegui enviar sua mensagem.",
+			);
+		}
 	};
 
 	const handleLimitReached = () => {
 		toast.error(`Máximo de ${MAX_ATTACHMENTS} anexos por mensagem.`);
 	};
+
+	const hasUploadingAttachment = attachments.some(
+		(a) => a.status === "uploading",
+	);
+	const composerBlocked = rateLimited || hasUploadingAttachment;
+
+	const renderedMessages = useMemo(() => {
+		if (messages.length === 0) return null;
+		return (messages as Message[]).map((msg, idx) => {
+			const isLast = idx === messages.length - 1;
+			const streaming = isLoading && isLast && msg.role === "assistant";
+			return (
+				<MessageBubble
+					key={msg.id}
+					role={msg.role}
+					content={msg.content}
+					isStreaming={streaming}
+				/>
+			);
+		});
+	}, [messages, isLoading]);
+
+	const showInitialShimmer = messages.length === 0 && isLoading;
 
 	return (
 		<div className="flex h-[calc(100vh-var(--header-height,4rem))] flex-col bg-background">
@@ -107,13 +195,25 @@ export function ChatShell({
 				templateLabel={templateLabel}
 				isDirty={isDirty}
 			/>
-			<StatusBar currentStage={currentStage} />
-			<MessagesArea isLoadingInitial />
+			<StatusBar currentStage={currentStage} doneStages={doneStages} />
+			<MessagesArea isLoadingInitial={showInitialShimmer}>
+				{renderedMessages}
+				{chatError && !isLoading ? (
+					<div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-xs">
+						{chatError.message ||
+							"Erro de conexão com o Arquiteto."}
+					</div>
+				) : null}
+			</MessagesArea>
 			<ArchitectComposer
 				onSend={handleSend}
 				onOpenAttachmentMenu={() => menuRef.current?.open()}
 				attachments={attachments}
 				onRemoveAttachment={removeAttachment}
+				blocked={composerBlocked}
+				disabled={isLoading}
+				onStop={isLoading ? stop : undefined}
+				isStreaming={isLoading}
 				attachmentSlot={
 					<AttachmentMenu
 						ref={menuRef}

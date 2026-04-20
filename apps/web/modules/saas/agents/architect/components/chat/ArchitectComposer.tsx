@@ -8,7 +8,7 @@ import {
 	TooltipTrigger,
 } from "@ui/components/tooltip";
 import { cn } from "@ui/lib";
-import { ArrowUpIcon, Loader2Icon } from "lucide-react";
+import { ArrowUpIcon, Loader2Icon, SquareIcon } from "lucide-react";
 import {
 	type KeyboardEvent,
 	type ReactNode,
@@ -30,6 +30,8 @@ type Props = {
 	disabled?: boolean;
 	blocked?: boolean;
 	maxChars?: number;
+	onStop?: () => void;
+	isStreaming?: boolean;
 };
 
 const DEFAULT_MAX_CHARS = 4000;
@@ -60,6 +62,8 @@ export function ArchitectComposer({
 	disabled = false,
 	blocked = false,
 	maxChars = DEFAULT_MAX_CHARS,
+	onStop,
+	isStreaming = false,
 }: Props) {
 	const [value, setValue] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,6 +114,13 @@ export function ArchitectComposer({
 		// Guard IME (AC15): Enter NAO envia durante composicao
 		if (e.nativeEvent.isComposing) return;
 
+		// ESC aborta stream em andamento (09.5 AC19)
+		if (e.key === "Escape" && isStreaming && onStop) {
+			e.preventDefault();
+			onStop();
+			return;
+		}
+
 		// Cmd/Ctrl+K abre menu de anexo (AC14)
 		if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
 			e.preventDefault();
@@ -131,21 +142,34 @@ export function ArchitectComposer({
 			? "Aguardando processar anexos..."
 			: "Digite sua mensagem...";
 
-	const sendButton = (
-		<Button
-			size="icon"
-			onClick={() => void send()}
-			disabled={!canSubmit}
-			aria-label={isSubmitting ? "Enviando mensagem" : "Enviar mensagem"}
-			className="size-9 shrink-0 self-end"
-		>
-			{isSubmitting ? (
-				<Loader2Icon className="size-4 animate-spin" />
-			) : (
-				<ArrowUpIcon className="size-4" />
-			)}
-		</Button>
-	);
+	const sendButton =
+		isStreaming && onStop ? (
+			<Button
+				size="icon"
+				variant="secondary"
+				onClick={onStop}
+				aria-label="Parar resposta do Arquiteto"
+				className="size-9 shrink-0 self-end"
+			>
+				<SquareIcon className="size-3.5" />
+			</Button>
+		) : (
+			<Button
+				size="icon"
+				onClick={() => void send()}
+				disabled={!canSubmit}
+				aria-label={
+					isSubmitting ? "Enviando mensagem" : "Enviar mensagem"
+				}
+				className="size-9 shrink-0 self-end"
+			>
+				{isSubmitting ? (
+					<Loader2Icon className="size-4 animate-spin" />
+				) : (
+					<ArrowUpIcon className="size-4" />
+				)}
+			</Button>
+		);
 
 	const hasAttachments = attachments.length > 0;
 

@@ -23,3 +23,8 @@ export {
 	or,
 	sql,
 } from "drizzle-orm";
+
+// Re-export cuid2 id factory pra consumers fora do package não precisarem instalar
+// @paralleldrive/cuid2 separado. Usado em endpoints que geram IDs antes do insert
+// (ex: upload endpoint 08A.4 precisa do documentId pra construir storage path).
+export { createId } from "@paralleldrive/cuid2";

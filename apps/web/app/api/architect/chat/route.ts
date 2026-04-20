@@ -1,4 +1,4 @@
-import { RequestContext, getMastra } from "@repo/ai";
+import { RequestContext, getArchitectWorkingMemory, getMastra } from "@repo/ai";
 import { agentCreationSession, and, db, eq } from "@repo/database";
 import {
 	ARCHITECT_CHAT_LIMIT,
@@ -130,6 +130,19 @@ export async function POST(req: Request) {
 		const currentStage =
 			sessionRow.draftSnapshot?.currentStage ?? "ideation";
 
+		// Hidrata working memory real do Mastra (estado que o LLM atualizou
+		// via tool updateWorkingMemory built-in). Fallback pra snapshot
+		// zerado só no primeiro turn, antes do LLM gravar qualquer coisa.
+		const liveWorkingMemory = await getArchitectWorkingMemory({
+			sessionId: sessionRow.id,
+			userId: session.user.id,
+		});
+		const workingMemoryForTools = hydrateWorkingMemoryForTools(
+			liveWorkingMemory,
+			sessionRow,
+			currentStage,
+		);
+
 		const requestContext = new RequestContext<Record<string, unknown>>([
 			["sessionId", sessionRow.id],
 			["userId", session.user.id],
@@ -137,14 +150,7 @@ export async function POST(req: Request) {
 			["templateId", sessionRow.templateId],
 			["currentStage", currentStage],
 			["attachmentIds", attachmentIds],
-			// Placeholder — as tools architectTools chamam requireArchitectContext
-			// que exige workingMemory presente. Mastra Memory hidrata o real via
-			// workingMemory.enabled=true na próxima iteração; aqui passamos um
-			// snapshot mínimo derivado do draftSnapshot pra destravar execução.
-			[
-				"workingMemory",
-				buildWorkingMemorySnapshot(sessionRow, currentStage),
-			],
+			["workingMemory", workingMemoryForTools],
 		]);
 
 		const mastra = getMastra();
@@ -196,15 +202,45 @@ function extractMessageText(msg: ChatMessagePart | undefined): string {
 	return parts.join("\n").trim();
 }
 
-function buildWorkingMemorySnapshot(
-	_session: {
+type Stage = "ideation" | "planning" | "knowledge" | "creation";
+
+/**
+ * Hidrata o working memory no shape que as tools architectTools esperam
+ * (`ArchitectWorkingMemory` — inclui sessionId/templateId que vivem em
+ * requestContext, além do checklist mantido pelo Mastra).
+ *
+ * O LLM atualiza só `currentStage + checklist + artifactIds` via tool
+ * built-in updateWorkingMemory. Os campos de metadata (sessionId,
+ * templateId) são injetados aqui pra completar o shape pras tools.
+ */
+function hydrateWorkingMemoryForTools(
+	liveWorkingMemory: Record<string, unknown> | null,
+	session: { id: string; templateId: string; draftSnapshot: unknown },
+	currentStage: Stage,
+) {
+	const base = buildEmptyWorkingMemorySnapshot(session, currentStage);
+	if (!liveWorkingMemory) return base;
+
+	// Merge raso: mantém metadata + sobrescreve campos que o LLM populou.
+	return {
+		...base,
+		...(liveWorkingMemory as Partial<typeof base>),
+		sessionId: session.id,
+		templateId: session.templateId,
+	};
+}
+
+function buildEmptyWorkingMemorySnapshot(
+	session: {
 		id: string;
 		templateId: string;
 		draftSnapshot: unknown;
 	},
-	currentStage: "ideation" | "planning" | "knowledge" | "creation",
+	currentStage: Stage,
 ) {
 	return {
+		sessionId: session.id,
+		templateId: session.templateId,
 		currentStage,
 		checklist: {
 			ideation: {

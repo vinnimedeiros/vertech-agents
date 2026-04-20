@@ -11,6 +11,7 @@ export { getArchitectAgent } from "./agents/architect";
 export { getCommercialAgent } from "./agents/commercial";
 export { getArchitectAgentMemory } from "./memory/architect";
 export { getCommercialAgentMemory } from "./memory/config";
+export { getArchitectWorkingMemory } from "./memory/architect-read";
 export { getMastra } from "./instance";
 export { getMastraStorage } from "./storage";
 export { buildInstructions } from "./instructions/builder";

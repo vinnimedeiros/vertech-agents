@@ -19,6 +19,14 @@ import {
 	type FinalSummaryContent,
 	type KnowledgeBaseContent,
 } from "../../lib/artifact-types";
+import type {
+	BusinessProfileRefineInput,
+	KnowledgeBaseRefineInput,
+} from "../../lib/inline-refinement-schemas";
+import {
+	ArtifactInlineRefinement,
+	supportsInlineRefinement,
+} from "./ArtifactInlineRefinement";
 import { AgentBlueprintRenderer } from "./renderers/AgentBlueprintRenderer";
 import { BusinessProfileRenderer } from "./renderers/BusinessProfileRenderer";
 import { FinalSummaryRenderer } from "./renderers/FinalSummaryRenderer";
@@ -28,9 +36,16 @@ type Props = {
 	artifact: ArchitectArtifact;
 	isRegenerating?: boolean;
 	isApproving?: boolean;
+	isRefining?: boolean;
+	isExpanded?: boolean;
 	onRefine?: (artifactId: string) => void;
 	onChatChange?: (artifactId: string) => void;
 	onApprove?: (artifactId: string) => void;
+	onRefineSave?: (
+		artifactId: string,
+		data: BusinessProfileRefineInput | KnowledgeBaseRefineInput,
+	) => Promise<void> | void;
+	onRefineCancel?: (artifactId: string) => void;
 };
 
 /**
@@ -49,10 +64,16 @@ export function ArtifactCard({
 	artifact,
 	isRegenerating = false,
 	isApproving = false,
+	isRefining = false,
+	isExpanded = false,
 	onRefine,
 	onChatChange,
 	onApprove,
+	onRefineSave,
+	onRefineCancel,
 }: Props) {
+	const supportsInline = supportsInlineRefinement(artifact.type);
+	const showInlineForm = isExpanded && supportsInline;
 	const [imageError, _setImageError] = useState(false);
 	const titleId = `artifact-${artifact.id}-title`;
 	const isApproved = artifact.status === "APPROVED";
@@ -130,11 +151,20 @@ export function ArtifactCard({
 
 			{isRegenerating ? (
 				<Shimmer />
+			) : showInlineForm ? (
+				<ArtifactInlineRefinement
+					artifact={artifact}
+					isSaving={isRefining}
+					onSave={async (data) => {
+						await onRefineSave?.(artifact.id, data);
+					}}
+					onCancel={() => onRefineCancel?.(artifact.id)}
+				/>
 			) : (
 				<ArtifactContent artifact={artifact} />
 			)}
 
-			{!isApproved && !isRegenerating ? (
+			{!isApproved && !isRegenerating && !showInlineForm ? (
 				<div className="mt-5 flex flex-wrap gap-2">
 					<Button
 						variant="outline"

@@ -13,6 +13,10 @@ import {
 	type ArchitectAttachment,
 	MAX_ATTACHMENTS,
 } from "../../lib/attachment-helpers";
+import type {
+	BusinessProfileRefineInput,
+	KnowledgeBaseRefineInput,
+} from "../../lib/inline-refinement-schemas";
 import { ArtifactCard } from "../artifacts/ArtifactCard";
 import { ArchitectComposer } from "./ArchitectComposer";
 import { ArchitectHeader } from "./ArchitectHeader";
@@ -74,8 +78,9 @@ export function ChatShell({
 	const [isStarting, setIsStarting] = useState(false);
 	const [artifacts, setArtifacts] = useState<ArchitectArtifact[]>([]);
 	const [approvingId, setApprovingId] = useState<string | null>(null);
+	const [expandedId, setExpandedId] = useState<string | null>(null);
+	const [refiningId, setRefiningId] = useState<string | null>(null);
 	const menuRef = useRef<AttachmentMenuHandle>(null);
-	const composerFocusRef = useRef<(text: string) => void>(() => {});
 
 	const { uploadFiles, uploadLink, removeAttachment, ensureSession } =
 		useFileUpload({
@@ -252,25 +257,77 @@ export function ChatShell({
 		toast.error(`Máximo de ${MAX_ATTACHMENTS} anexos por mensagem.`);
 	};
 
-	const handleRefineArtifact = useCallback((artifactId: string) => {
-		// Placeholder até 09.7/09.8 entrarem. Por enquanto, alerta + foca
-		// composer pra user mandar alteração via chat.
-		toast.info(
-			"Refinamento inline chega na 09.7. Por enquanto, descreve a alteração no chat.",
-		);
-		composerFocusRef.current?.("");
+	const handleRefineArtifact = useCallback(
+		(artifactId: string) => {
+			const artifact = artifacts.find((a) => a.id === artifactId);
+			if (!artifact) return;
+			if (
+				artifact.type === "BUSINESS_PROFILE" ||
+				artifact.type === "KNOWLEDGE_BASE"
+			) {
+				setExpandedId((prev) =>
+					prev === artifactId ? null : artifactId,
+				);
+				return;
+			}
+			if (artifact.type === "AGENT_BLUEPRINT") {
+				toast.info("Refinamento do Blueprint chega na 09.8.");
+				return;
+			}
+			toast.info("Resumo final não suporta edição direta.");
+		},
+		[artifacts],
+	);
+
+	const handleRefineCancel = useCallback((_artifactId: string) => {
+		setExpandedId(null);
 	}, []);
 
-	const handleChatChangeArtifact = useCallback(
-		(_artifactId: string) => {
-			// Foca composer com placeholder sugestivo. User digita a alteração
-			// e Arquiteto aciona refineArtifact no próximo turn.
-			composerFocusRef.current?.(
-				"Quero alterar o seguinte: ",
-			);
+	const handleRefineSave = useCallback(
+		async (
+			artifactId: string,
+			data:
+				| BusinessProfileRefineInput
+				| KnowledgeBaseRefineInput,
+		) => {
+			setRefiningId(artifactId);
+			try {
+				const res = await fetch(
+					`/api/architect/artifacts/${artifactId}/refine`,
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify(data),
+					},
+				);
+				if (!res.ok) {
+					const payload = (await res.json().catch(() => null)) as {
+						message?: string;
+					} | null;
+					throw new Error(
+						payload?.message ?? "Erro ao salvar alterações.",
+					);
+				}
+				toast.success("Alterações salvas.");
+				setExpandedId(null);
+			} catch (err) {
+				toast.error(
+					err instanceof Error
+						? err.message
+						: "Erro ao salvar alterações.",
+				);
+			} finally {
+				setRefiningId(null);
+			}
 		},
 		[],
 	);
+
+	const handleChatChangeArtifact = useCallback((_artifactId: string) => {
+		toast.info(
+			"Descreva no chat a alteração que quer — o Arquiteto vai aplicar.",
+		);
+	}, []);
 
 	const handleApproveArtifact = useCallback(async (artifactId: string) => {
 		setApprovingId(artifactId);
@@ -386,9 +443,13 @@ export function ChatShell({
 								key={artifact.id}
 								artifact={artifact}
 								isApproving={approvingId === artifact.id}
+								isRefining={refiningId === artifact.id}
+								isExpanded={expandedId === artifact.id}
 								onRefine={handleRefineArtifact}
 								onChatChange={handleChatChangeArtifact}
 								onApprove={handleApproveArtifact}
+								onRefineSave={handleRefineSave}
+								onRefineCancel={handleRefineCancel}
 							/>
 						))}
 					</div>

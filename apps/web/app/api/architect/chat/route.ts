@@ -197,7 +197,7 @@ function extractMessageText(msg: ChatMessagePart | undefined): string {
 }
 
 function buildWorkingMemorySnapshot(
-	session: {
+	_session: {
 		id: string;
 		templateId: string;
 		draftSnapshot: unknown;
@@ -205,8 +205,6 @@ function buildWorkingMemorySnapshot(
 	currentStage: "ideation" | "planning" | "knowledge" | "creation",
 ) {
 	return {
-		sessionId: session.id,
-		templateId: session.templateId,
 		currentStage,
 		checklist: {
 			ideation: {

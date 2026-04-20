@@ -14,9 +14,18 @@ import {
 import { ArchitectComposer } from "./ArchitectComposer";
 import { ArchitectHeader } from "./ArchitectHeader";
 import { AttachmentMenu, type AttachmentMenuHandle } from "./AttachmentMenu";
+import { ChatWelcomeCta } from "./ChatWelcomeCta";
 import { MessageBubble } from "./MessageBubble";
 import { MessagesArea } from "./MessagesArea";
 import { type ArchitectStage, StatusBar } from "./StatusBar";
+
+/**
+ * Texto-gatilho enviado ao clicar "Iniciar construção". Mensagem do user
+ * nunca é renderizada no chat — o Arquiteto responde com apresentação +
+ * primeira pergunta, dando ao user a sensação de que a IA começou.
+ */
+const START_TRIGGER_TEXT =
+	"Olá, vamos começar a criar o agente. Se apresente brevemente e faça a primeira pergunta.";
 
 type Props = {
 	organizationSlug: string;
@@ -57,6 +66,8 @@ export function ChatShell({
 	);
 	const [attachments, setAttachments] = useState<ArchitectAttachment[]>([]);
 	const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+	const [hasStarted, setHasStarted] = useState(!!initialSessionId);
+	const [isStarting, setIsStarting] = useState(false);
 	const menuRef = useRef<AttachmentMenuHandle>(null);
 
 	const { uploadFiles, uploadLink, removeAttachment, ensureSession } =
@@ -168,6 +179,28 @@ export function ChatShell({
 		}
 	};
 
+	const handleStart = async () => {
+		if (isStarting) return;
+		setIsStarting(true);
+		try {
+			const activeSessionId = await ensureSession();
+			setHasStarted(true);
+			await sendWithAttachments(
+				START_TRIGGER_TEXT,
+				[],
+				activeSessionId,
+			);
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: "Não consegui iniciar a conversa.",
+			);
+		} finally {
+			setIsStarting(false);
+		}
+	};
+
 	const handleLimitReached = () => {
 		toast.error(`Máximo de ${MAX_ATTACHMENTS} anexos por mensagem.`);
 	};
@@ -179,24 +212,59 @@ export function ChatShell({
 
 	const renderedMessages = useMemo(() => {
 		if (messages.length === 0) return null;
-		return (messages as Message[]).map((msg, idx) => {
-			const isLast = idx === messages.length - 1;
-			const streaming = isLoading && isLast && msg.role === "assistant";
-			return (
-				<MessageBubble
-					key={msg.id}
-					role={msg.role}
-					content={msg.content}
-					isStreaming={streaming}
-				/>
-			);
-		});
+		return (messages as Message[])
+			.filter((msg) => {
+				// Esconde o trigger oculto que abriu a conversa —
+				// user não deve ver a instrução que foi mandada pro LLM.
+				if (
+					msg.role === "user" &&
+					msg.content === START_TRIGGER_TEXT
+				) {
+					return false;
+				}
+				return true;
+			})
+			.map((msg, idx, arr) => {
+				const isLast = idx === arr.length - 1;
+				const streaming =
+					isLoading && isLast && msg.role === "assistant";
+				return (
+					<MessageBubble
+						key={msg.id}
+						role={msg.role}
+						content={msg.content}
+						isStreaming={streaming}
+					/>
+				);
+			});
 	}, [messages, isLoading]);
 
-	const showInitialShimmer = messages.length === 0 && isLoading;
+	const showInitialShimmer =
+		hasStarted && messages.length === 0 && (isStarting || isLoading);
+
+	if (!hasStarted) {
+		return (
+			<div className="flex h-[calc(100vh-var(--header-height,4rem))] flex-col bg-background">
+				<ArchitectHeader
+					organizationSlug={organizationSlug}
+					templateLabel={templateLabel}
+					isDirty={isDirty}
+				/>
+				<StatusBar
+					currentStage={currentStage}
+					doneStages={doneStages}
+				/>
+				<ChatWelcomeCta
+					templateLabel={templateLabel}
+					isStarting={isStarting}
+					onStart={() => void handleStart()}
+				/>
+			</div>
+		);
+	}
 
 	return (
-		<div className="flex h-[calc(100vh-var(--header-height,4rem))] flex-col bg-background">
+		<div className="relative flex h-[calc(100vh-var(--header-height,4rem))] flex-col bg-background">
 			<ArchitectHeader
 				organizationSlug={organizationSlug}
 				templateLabel={templateLabel}
@@ -212,31 +280,35 @@ export function ChatShell({
 					</div>
 				) : null}
 			</MessagesArea>
-			<ArchitectComposer
-				onSend={handleSend}
-				onOpenAttachmentMenu={() => menuRef.current?.open()}
-				attachments={attachments}
-				onRemoveAttachment={removeAttachment}
-				blocked={composerBlocked}
-				disabled={isLoading}
-				onStop={isLoading ? stop : undefined}
-				isStreaming={isLoading}
-				attachmentSlot={
-					<AttachmentMenu
-						ref={menuRef}
-						attachmentCount={attachments.length}
-						onFilesSelected={(files) => {
-							setIsDirty(true);
-							void uploadFiles(files);
-						}}
-						onLinkSubmitted={(url) => {
-							setIsDirty(true);
-							void uploadLink(url);
-						}}
-						onLimitReached={handleLimitReached}
+			<div className="pointer-events-none absolute inset-x-0 bottom-0 z-10">
+				<div className="pointer-events-auto">
+					<ArchitectComposer
+						onSend={handleSend}
+						onOpenAttachmentMenu={() => menuRef.current?.open()}
+						attachments={attachments}
+						onRemoveAttachment={removeAttachment}
+						blocked={composerBlocked}
+						disabled={isLoading}
+						onStop={isLoading ? stop : undefined}
+						isStreaming={isLoading}
+						attachmentSlot={
+							<AttachmentMenu
+								ref={menuRef}
+								attachmentCount={attachments.length}
+								onFilesSelected={(files) => {
+									setIsDirty(true);
+									void uploadFiles(files);
+								}}
+								onLinkSubmitted={(url) => {
+									setIsDirty(true);
+									void uploadLink(url);
+								}}
+								onLimitReached={handleLimitReached}
+							/>
+						}
 					/>
-				}
-			/>
+				</div>
+			</div>
 		</div>
 	);
 }

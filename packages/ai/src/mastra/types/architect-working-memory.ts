@@ -12,17 +12,6 @@ import { z } from "zod";
  * loop trocando o tipo opaco pela inferência do schema Zod.
  */
 export const architectWorkingMemorySchema = z.object({
-	sessionId: z.string().min(1),
-	templateId: z.enum([
-		"clinical",
-		"ecommerce",
-		"real_estate",
-		"info_product",
-		"saas",
-		"local_services",
-		"custom",
-	]),
-
 	currentStage: z
 		.enum(["ideation", "planning", "knowledge", "creation"])
 		.default("ideation"),

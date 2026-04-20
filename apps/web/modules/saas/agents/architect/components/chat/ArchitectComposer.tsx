@@ -101,10 +101,16 @@ export function ArchitectComposer({
 	const send = useCallback(async () => {
 		if (!canSubmit) return;
 		const textToSend = trimmed;
+		// Limpa input imediato antes do await — UX: user vê msg subir
+		// pra lista + campo zerado instantaneamente, mesmo que o stream
+		// demore segundos pra chegar.
+		setValue("");
 		setIsSubmitting(true);
 		try {
 			await onSend(textToSend);
-			setValue("");
+		} catch {
+			// Em caso de falha, recupera o texto pra user tentar de novo.
+			setValue(textToSend);
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -174,7 +180,7 @@ export function ArchitectComposer({
 	const hasAttachments = attachments.length > 0;
 
 	return (
-		<div className="border-border border-t bg-background p-3 md:p-4">
+		<div className="relative bg-gradient-to-t from-background via-background to-transparent px-3 pt-6 pb-3 md:px-4 md:pb-4">
 			<div className="mx-auto max-w-[800px]">
 				{hasAttachments ? (
 					<div className="mb-2 flex flex-wrap gap-2">
@@ -189,7 +195,7 @@ export function ArchitectComposer({
 				) : null}
 				<div
 					className={cn(
-						"flex items-end gap-2 rounded-xl border bg-card p-2 transition-colors",
+						"flex items-end gap-2 rounded-2xl border border-border/60 bg-card/80 p-2 shadow-lg shadow-black/5 backdrop-blur-md transition-colors",
 						"focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20",
 						disabled && "opacity-60",
 					)}

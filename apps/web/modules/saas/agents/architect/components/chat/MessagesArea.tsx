@@ -31,7 +31,7 @@ export function MessagesArea({ children, isLoadingInitial = true }: Props) {
 				"bg-background",
 			)}
 		>
-			<div className="mx-auto flex min-h-full max-w-[800px] flex-col gap-4 px-4 pt-6 pb-12 md:px-6">
+			<div className="mx-auto flex min-h-full max-w-[800px] flex-col gap-4 px-4 pt-6 pb-32 md:px-6">
 				{isEmpty && isLoadingInitial ? <InitialShimmer /> : children}
 			</div>
 		</div>

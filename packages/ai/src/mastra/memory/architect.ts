@@ -1,19 +1,18 @@
 import { Memory } from "@mastra/memory";
 import { getPgVector } from "../../rag/pgvector";
 import { getMastraStorage } from "../storage";
-import { architectWorkingMemorySchema } from "../types/architect-working-memory";
 
 /**
- * Factory da Memory do Arquiteto (story 09.5).
+ * Factory da Memory do Arquiteto (story 09.5, arquitetura extractor-driven).
  *
- * Config completa tech-spec § 3.4:
- * - `storage`: PostgresStore singleton (mesmo do Commercial Agent)
- * - `vector`: PgVector do @repo/ai/rag (HNSW dotproduct em knowledge_chunk)
- * - `embedder`: string `openai/text-embedding-3-small` (1536d, compatível com
- *   o index já criado em 08A.1)
- * - `options.lastMessages`: 20 msgs recentes sempre no prompt
- * - `options.semanticRecall`: topK=5, scope='resource', HNSW params
- * - `options.workingMemory`: Zod schema via `architectWorkingMemorySchema`
+ * Config enxuta:
+ * - `storage`: PostgresStore singleton (persiste messages + threads)
+ * - `vector`: PgVector pra semanticRecall cross-thread
+ * - `embedder`: text-embedding-3-small (1536d)
+ * - `lastMessages: 20` + semanticRecall HNSW dotproduct
+ *
+ * Working memory foi removida — o extractor LLM secundário cuida de
+ * estruturar o estado, não o Arquiteto principal.
  *
  * Lazy init — evita side effects no import (DATABASE_URL só é checado
  * na primeira `get`).
@@ -41,11 +40,7 @@ export function getArchitectAgentMemory(): Memory {
 						},
 					},
 				},
-				workingMemory: {
-					enabled: true,
-					schema: architectWorkingMemorySchema,
-					scope: "thread",
-				},
+				workingMemory: { enabled: false },
 			},
 		});
 	}

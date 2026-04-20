@@ -8,6 +8,7 @@ type UseArchitectChatOptions = {
 	initialMessages?: Message[];
 	onRateLimited?: (retryAfter: number, message: string) => void;
 	onError?: (error: Error) => void;
+	onAssistantFinish?: (sessionId: string) => void;
 };
 
 type ArchitectRequestBody = {
@@ -36,6 +37,7 @@ export function useArchitectChat({
 	initialMessages,
 	onRateLimited,
 	onError,
+	onAssistantFinish,
 }: UseArchitectChatOptions) {
 	const pendingAttachmentIdsRef = useRef<string[]>([]);
 	const sessionIdRef = useRef<string | undefined>(sessionId);
@@ -86,6 +88,10 @@ export function useArchitectChat({
 		},
 		onError: (err: Error) => {
 			onError?.(err);
+		},
+		onFinish: () => {
+			const sid = sessionIdRef.current;
+			if (sid) onAssistantFinish?.(sid);
 		},
 	});
 

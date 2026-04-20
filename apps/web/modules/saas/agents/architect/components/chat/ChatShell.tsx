@@ -214,6 +214,14 @@ export function ChatShell({
 				err.message || "Erro inesperado. Tente de novo em instantes.",
 			);
 		},
+		onAssistantFinish: (sid) => {
+			// Arquitetura extractor-driven: após cada resposta do LLM
+			// dispara extração em background. Card aparece/atualiza
+			// via Realtime. Fire-and-forget — falha não bloqueia UX.
+			void fetch(`/api/architect/sessions/${sid}/extract`, {
+				method: "POST",
+			}).catch(() => {});
+		},
 	});
 
 	// Hidrata histórico de mensagens quando retoma sessão existente

@@ -16,6 +16,12 @@ export {
 	getArchitectMessages,
 	type ArchitectMessage,
 } from "./memory/architect-messages";
+export {
+	extractArchitectArtifact,
+	type ExtractorInput,
+	type ExtractorMessage,
+	type ExtractorResult,
+} from "./extractors/architect-extractor";
 export { getMastra } from "./instance";
 export { getMastraStorage } from "./storage";
 export { buildInstructions } from "./instructions/builder";

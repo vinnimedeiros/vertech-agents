@@ -6,20 +6,31 @@
 		"@mastra/core": "^1.25.0",
 		"@mastra/memory": "^1.15.1",
 		"@mastra/pg": "^1.9.1",
+		"@mastra/rag": "^2.2.0",
 		"@repo/database": "workspace:*",
+		"@supabase/supabase-js": "^2.103.3",
 		"ai": "^4.3.16",
-		"openai": "^5.1.1"
+		"cheerio": "^1.2.0",
+		"mammoth": "^1.12.0",
+		"openai": "^5.1.1",
+		"papaparse": "^5.5.3",
+		"pdf-parse": "^2.4.5",
+		"xlsx": "^0.18.5",
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
 		"@repo/tsconfig": "workspace:*",
+		"@types/papaparse": "^5.5.2",
 		"@types/react": "19.1.6",
+		"tsx": "^4.21.0",
 		"typescript": "5.8.3"
 	},
 	"main": "./index.ts",
 	"name": "@repo/ai",
 	"scripts": {
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"test:rag:smoke": "tsx src/rag/__tests__/extractors.smoke.ts"
 	},
 	"types": "./**/.tsx",
 	"version": "0.0.0"

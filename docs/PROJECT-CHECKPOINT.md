@@ -1,7 +1,7 @@
 ---
 type: checkpoint
 last_updated: 2026-04-19
-active_story: "Phase 08-alpha COMPLETA + pushed + PR #1 aberto — próximo: review/merge + Phase 09"
+active_story: "Phase 09.1 + 09.2 + 09.3 Ready for Review (branch paralela) — próximo: gate humano + 09.4"
 active_agent: dev
 project: vertech-agents
 tags:
@@ -11,10 +11,10 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-20 madrugada (**Phase 08-alpha pushed + PR #1 aberto**)
-> **Agente ativo:** `@devops` (Operator) — HALT após push/PR, aguardando review
-> **Próximo passo:** Vinni revisa PR #1 → decide entre mergear tudo ou cherry-pick 9 commits 08-alpha → depois Phase 09.1 (Niobe passa 9.1 pro Neo, UI do Arquiteto)
-> **PR:** https://github.com/vinnimedeiros/vertech-agents/pull/1
+> **Última atualização:** 2026-04-20 manhã (**Phase 09.1 + 09.2 + 09.3 Ready for Review** em branch paralela `feature/phase-09-architect-ui`)
+> **Agente ativo:** `@dev` (Neo) — HALT após entrega, aguardando gate humano
+> **Próximo passo:** Vinni testa composer em dev (digitar, Enter, Shift+Enter, Cmd+K, over-limit) + decide 09.4 (AttachmentMenu + upload flow) ou commit/push pra PR #2
+> **PR aberto (08-alpha):** https://github.com/vinnimedeiros/vertech-agents/pull/1
 
 ## Contexto Ativo
 
@@ -143,6 +143,41 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - **Coolify VPS:** destino de deploy quando CRM + Chat + WhatsApp + Agenda (Phase 11) estiverem prontos
 
 ## Ultimo Trabalho Realizado
+
+### Sessão 2026-04-20 manhã (Neo entrega 09.3 — Composer funcional)
+
+**Story 09.3 Ready for Review:**
+- `ArchitectComposer` substitui `ComposerPlaceholder` no ChatShell
+- Textarea auto-resize 1→8 rows via hook `useAutoResizeTextarea` (scrollHeight cap em line-height × maxRows + padding; reset `auto` antes de medir)
+- Shortcuts: Enter envia, Shift+Enter quebra linha, Cmd/Ctrl+K abre menu. Guard IME (`e.nativeEvent.isComposing`)
+- Placeholder dinâmico 3 estados: offline/blocked/idle (listener `online`/`offline` no window)
+- CharCounter com thresholds relativos ao `max`: muted em max-500, amber em max-100, destructive em ≥max (bloqueia envio + Tooltip)
+- Stub `onSend` no ChatShell ativa dirty flag → aciona ExitDialog no header. 09.5 pluga Mastra `useChat`
+- Typecheck + 92/92 tests + biome 0 errors
+- 3 novos + 1 modificado
+
+### Sessão 2026-04-20 manhã (Neo entrega 09.2 — Shell do chat Arquiteto)
+
+**Story 09.2 Ready for Review — Shell do chat `/agents/new`:**
+- Substituiu o `NewAgentForm` antigo (07B v1) na rota `/agents/new`. Conflito esperado no merge se PR #1 mergear 07B v1 junto — documentado.
+- 7 componentes client criados em `architect/components/chat/`: ChatShell (orchestra) + ArchitectHeader (breadcrumb + save-exit) + ExitDialog (AlertDialog shadcn) + StatusBar (4 etapas + mobile compact + a11y `<output>`) + MessagesArea (max-w 800 + shimmer) + ComposerPlaceholder (disabled pra 09.3 substituir)
+- page.tsx server component com guards: sem query→redirect `/agents`, template inválido→404, session sem ownership→404. Session param tem precedência (carrega template da row)
+- Server query `getArchitectSessionForUser` adicionada a `architect/lib/server.ts` (tenant isolation via userId+orgId)
+- `useChatSession` hook mencionado no File List não foi criado — rationale: shell puro não precisa de state client-side, hook real fica pra 09.5 quando Mastra useChat for integrado
+- Divergência translations documentada (consistente com 09.1): projeto usa pt-BR hardcoded
+- Typecheck web + 92/92 vitest + biome 0 errors
+- 8 arquivos no total (7 novos + 1 modificado)
+
+### Sessão 2026-04-20 manhã (Neo entrega 09.1 — Tela de boas-vindas do Arquiteto)
+
+**Story 09.1 Ready for Review — UI foundation da Phase 09:**
+- Branch nova `feature/phase-09-architect-ui` a partir de `feature/phase-08a-09-architect` (não contamina PR #1)
+- Estrutura nova `apps/web/modules/saas/agents/architect/{components/welcome,lib}` separada do agents/ tradicional (07B v1)
+- 8 componentes/libs criados: Hero (2 variantes empty/compressed), TemplateCard + TemplateGrid responsivo (2/3/4 cols), DraftCard + SessionHistory (accordion), registry de 7 templates, formatRelativeTime em pt-BR, getDraftSessions server query
+- page.tsx reescrita: estado vazio (Hero dominante + templates) vs estado com agentes (Hero compressed + accordions Rascunhos/Agentes/Templates)
+- Divergência da spec documentada: AC20 pede translations pt-BR.json, mas projeto inteiro usa pt-BR hardcoded. Seguido pattern existente (AgentCard, etc)
+- Typecheck web + 92/92 vitest + biome 0 errors
+- 9 arquivos no total (8 novos + 1 modificado)
 
 ### Sessão 2026-04-20 madrugada (Operator consolida push + PR)
 

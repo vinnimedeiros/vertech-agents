@@ -112,12 +112,14 @@ export async function publishAgentFromSessionCore(
 			.set({ agentId: createdAgent.id, sessionId: null })
 			.where(eq(knowledgeDocument.sessionId, sessionId));
 
+		// metadata é json (não jsonb). Cast pra jsonb pra usar jsonb_set
+		// e converte de volta pra json no final.
 		await tx.execute(sql`
 			UPDATE knowledge_chunk
 			SET metadata = jsonb_set(
-				jsonb_set(metadata, '{agentId}', to_jsonb(${createdAgent.id}::text)),
+				jsonb_set(metadata::jsonb, '{agentId}', to_jsonb(${createdAgent.id}::text)),
 				'{sessionId}', 'null'::jsonb
-			)
+			)::json
 			WHERE (metadata->>'sessionId') = ${sessionId}
 		`);
 

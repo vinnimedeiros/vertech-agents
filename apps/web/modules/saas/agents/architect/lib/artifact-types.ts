@@ -19,6 +19,14 @@ export type BusinessProfileContent = {
 	targetAudience: string;
 	goalForAgent: string;
 	differentiator?: string;
+	// Extensões do wizard (refactor 2026-04-20):
+	agentGoals?: string[];
+	suggestedIdentity?: {
+		name: string;
+		role: string;
+		toneKeyword: string;
+		gender?: "FEMININE" | "MASCULINE";
+	};
 };
 
 export type AgentBlueprintContent = {

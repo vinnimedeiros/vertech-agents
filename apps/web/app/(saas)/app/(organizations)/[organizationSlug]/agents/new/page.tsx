@@ -1,4 +1,4 @@
-import { ChatShell } from "@saas/agents/architect/components/chat/ChatShell";
+import { WizardShell } from "@saas/agents/architect/components/wizard/WizardShell";
 import { getArchitectSessionForUser } from "@saas/agents/architect/lib/server";
 import {
 	type ArchitectTemplate,
@@ -81,7 +81,7 @@ export default async function NewArchitectChatPage({
 	}
 
 	return (
-		<ChatShell
+		<WizardShell
 			organizationSlug={organizationSlug}
 			templateId={resolvedTemplate.id}
 			templateLabel={resolvedTemplate.label}

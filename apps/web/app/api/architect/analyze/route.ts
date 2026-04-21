@@ -30,57 +30,40 @@ type Answer = { questionId: string; question: string; answer: string };
 const analysisSchema = z.object({
 	businessTitle: z
 		.string()
-		.max(80)
 		.describe("Título curto do negócio, 2-6 palavras."),
 	executiveSummary: z
 		.string()
-		.max(500)
 		.describe(
 			"Resumo em 1 parágrafo denso: contexto do negócio + dor principal + o que o agente resolverá.",
 		),
 	identifiedServices: z
 		.array(z.string())
-		.min(3)
-		.max(10)
-		.describe("Lista de serviços/produtos identificados na conversa."),
+		.describe(
+			"Lista de serviços/produtos identificados (ideal 3-10 itens).",
+		),
 	agentGoals: z
 		.array(z.string())
-		.min(3)
-		.max(8)
-		.describe("Objetivos concretos do agente (o que ele faz)."),
+		.describe("Objetivos concretos do agente (ideal 3-8 itens)."),
 	targetAudience: z
 		.string()
-		.max(300)
-		.describe("Quem é o público-alvo descrito pelo usuário."),
+		.describe("Público-alvo descrito pelo usuário."),
 	differentiator: z
 		.string()
-		.max(300)
 		.nullable()
-		.describe("Diferencial competitivo, se mencionado."),
+		.describe("Diferencial competitivo, ou null se não mencionado."),
 	suggestedName: z
 		.string()
-		.max(30)
-		.describe(
-			"Nome sugerido pro agente, coerente com vertical e gênero escolhido. Ex: Sofia, Amanda, Carlos, Ricardo.",
-		),
+		.describe("Nome sugerido (ex: Sofia, Amanda, Carlos, Ricardo)."),
 	suggestedRole: z
 		.string()
-		.max(80)
 		.describe(
-			"Título/função do agente em 3-6 palavras. Ex: Consultora Digital de Imóveis, Atendente Virtual da Clínica.",
+			"Título/função do agente (ex: Consultora Digital de Imóveis).",
 		),
 	suggestedTone: z
-		.enum([
-			"caloroso",
-			"consultivo",
-			"profissional",
-			"amigável",
-			"entusiasmado",
-			"acolhedor",
-			"direto",
-			"empático",
-		])
-		.describe("Tom de voz sugerido pro agente."),
+		.string()
+		.describe(
+			"Tom de voz em 1 palavra: caloroso, consultivo, profissional, amigavel, entusiasmado, acolhedor, direto, empatico.",
+		),
 });
 
 /**
@@ -172,16 +155,42 @@ export async function POST(req: Request) {
 			);
 		}
 
-		const { object } = await generateObject({
-			model: openai("gpt-4o"),
-			schema: analysisSchema,
-			prompt: buildAnalysisPrompt({
-				templateId: sessionRow.templateId,
-				gender,
-				answers,
-				additionalInfo,
-			}),
-		});
+		let object: z.infer<typeof analysisSchema>;
+		try {
+			const result = await generateObject({
+				model: openai("gpt-4o"),
+				schema: analysisSchema,
+				mode: "json",
+				schemaName: "BusinessAnalysis",
+				schemaDescription: "Mini-PRD do agente comercial a ser criado",
+				maxRetries: 2,
+				prompt: buildAnalysisPrompt({
+					templateId: sessionRow.templateId,
+					gender,
+					answers,
+					additionalInfo,
+				}),
+			});
+			object = result.object;
+		} catch (genErr) {
+			const anyErr = genErr as {
+				text?: string;
+				cause?: { text?: string };
+			};
+			console.error("[architect/analyze] generateObject failed", {
+				error:
+					genErr instanceof Error ? genErr.message : String(genErr),
+				rawText: anyErr?.text ?? anyErr?.cause?.text,
+			});
+			return NextResponse.json(
+				{
+					error: "LLM_SCHEMA_MISMATCH",
+					message:
+						"A IA retornou um formato inesperado. Tente novamente — se persistir, reformule as respostas.",
+				},
+				{ status: 502 },
+			);
+		}
 
 		const content = {
 			businessName: object.businessTitle,

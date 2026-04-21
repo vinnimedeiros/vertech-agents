@@ -15,15 +15,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const refineSchema = z.object({
-	businessTitle: z.string().max(80),
-	executiveSummary: z.string().max(500),
-	identifiedServices: z.array(z.string()).min(3).max(10),
-	agentGoals: z.array(z.string()).min(3).max(8),
-	targetAudience: z.string().max(300),
-	differentiator: z.string().max(300).nullable(),
-	suggestedName: z.string().max(30),
-	suggestedRole: z.string().max(80),
-	suggestedTone: z.string().max(30),
+	businessTitle: z.string(),
+	executiveSummary: z.string(),
+	identifiedServices: z.array(z.string()),
+	agentGoals: z.array(z.string()),
+	targetAudience: z.string(),
+	differentiator: z.string().nullable(),
+	suggestedName: z.string(),
+	suggestedRole: z.string(),
+	suggestedTone: z.string(),
 });
 
 /**
@@ -99,6 +99,10 @@ export async function POST(
 		const { object } = await generateObject({
 			model: openai("gpt-4o"),
 			schema: refineSchema,
+			mode: "json",
+			schemaName: "BusinessAnalysisRefined",
+			schemaDescription: "Mini-PRD atualizado conforme instrução do user",
+			maxRetries: 2,
 			prompt: `
 Você é consultor sênior de automação comercial. O usuário pediu um ajuste no mini-PRD atual do agente dele (vertical "${sessionRow.templateId}").
 

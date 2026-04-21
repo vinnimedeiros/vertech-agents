@@ -27,20 +27,20 @@ const planSchema = z.object({
 	blocks: z
 		.array(
 			z.object({
-				title: z.string().max(80),
-				description: z.string().max(500),
+				title: z.string(),
+				description: z.string(),
 			}),
 		)
-		.min(5)
-		.max(8)
-		.describe("5-8 blocos narrativos descrevendo comportamento do agente."),
+		.describe(
+			"Blocos narrativos descrevendo o comportamento do agente (ideal 5-8).",
+		),
 	persona: z.object({
-		name: z.string().max(30),
+		name: z.string(),
 		tone: z.number().min(0).max(100),
 		formality: z.number().min(0).max(100),
 		humor: z.number().min(0).max(100),
 		empathy: z.number().min(0).max(100),
-		antiPatterns: z.array(z.string()).max(10),
+		antiPatterns: z.array(z.string()),
 	}),
 	capabilities: z
 		.array(
@@ -52,20 +52,26 @@ const planSchema = z.object({
 				"followup",
 			]),
 		)
-		.min(1),
-	salesTechniques: z.array(
-		z.object({
-			presetId: z.enum([
-				"rapport",
-				"spin",
-				"aida",
-				"pas",
-				"objection",
-				"followup",
-			]),
-			intensity: z.enum(["soft", "balanced", "aggressive"]),
-		}),
-	),
+		.describe(
+			"Capabilities do agente. Pelo menos 1. Valores aceitos: qualification, scheduling, faq, handoff, followup.",
+		),
+	salesTechniques: z
+		.array(
+			z.object({
+				presetId: z.enum([
+					"rapport",
+					"spin",
+					"aida",
+					"pas",
+					"objection",
+					"followup",
+				]),
+				intensity: z.enum(["soft", "balanced", "aggressive"]),
+			}),
+		)
+		.describe(
+			"Técnicas comerciais com intensidade. presetId: rapport/spin/aida/pas/objection/followup. intensity: soft/balanced/aggressive.",
+		),
 });
 
 /**
@@ -142,16 +148,42 @@ export async function POST(req: Request) {
 			),
 		});
 
-		const { object } = await generateObject({
-			model: openai("gpt-4o"),
-			schema: planSchema,
-			prompt: buildPlanPrompt({
-				templateId: sessionRow.templateId,
-				businessProfile: bizProfile.content as Record<string, unknown>,
-				adjustment,
-				previousPlan: existingPlan?.content,
-			}),
-		});
+		let object: z.infer<typeof planSchema>;
+		try {
+			const result = await generateObject({
+				model: openai("gpt-4o"),
+				schema: planSchema,
+				mode: "json",
+				schemaName: "AgentBlueprint",
+				schemaDescription: "Plano do agente comercial a ser criado",
+				maxRetries: 2,
+				prompt: buildPlanPrompt({
+					templateId: sessionRow.templateId,
+					businessProfile: bizProfile.content as Record<string, unknown>,
+					adjustment,
+					previousPlan: existingPlan?.content,
+				}),
+			});
+			object = result.object;
+		} catch (genErr) {
+			const anyErr = genErr as {
+				text?: string;
+				cause?: { text?: string };
+			};
+			console.error("[architect/plan] generateObject failed", {
+				error:
+					genErr instanceof Error ? genErr.message : String(genErr),
+				rawText: anyErr?.text ?? anyErr?.cause?.text,
+			});
+			return NextResponse.json(
+				{
+					error: "LLM_SCHEMA_MISMATCH",
+					message:
+						"A IA retornou um formato inesperado ao gerar o plano. Tente novamente.",
+				},
+				{ status: 502 },
+			);
+		}
 
 		const profile = bizProfile.content as {
 			suggestedIdentity?: { gender?: "FEMININE" | "MASCULINE" };

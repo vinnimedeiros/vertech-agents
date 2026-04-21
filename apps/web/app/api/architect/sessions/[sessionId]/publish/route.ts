@@ -59,45 +59,169 @@ export async function POST(
 			);
 		}
 
-		// Exige FinalSummary APPROVED antes de publicar — proteção UX.
-		const finalSummary = await db.query.agentArtifact.findFirst({
-			where: and(
-				eq(agentArtifact.sessionId, sessionId),
-				eq(agentArtifact.type, "FINAL_SUMMARY"),
-			),
-		});
-		if (!finalSummary || finalSummary.status !== "APPROVED") {
+		// Wizard requer BusinessProfile + Blueprint aprovados (Step 1 e Step 2).
+		// Step 4 "Criar agente" é o aprovar implícito — não tem artifact separado.
+		const [businessProfile, blueprint] = await Promise.all([
+			db.query.agentArtifact.findFirst({
+				where: and(
+					eq(agentArtifact.sessionId, sessionId),
+					eq(agentArtifact.type, "BUSINESS_PROFILE"),
+				),
+			}),
+			db.query.agentArtifact.findFirst({
+				where: and(
+					eq(agentArtifact.sessionId, sessionId),
+					eq(agentArtifact.type, "AGENT_BLUEPRINT"),
+				),
+			}),
+		]);
+		if (!businessProfile || businessProfile.status !== "APPROVED") {
 			return NextResponse.json(
 				{
-					error: "FINAL_SUMMARY_NOT_APPROVED",
+					error: "ANALYSIS_NOT_APPROVED",
 					message:
-						"Aprove o Resumo Final antes de criar o agente.",
+						"Volte ao Step 1 e aprove a análise do negócio antes de criar o agente.",
+				},
+				{ status: 409 },
+			);
+		}
+		if (!blueprint || blueprint.status !== "APPROVED") {
+			return NextResponse.json(
+				{
+					error: "PLAN_NOT_APPROVED",
+					message:
+						"Volte ao Step 2 e aprove o plano antes de criar o agente.",
 				},
 				{ status: 409 },
 			);
 		}
 
-		const workingMemory = await getArchitectWorkingMemory({
-			sessionId,
-			userId: session.user.id,
-		});
-		if (!workingMemory) {
-			return NextResponse.json(
-				{
-					error: "WORKING_MEMORY_EMPTY",
-					message:
-						"Checklist ainda não foi preenchido pelo Arquiteto.",
-				},
-				{ status: 409 },
-			);
-		}
+		// Wizard não usa Mastra working memory — artefatos aprovados são
+		// a fonte de verdade. Monta o shape que publishAgentFromSessionCore
+		// espera a partir do BusinessProfile + Blueprint contents.
+		const biz = businessProfile.content as {
+			businessName?: string;
+			summary?: string;
+			offering?: string[];
+			targetAudience?: string;
+			goalForAgent?: string;
+			differentiator?: string;
+			suggestedIdentity?: { toneKeyword?: string; role?: string };
+		};
+		const plan = blueprint.content as {
+			persona?: {
+				name?: string;
+				gender?: "FEMININE" | "MASCULINE" | "feminine" | "masculine";
+				tone?: number;
+				formality?: number;
+				humor?: number;
+				empathy?: number;
+				antiPatterns?: string[];
+			};
+			salesTechniques?: Array<{
+				presetId: string;
+				intensity: string;
+			}>;
+			emojiConfig?: {
+				mode?: "none" | "curated" | "free";
+				curatedList?: string[];
+				allowed?: string[];
+				forbidden?: string[];
+			};
+			voiceConfig?: {
+				enabled?: boolean;
+				provider?: string | null;
+				voiceId?: string | null;
+				mode?: "always_text" | "always_audio" | "triggered";
+				triggers?: string[];
+			};
+			capabilities?: string[];
+		};
 
-		// publishAgentFromSessionCore exige o shape completo com sessionId +
-		// templateId. Injeta o metadata (Mastra só guarda checklist).
+		const genderNormalized =
+			plan.persona?.gender === "MASCULINE" ||
+			plan.persona?.gender === "masculine"
+				? "masculine"
+				: "feminine";
+
 		const completeWorkingMemory = {
-			...workingMemory,
 			sessionId,
 			templateId: sessionRow.templateId,
+			currentStage: "creation" as const,
+			checklist: {
+				ideation: {
+					businessName: biz.businessName ?? null,
+					industry: sessionRow.templateId,
+					targetAudience: biz.targetAudience ?? null,
+					offering: biz.offering?.join(", ") ?? null,
+					differentiator: biz.differentiator ?? null,
+					goalForAgent: biz.goalForAgent ?? null,
+					ticketMean: null,
+					status: "done" as const,
+				},
+				planning: {
+					persona: {
+						name: plan.persona?.name ?? null,
+						gender: genderNormalized as "feminine" | "masculine",
+						tone: plan.persona?.tone ?? 50,
+						formality: plan.persona?.formality ?? 50,
+						humor: plan.persona?.humor ?? 40,
+						empathy: plan.persona?.empathy ?? 70,
+						antiPatterns: plan.persona?.antiPatterns ?? [],
+					},
+					salesTechniques: (plan.salesTechniques ?? []) as Array<{
+						presetId:
+							| "rapport"
+							| "spin"
+							| "aida"
+							| "pas"
+							| "objection"
+							| "followup";
+						intensity: "soft" | "balanced" | "aggressive";
+					}>,
+					emojiConfig: {
+						mode: plan.emojiConfig?.mode ?? "curated",
+						curatedList: plan.emojiConfig?.curatedList ?? [],
+						allowed: plan.emojiConfig?.allowed ?? [],
+						forbidden: plan.emojiConfig?.forbidden ?? [],
+					},
+					voiceConfig: {
+						enabled: plan.voiceConfig?.enabled ?? false,
+						provider: (plan.voiceConfig?.provider ?? null) as
+							| "elevenlabs"
+							| "qwen-self-hosted"
+							| null,
+						voiceId: plan.voiceConfig?.voiceId ?? null,
+						mode: plan.voiceConfig?.mode ?? "always_text",
+						triggers: plan.voiceConfig?.triggers ?? [],
+					},
+					capabilities: (plan.capabilities ?? []) as Array<
+						| "qualification"
+						| "scheduling"
+						| "faq"
+						| "handoff"
+						| "followup"
+					>,
+					status: "done" as const,
+				},
+				knowledge: {
+					documentIds: [],
+					additionalNotes: null,
+					domainAnswers: {},
+					status: "done" as const,
+				},
+				creation: {
+					finalized: false,
+					publishedAgentId: null,
+					status: "in_progress" as const,
+				},
+			},
+			artifactIds: {
+				businessProfile: businessProfile.id,
+				agentBlueprint: blueprint.id,
+				knowledgeBase: null,
+				finalSummary: null,
+			},
 		};
 
 		const agent = await publishAgentFromSessionCore({

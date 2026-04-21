@@ -170,6 +170,28 @@ export function WizardShell({
 			<WizardStepper
 				currentStep={STEP_MAP[step]}
 				completedSteps={Array.from(completed)}
+				onStepClick={(target) => {
+					if (target === "idealization") {
+						setStep(
+							businessProfile ? "analysis-review" : "idealization",
+						);
+					} else if (
+						target === "planning" &&
+						(completed.has("idealization") || !!blueprint)
+					) {
+						setStep("planning");
+					} else if (
+						target === "knowledge" &&
+						completed.has("planning")
+					) {
+						setStep("knowledge");
+					} else if (
+						target === "creation" &&
+						completed.has("knowledge")
+					) {
+						setStep("creation");
+					}
+				}}
 			/>
 			<main className="flex-1 overflow-y-auto">
 				{step === "idealization" ? (

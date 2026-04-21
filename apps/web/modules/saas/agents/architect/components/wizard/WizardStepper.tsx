@@ -15,6 +15,7 @@ const STEPS: { id: WizardStep; label: string }[] = [
 type Props = {
 	currentStep: WizardStep;
 	completedSteps: WizardStep[];
+	onStepClick?: (step: WizardStep) => void;
 };
 
 /**
@@ -25,7 +26,11 @@ type Props = {
  * - active: dot primary + label bold
  * - pending: dot muted + label muted
  */
-export function WizardStepper({ currentStep, completedSteps }: Props) {
+export function WizardStepper({
+	currentStep,
+	completedSteps,
+	onStepClick,
+}: Props) {
 	const currentIdx = STEPS.findIndex((s) => s.id === currentStep);
 	const doneSet = new Set(completedSteps);
 
@@ -36,43 +41,63 @@ export function WizardStepper({ currentStep, completedSteps }: Props) {
 				const isActive = step.id === currentStep;
 				const isFuture = !isDone && !isActive;
 				const showConnector = idx < STEPS.length - 1;
+				const canClick =
+					!!onStepClick && (isDone || idx <= currentIdx);
+
+				const content = (
+					<div className="flex items-center gap-2">
+						{isDone ? (
+							<span
+								aria-hidden="true"
+								className="flex size-7 items-center justify-center rounded-full bg-emerald-500 text-white"
+							>
+								<CheckIcon className="size-4" />
+							</span>
+						) : (
+							<span
+								aria-hidden="true"
+								className={cn(
+									"flex size-7 items-center justify-center rounded-full border font-medium text-xs",
+									isActive
+										? "border-primary bg-primary text-primary-foreground"
+										: "border-border bg-background text-foreground/50",
+								)}
+							>
+								{idx + 1}
+							</span>
+						)}
+						<span
+							className={cn(
+								"hidden font-medium text-sm md:inline",
+								isActive && "text-foreground",
+								isFuture && "text-foreground/50",
+								isDone && "text-foreground/70",
+							)}
+						>
+							{step.label}
+						</span>
+					</div>
+				);
+
 				return (
 					<div
 						key={step.id}
 						className="flex flex-1 items-center gap-2"
 					>
-						<div className="flex items-center gap-2">
-							{isDone ? (
-								<span
-									aria-hidden="true"
-									className="flex size-7 items-center justify-center rounded-full bg-emerald-500 text-white"
-								>
-									<CheckIcon className="size-4" />
-								</span>
-							) : (
-								<span
-									aria-hidden="true"
-									className={cn(
-										"flex size-7 items-center justify-center rounded-full border font-medium text-xs",
-										isActive
-											? "border-primary bg-primary text-primary-foreground"
-											: "border-border bg-background text-foreground/50",
-									)}
-								>
-									{idx + 1}
-								</span>
-							)}
-							<span
+						{canClick ? (
+							<button
+								type="button"
+								onClick={() => onStepClick?.(step.id)}
 								className={cn(
-									"hidden font-medium text-sm md:inline",
-									isActive && "text-foreground",
-									isFuture && "text-foreground/50",
-									isDone && "text-foreground/70",
+									"rounded-md px-1 py-0.5 transition-opacity hover:opacity-80",
+									"focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
 								)}
 							>
-								{step.label}
-							</span>
-						</div>
+								{content}
+							</button>
+						) : (
+							<div className="px-1 py-0.5">{content}</div>
+						)}
 						{showConnector ? (
 							<div
 								aria-hidden="true"

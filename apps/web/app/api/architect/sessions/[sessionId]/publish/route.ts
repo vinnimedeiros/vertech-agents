@@ -75,25 +75,41 @@ export async function POST(
 				),
 			}),
 		]);
-		if (!businessProfile || businessProfile.status !== "APPROVED") {
+		if (!businessProfile) {
 			return NextResponse.json(
 				{
-					error: "ANALYSIS_NOT_APPROVED",
+					error: "ANALYSIS_MISSING",
 					message:
-						"Volte ao Step 1 e aprove a análise do negócio antes de criar o agente.",
+						"Análise do negócio não encontrada. Volte ao Step 1.",
 				},
 				{ status: 409 },
 			);
 		}
-		if (!blueprint || blueprint.status !== "APPROVED") {
+		if (!blueprint) {
 			return NextResponse.json(
 				{
-					error: "PLAN_NOT_APPROVED",
-					message:
-						"Volte ao Step 2 e aprove o plano antes de criar o agente.",
+					error: "PLAN_MISSING",
+					message: "Plano não encontrado. Volte ao Step 2.",
 				},
 				{ status: 409 },
 			);
+		}
+		// Wizard: ao chegar no Step 4 (Criação) o user já passou pelos
+		// Steps 1 e 2 (guard no próprio wizard). Ajuste posterior no plano
+		// rebate status pra REGENERATED — não exige re-aprovação.
+		// Clique no "Criar agente" é o aprovar final implícito.
+		// Marca ambos como APPROVED agora, antes da transação atômica.
+		if (businessProfile.status !== "APPROVED") {
+			await db
+				.update(agentArtifact)
+				.set({ status: "APPROVED", approvedAt: new Date() })
+				.where(eq(agentArtifact.id, businessProfile.id));
+		}
+		if (blueprint.status !== "APPROVED") {
+			await db
+				.update(agentArtifact)
+				.set({ status: "APPROVED", approvedAt: new Date() })
+				.where(eq(agentArtifact.id, blueprint.id));
 		}
 
 		// Wizard não usa Mastra working memory — artefatos aprovados são

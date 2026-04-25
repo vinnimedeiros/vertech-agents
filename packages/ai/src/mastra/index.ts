@@ -20,6 +20,15 @@ export {
 	leadProfileSchema,
 	type LeadProfile,
 } from "./memory/working-memory-schema";
+export {
+	ATENDENTE_DATASET_NAMES,
+	atendenteGroundTruthSchema,
+	atendenteInputSchema,
+	type AtendenteGroundTruth,
+	type AtendenteInput,
+	type AtendenteMode,
+} from "./datasets/atendente-schemas";
+export { ATENDENTE_SEED_CASES } from "./datasets/atendente-seed-cases";
 export { getArchitectWorkingMemory } from "./memory/architect-read";
 export {
 	getArchitectMessages,

@@ -66,7 +66,15 @@ export function startAgentInvocationWorker(): Worker {
 	});
 
 	workerInstance.on("error", (err) => {
-		console.error(`[agent-invocation-worker] worker error: ${err.message}`);
+		const code = (err as { code?: string })?.code;
+		const msg = err.message || "(sem mensagem)";
+		const hint =
+			code === "ECONNREFUSED"
+				? " — Redis não está rodando. Abra Docker Desktop."
+				: "";
+		console.error(
+			`[agent-invocation-worker] worker error: ${msg}${code ? ` [${code}]` : ""}${hint}`,
+		);
 	});
 
 	return workerInstance;

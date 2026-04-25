@@ -28,16 +28,24 @@ export function getCommercialAgent(): Agent {
 			description: "Agente comercial dinamico multi-tenant da Vertech",
 
 			model: async ({ requestContext }) => {
+				const agentId = requestContext?.get?.("agentId") as string | undefined;
+				if (!agentId) return "openai/gpt-4.1-mini" as never;
 				const record = await loadAgentFromContext(requestContext);
 				return record.model as never;
 			},
 
 			instructions: async ({ requestContext }) => {
+				const agentId = requestContext?.get?.("agentId") as string | undefined;
+				if (!agentId) {
+					return "Agente comercial dinâmico multi-tenant da Vertech. Configurar `requestContext.agentId` em runtime pra resolver model/instructions/tools do banco.";
+				}
 				const record = await loadAgentFromContext(requestContext);
 				return buildInstructions(record);
 			},
 
 			tools: async ({ requestContext }) => {
+				const agentId = requestContext?.get?.("agentId") as string | undefined;
+				if (!agentId) return {};
 				const record = await loadAgentFromContext(requestContext);
 				return filterTools(record.enabledTools);
 			},

@@ -4,6 +4,7 @@ import { cn } from "@ui/lib";
 import {
 	BriefcaseIcon,
 	CpuIcon,
+	FlaskConicalIcon,
 	type LucideIcon,
 	MessageSquareIcon,
 	PhoneIcon,
@@ -46,6 +47,12 @@ const ITEMS: MenuItem[] = [
 		label: "WhatsApp",
 		icon: PhoneIcon,
 		pathSuffix: "/whatsapp",
+	},
+	{
+		id: "sandbox",
+		label: "Sandbox",
+		icon: FlaskConicalIcon,
+		pathSuffix: "/sandbox",
 	},
 ];
 

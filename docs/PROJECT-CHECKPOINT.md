@@ -1,7 +1,7 @@
 ---
 type: checkpoint
-last_updated: 2026-04-21
-active_story: "Smith verify Phase 09 FECHADO — 7 fixes aplicados, migration 0016 em prod dev, 2 itens adiados como tech-debt, 1 decisão negócio aguarda Vinni. Typecheck limpo. Aguarda Vinni testar UI."
+last_updated: 2026-04-25
+active_story: "Pivot V3 (TIME 4 agentes) + Roadmap V3 + M1-01 Mastra Studio local rodando. Q1-Q12 fechadas. R1/R2/R3 mitigados. Próximo: M1-02 Supervisor Pattern stub."
 active_agent: lmas-master
 project: vertech-agents
 tags:
@@ -11,7 +11,39 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-21 (**Pacote Smith verify fixes COMPLETO** — Morpheus executou 3 blocos direto, typecheck passando, migration 0016 aplicada via MCP Supabase)
+> **Última atualização:** 2026-04-25 noite (**Pivot V3 fechado + Mastra Studio local UP** — pesquisa Mercado Agentes 1.0+2.0 + análise independente sem viés + Mastra deep dive 2026 = 12 decisões estratégicas batidas + roadmap V3 com 7 milestones + M1-01 Studio rodando em http://localhost:4111)
+> **Agente ativo:** `@lmas-master` (Morpheus) — pronto pra atacar M1-02 Supervisor Pattern
+> **Próximo passo:** M1-02 Supervisor Pattern stub — refatorar Atendente como Supervisor (estrutura pronta sem sub-agents ainda) usando `agentAsTool()`. Pré-requisito pra TIME 4 agentes em M2 (evolução progressiva Atendente → +Analista → +Campanhas → +Assistente).
+> **Roadmap consolidado:** `docs/PROJECT-ROADMAP-V3.md` (7 milestones M0-M7). Phases 09 wizard + 10 orquestrador CANCELADAS (substituídas por Mastra Supervisor + M3 Construtor V3).
+> **PRs abertos:** #1 (Phase 08-alpha) | #2 (Phase 09 UI completa). Branch atual: `feature/phase-09-architect-ui`
+
+## Sessão 2026-04-25 — Pivot V3 + Mastra Studio local
+
+**Decisões fechadas (Q1-Q12 + R1-R3):**
+- Q1 BYOK em cascata (Super→Master→Agency→Cliente herda automaticamente)
+- Q3 Multi-provider 12 modelos, default GPT-4.1-mini
+- Q4 `{{var}}` Mustache universal
+- Q5 BC 50 arquivos × 10MB formato amplo
+- Q6 Wizard primário + Canvas opt-in + IA copilot reativo (INVERTE Opção B)
+- Q7 10+ templates verticais
+- Q8 Tom desacoplado (4 Tons + 20 Traços)
+- Q9 Humanização modular 8+ módulos
+- Q10 Flow Diagram do TIME
+- Q11 Sandbox real escopo restrito (1 vertical: consultório)
+- Q12 Frameworks SPIN+NEAT+BANT+MEDDIC+GAP+Upsell+Cross-sell
+- R1 Baileys agora + API oficial paralelo (camada abstração canal Phase M6-01)
+- R2 Multi-agent evolução progressiva c/ critério mensurável >70% sucesso
+- R3 Sandbox = playground chat + tabs Pipeline+Agenda + flag is_sandbox + suite testes integração
+
+**M1-01 entregue:** Mastra Studio local em `http://localhost:4111` (mastra dev --dir mastra-runtime --env ../../.env.local). Studio mostra Agents/Workflows/Tools/Scorers/Datasets/Experiments/Metrics/Traces/Logs.
+
+**Próximas phases M1:** M1-02 Supervisor Pattern stub → M1-03 Memory completa → M1-04 Datasets → M1-05 Scorers
+
+---
+
+## Sessão 2026-04-21 (histórico) — Pacote Smith verify fixes COMPLETO
+
+> **Última atualização original:** 2026-04-21 (**Pacote Smith verify fixes COMPLETO** — Morpheus executou 3 blocos direto, typecheck passando, migration 0016 aplicada via MCP Supabase)
 > **Agente ativo:** `@lmas-master` (Morpheus) — aguardando Vinni testar wizard end-to-end na UI
 > **Próximo passo:** Vinni testa fluxo `/agents/new?template=clinical` em dev. Validar: wizard roda end-to-end, ajustar análise + aprovar funciona, ajustar plano + aprovar funciona, publish cria agente sem erro de UPDATE em knowledge_chunk, erros mostram tela amigável em vez de tela branca.
 > **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI completa 09.1→09.10) https://github.com/vinnimedeiros/vertech-agents/pull/2

@@ -7,6 +7,7 @@ export * from "./schema";
 export {
 	and,
 	asc,
+	count,
 	desc,
 	eq,
 	gt,

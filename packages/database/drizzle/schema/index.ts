@@ -5,3 +5,4 @@ export * from "./whatsapp";
 export * from "./agents";
 export * from "./knowledge";
 export * from "./architect-session";
+export * from "./agenda";

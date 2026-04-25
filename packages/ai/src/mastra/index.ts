@@ -29,6 +29,11 @@ export {
 	type AtendenteMode,
 } from "./datasets/atendente-schemas";
 export { ATENDENTE_SEED_CASES } from "./datasets/atendente-seed-cases";
+export {
+	promessaIndevidaScorer,
+	qualificacaoScorer,
+	toneScorer,
+} from "./scorers";
 export { getArchitectWorkingMemory } from "./memory/architect-read";
 export {
 	getArchitectMessages,

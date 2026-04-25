@@ -6,9 +6,13 @@ import { getMastraStorage } from "./storage";
 /**
  * Instancia singleton do Mastra pro projeto Vertech.
  *
- * - commercialAgent (07A): dinamico, multi-tenant
- * - architectAgent (09.5): guia construção de agentes em 4 etapas
- * - orchestratorAgent: Phase 10
+ * - commercialAgent (Atendente Supervisor — M1-02): dinamico, multi-tenant.
+ *   Sub-agents do TIME adicionados em M2-03/04/05 via `getTeamMembers()`.
+ * - architectAgent (09.5): guia construção de agentes em 4 etapas.
+ *
+ * **Scorers (M1-05)** vivem em `./scorers/` como funções TS puras
+ * (interface `Scorer`). Quando Mastra estabilizar `createScorer` na API
+ * pública, plugar aqui via `scorers: {...}` property.
  *
  * Lazy init — evita side effects no import. Primeira chamada a
  * `getMastra()` cria a instancia, os agents e faz boot do storage.

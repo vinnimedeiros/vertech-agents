@@ -72,3 +72,12 @@ design-refs/
 
 # Editor temp files (Claude Code Write tool leaks *.tmp.* on Windows)
 *.tmp.*
+
+# Mastra build artifacts (CLI gera em packages/ai/.mastra/output/)
+packages/ai/.mastra/
+
+# Playwright MCP transient snapshots (research automation, não commitar)
+.playwright-mcp/
+
+# Screenshots transient na raiz (debug/research) — research vai pra docs/research/screenshots/
+/*.png

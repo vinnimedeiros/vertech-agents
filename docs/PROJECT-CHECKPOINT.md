@@ -1,8 +1,8 @@
 ---
 type: checkpoint
-last_updated: 2026-04-20
-active_story: "Phase 09 COMPLETA (10/10 stories Ready for Review). Próximo: gate humano Vinni end-to-end + merge da PR #2 → destrava Phase 07B-v2"
-active_agent: dev
+last_updated: 2026-04-21
+active_story: "Smith verify Phase 09 FECHADO — 7 fixes aplicados, migration 0016 em prod dev, 2 itens adiados como tech-debt, 1 decisão negócio aguarda Vinni. Typecheck limpo. Aguarda Vinni testar UI."
+active_agent: lmas-master
 project: vertech-agents
 tags:
   - project/vertech-agents
@@ -11,14 +11,223 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-20 (**Phase 09 COMPLETA — 10/10 stories Ready for Review**, Neo entregou tudo em sequência)
-> **Agente ativo:** `@dev` (Neo) — HALT aguardando gate humano Vinni end-to-end
-> **Próximo passo:** Vinni testa fluxo completo: /agents/new?template=clinical → welcome CTA → conversa 5-10 turnos → artefatos geram cards → refina inline (Perfil/Conhecimento) ou Dialog (Blueprint) → aprova → Resumo Final + FlowDiagram → "Criar agente" → redirect. Se aprovar, merge PR #2 destrava Phase 07B-v2.
+> **Última atualização:** 2026-04-21 (**Pacote Smith verify fixes COMPLETO** — Morpheus executou 3 blocos direto, typecheck passando, migration 0016 aplicada via MCP Supabase)
+> **Agente ativo:** `@lmas-master` (Morpheus) — aguardando Vinni testar wizard end-to-end na UI
+> **Próximo passo:** Vinni testa fluxo `/agents/new?template=clinical` em dev. Validar: wizard roda end-to-end, ajustar análise + aprovar funciona, ajustar plano + aprovar funciona, publish cria agente sem erro de UPDATE em knowledge_chunk, erros mostram tela amigável em vez de tela branca.
 > **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI completa 09.1→09.10) https://github.com/vinnimedeiros/vertech-agents/pull/2
 
 ## Contexto Ativo
 
-**O que está sendo feito agora:** **Phase 08-alpha COMPLETA** numa sessão maratona de madrugada. Todas as 5 stories (08A.1 até 08A.5) Ready for Review. Gate 08A.5 com verdict PASS com observações. Próximo: gate humano do Vinni + decisão de commit/push + Phase 09.
+**O que está sendo feito agora (sessão 2026-04-21):** Smith (@smith) rodou `*verify` adversarial completo no Phase 09 (24 findings). Morpheus (@lmas-master) executou o pacote completo de correções direto via MCP Supabase + Bash + Edits. **Todos os blocos concluídos**: 7 fixes aplicados, 2 tech-debts registrados formalmente, 1 decisão de negócio documentada pro Vinni decidir, 4 findings rebatidos por evidência. Migration 0016 aplicada no Supabase dev `agents-v2`. Typecheck `@repo/web` limpo. Agora aguarda só Vinni testar UI.
+
+## Sessão 2026-04-21 — Pacote Smith verify fixes COMPLETO
+
+### Executado (7 fixes + audit)
+
+**Fix-01 (C1 credentials audit) — CLEAN:** `.env.local` nunca commitado. Zero leak. Pre-commit hook gitleaks documentado como preventivo opcional.
+- Arquivo: `docs/security/secrets-audit-2026-04-21.md`
+
+**Fix-02 (PRD-1 doc divergence) — ADR-002 criado:** Pivot Phase 09 chat→wizard registrado formalmente.
+- Arquivo: `docs/architecture/adr/adr-002-phase-09-wizard-vs-chat.md`
+
+**Fix-03 (C4 metadata json→jsonb) — APLICADO:**
+- Schema `packages/database/drizzle/schema/knowledge.ts` atualizado (json→jsonb)
+- `count` re-exportado de `packages/database/drizzle/index.ts`
+- Cast removido de `packages/ai/src/mastra/tools/architect/publish-agent.ts`
+- Migration `0016_cuddly_george_stacy.sql` gerada via drizzle-kit
+- **Aplicada em prod dev Supabase via MCP** (project `nujsmuciphumofhbqprl`, success)
+
+**Fix-05 (H6 REGENERATED → APPROVED explícito):**
+- `apps/web/app/api/architect/sessions/[sessionId]/publish/route.ts`: removida força de APPROVED, retorna 409 com message guiando user
+- `apps/web/modules/saas/agents/architect/components/wizard/PlanningStep.tsx`: prop `onArtifactUpdated` + toast após ajustar pedindo aprovação explícita
+- WizardShell recebe propagação de artifact updated
+
+**Fix-06 (H1 race sessionId + completed sync):**
+- `WizardShell.tsx`: novo useEffect re-sincroniza `completed` set baseado em status de artefatos. Se user refina (REGENERATED), remove automaticamente de `completed` → stepper bloqueia navegação forward
+
+**Fix-07 (H2 ErrorBoundary + loading):**
+- `apps/web/app/(saas)/app/(organizations)/[organizationSlug]/agents/error.tsx` criado
+- `.../agents/new/error.tsx` criado
+- `.../agents/new/loading.tsx` criado
+
+**Fix-10 (PRD-10 Health Tech architect endpoint):**
+- `apps/web/app/api/admin/health/architect/route.ts` criado
+- Métricas: sessions DRAFT, ABANDONED 24h, PUBLISHED 24h, publish_rate, contagem artefatos por tipo/status
+- Alerts: critical se publish_rate < 10%, warning se DRAFT backlog > 500
+- Atende regra MUST `feedback_health_tech_dashboard.md`
+
+### Decisão pendente Vinni
+
+**Fix-09 (PRD-7 vertical library white-label):** Documento com 3 opções + recomendação Opção A (manter hardcoded, migrar em Phase 13).
+- Arquivo: `docs/architecture/decisions/vertical-library-white-label-options.md`
+
+### Adiado como tech-debt registrado
+
+**Fix-08 (H5 optimistic locking):** Defer pra Phase 07B-v2 que refatora profundamente as abas.
+- Rationale em `docs/architecture/tech-debt-register.md#td-002`
+
+### Findings Smith rebatidos por evidência
+
+- **C1** credentials → audit CLEAN
+- **PRD-2** schema v2 campos → já existem em migration 0015
+- **PRD-4** agent_version → tabela já existe
+- **PRD-5** orchestrator_audit_log → tabela já existe
+
+### Findings Smith MEDIUM/LOW adiados pra pre-prod gate
+
+Registrados em `docs/architecture/tech-debt-register.md`:
+- TD-003 C2 prompt injection admin
+- TD-004 C3 prompt injection user refine
+- TD-005 H8 /api/system/boot auth
+- TD-006 H10 rate limit architect endpoints
+- TD-007 H7 test coverage
+- TD-008 M1 silent failures enrich
+
+### Build status
+- `pnpm --filter @repo/web type-check` → limpo, zero erros após fixes
+- Migration 0016 aplicada em Supabase dev
+
+### Teste end-to-end Playwright 2026-04-21 (Firefox)
+
+Morpheus testou wizard inteiro via Playwright. **Resultado: PUBLISH OK.**
+
+Percorrido:
+1. `/agents/new?template=clinical` → renderizou sem erros
+2. Marcou Feminino, 3 perguntas, preencheu respostas → `Gerar Análise` habilitou ✅
+3. LLM gerou mini-PRD: "Clínica Odontológica Avançada", 592 chars summary, 10 serviços
+4. Clicou `Refinar` + instrução + `Aplicar refinamento` → análise atualizou ✅
+5. Clicou `Aprovar e continuar` → avançou pro Planejamento ✅
+6. LLM gerou blueprint em ~9.2s com 6 blocos narrativos ✅
+7. Clicou `Ajustar` + instrução + `Aplicar ajuste` → plano atualizou pra 7 blocos ✅
+8. Clicou `Aprovar plano` → avançou pro Conhecimento ✅
+9. `Vou adicionar depois` + `Próximo` → Criação ✅
+10. `Criar agente Camila` → primeira tentativa falhou com toast 409: "Você ajustou o plano e ainda não aprovou a versão nova" (Fix-05 safety rail ATIVOU CORRETAMENTE) ⚠️
+
+**Bug NOVO descoberto + fixado na mesma sessão:**
+Race condition React strict mode dev double-monta PlanningStep, dispara POST `/plan` 2x simultâneo, `findFirst` sem `orderBy` retorna qualquer um dos 2 blueprints criados → publish pega indeterminado e recusa.
+
+Fix aplicado:
+- Migration 0017 SQL manual: deletou 2 blueprints duplicados + criou `UNIQUE INDEX agent_artifact_session_type_unique ON (sessionId, type)`
+- Schema Drizzle: trocou `index` pra `uniqueIndex` em `agent_artifact`
+- `PlanningStep.tsx`: `useRef<string | null>` dedup pra bloquear POST dupla
+
+11. Retomou sessão + clicou `Criar agente Camila` → **publish completou, redirecionou pra `/app/demo-client/agents/qibqu8hkop7tvc4ws2ede0i9`** ✅
+12. Painel 07B v1 renderizou: tabs Identidade/Persona/Negócio/Conversas/Modelo/WhatsApp ✅
+13. Zero erros críticos no console
+
+### Fix adicional aplicado nesta sessão
+- `agent_artifact` ganhou UNIQUE constraint + client dedup em PlanningStep
+- Arquivo: `scripts/fix-artifact-dedup.ts` (one-off cleanup)
+- Arquivos modificados: `packages/database/drizzle/schema/architect-session.ts`, `apps/web/modules/saas/agents/architect/components/wizard/PlanningStep.tsx`
+
+### Sessão 2026-04-21 noite — fix regra MUST multi-layer features
+
+**Violação detectada:** Vinni reparou que conta SUPERADMIN (`/app/platform/*`) não tinha pipeline. Audit revelou que **3 das 4 orgs** (SUPERADMIN, MASTER, AGENCY) estavam sem kit operacional completo. Até CLIENT tinha gap (0 pipeline_views).
+
+**Causa raiz:** `packages/auth/lib/organizations-hierarchy.ts:91` tinha gate hardcoded:
+```ts
+if (childType === "CLIENT") {
+  await ensureDefaultPipeline(newOrg.id);
+}
+```
+Anti-padrão explícito em `feedback_multi_layer_features.md`: "❌ Pipeline é criado automaticamente ao criar CLIENT".
+
+**Fix aplicado:**
+1. Novo helper `ensureDefaultPipelineView` em `packages/auth/lib/pipeline-defaults.ts` (cria Kanban view padrão)
+2. Novo helper `ensureDefaultOperationalKit` que agrega pipeline + view
+3. `organizations-hierarchy.ts` removeu gate — agora aplica pra TODO org type
+4. Backfill script `scripts/backfill-org-features.ts` aplicado em dev — todas as 4 orgs agora têm 1 pipeline + 6 stages + 1 kanban view
+5. Seed script `scripts/seed-builtin-templates.ts` — adicionou template "Infoproduto" que faltava (4 dos 5 built-ins já existiam)
+
+**Audit final (após fix):**
+| Org | Pipeline | Stages | Views |
+|-----|----------|--------|-------|
+| SUPERADMIN | 1 ✅ | 6 ✅ | 1 ✅ |
+| MASTER | 1 ✅ | 6 ✅ | 1 ✅ |
+| AGENCY | 1 ✅ | 6 ✅ | 1 ✅ |
+| CLIENT | 2 ✅ | 7 ✅ | 1 ✅ |
+
+Agentes/WhatsApp/leads = 0 em 3 das 4 é esperado (opt-in — user cria quando quiser).
+
+### Sessão 2026-04-21 fim — Agenda completa (Phase 11 antecipada)
+
+**Objetivo Vinni:** criar agenda com visual da referência em `design-refs/calendar/`.
+
+**Entregue:**
+
+1. **Schema DB** (migration 0017):
+   - Tabela `calendar` (id, orgId, name, color, type, visible, isDefault, position)
+   - Tabela `calendar_event` (id, orgId, calendarId, title, description, startAt, duration, allDay, type, color, location, attendees jsonb, reminder)
+   - Enums `CalendarType` (personal/work/shared) e `CalendarEventType` (meeting/event/personal/task/reminder)
+   - FKs cascata + índices
+
+2. **Seed default:** `ensureDefaultCalendar` adicionado ao `ensureDefaultOperationalKit`. Toda org (Super/Master/Agency/Client) recebe calendar "Pessoal" azul ao ser criada. Backfill aplicado.
+
+3. **Server actions** em `apps/web/modules/saas/agenda/lib/actions.ts`:
+   - createCalendar/update/delete
+   - createEvent/update/delete
+   - Zod validation + requireOrgAccess + revalidatePath
+
+4. **UI components** em `apps/web/modules/saas/agenda/components/`:
+   - `AgendaShell` — container 2 colunas + Sheet mobile + dialogs
+   - `AgendaSidebar` — "Novo evento" btn + DatePicker + lista calendars + "Novo calendário" btn
+   - `AgendaMain` — header com nav mês + "Hoje" + search + view toggle (Mês/Lista) + grid 7x6 + list view + eventos coloridos
+   - `CalendarPicker` — shadcn day-picker com dot indicator em dias com eventos
+   - `CalendarsList` — collapsible com toggle visibility + dropdown menu (editar/ocultar/excluir)
+   - `EventForm` — Dialog completo: título, tipo, calendário, data, horário, duração, all-day, lembrete, local, attendees, descrição
+   - `NewCalendarDialog` — form nome + paleta 8 cores + tipo
+
+5. **UI shadcn novos** em `apps/web/modules/ui/components/`:
+   - `calendar.tsx` (wrapper react-day-picker v9)
+   - `collapsible.tsx` (radix primitive)
+
+6. **Deps adicionadas:** react-day-picker, @radix-ui/react-collapsible
+
+7. **Page server component** em `apps/web/app/(saas)/app/(organizations)/[organizationSlug]/crm/agenda/page.tsx`:
+   - Substituiu placeholder "Agenda em breve"
+   - Server fetch de calendars + eventos do range ±2 meses
+   - Passa pra AgendaShell client
+
+**Teste Playwright end-to-end:**
+- `/app/demo-client/crm/agenda` — renderizou grid mensal + sidebar com calendar "Pessoal"
+- Criou evento "Reunião de kickoff com time" (tipo Reunião, 23/abril 12h, 1 hora, sala principal) via form
+- Evento aparece no grid mensal dia 23 com cor azul ✅
+- `/app/platform/crm/agenda` (Superadmin) — renderizou idêntico com calendar default Pessoal ✅
+
+**Arquivos criados:**
+- `packages/database/drizzle/schema/agenda.ts`
+- `packages/database/drizzle/migrations/0017_melted_sharon_ventura.sql`
+- `apps/web/modules/saas/agenda/*` (9 arquivos)
+- `apps/web/modules/ui/components/calendar.tsx`
+- `apps/web/modules/ui/components/collapsible.tsx`
+- `apps/web/app/(saas)/app/(organizations)/[organizationSlug]/crm/agenda/page.tsx` (substituído)
+- `scripts/apply-migration-0017.ts`
+- `scripts/check-events.ts`
+
+**Arquivos modificados:**
+- `packages/auth/lib/pipeline-defaults.ts` (+ ensureDefaultCalendar)
+- `packages/database/drizzle/schema/index.ts` (export agenda)
+
+**Typecheck:** limpo
+**Phase 11 (Calendar) antecipada** do roadmap original.
+
+### Gate humano pendente
+
+Vinni precisa testar na UI:
+1. `/agents/new?template=clinical` abre wizard sem erros
+2. Preencher 3+ perguntas + clicar Gerar Análise → mostra mini-PRD
+3. Clicar Ajustar + texto + Aplicar → mini-PRD atualiza com toast pedindo aprovação explícita
+4. Clicar Aprovar e continuar → vai pro Planejamento
+5. Mesmo fluxo no Planejamento (Ajustar + Aprovar plano)
+6. Upload arquivo ou Pular → Criar agente → publish completa SEM erro `UPDATE knowledge_chunk`
+7. Forçar erro (ex: desligar internet no meio) → mostra tela amigável de erro, não tela branca
+
+## Contexto anterior (Phase 08-alpha + 09)
+
+**Branch atual:** `feature/phase-09-architect-ui` — sucessora de `feature/phase-08a-09-architect`. 5 commits de wizard refactor + fixes.
+**Branch main:** atualizada até Phase 07A (commit `3458641`).
+**Status do DB:** migrations 0000-0015 aplicadas em prod via MCP. Bucket `architect-uploads` criado em prod em 08A.4.
+**Status do backlog:** 5/5 de 08-alpha entregues, 10/10 de Phase 09 entregues, Phase 09 Ready for Review aguarda gate humano end-to-end + merge PR #2.
 
 **Branch atual:** `feature/phase-08a-09-architect` — 9 commits 08-alpha + 5 carry-over 07B v1, **pushed pro origin**, PR #1 aberto contra `main`. 07B v1 permanece em hold em `feature/07B.1-agents-list-and-new` (duplicado carry-over aqui, decisão no merge se mantém ou cherry-pick).
 **Branch main:** atualizada até Phase 07A (commit `3458641`).

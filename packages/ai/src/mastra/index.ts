@@ -16,6 +16,10 @@ export {
 } from "./agents/team-members";
 export { getArchitectAgentMemory } from "./memory/architect";
 export { getCommercialAgentMemory } from "./memory/config";
+export {
+	leadProfileSchema,
+	type LeadProfile,
+} from "./memory/working-memory-schema";
 export { getArchitectWorkingMemory } from "./memory/architect-read";
 export {
 	getArchitectMessages,

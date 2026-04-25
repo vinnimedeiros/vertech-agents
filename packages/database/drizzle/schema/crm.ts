@@ -207,6 +207,8 @@ export const lead = pgTable(
 		dueDate: timestamp("dueDate"),
 		// Phase 04E: favoritado pelo user
 		starred: boolean("starred").notNull().default(false),
+		// M2-02 Sandbox: isola dados de teste do Atendente sem nova tabela
+		isSandbox: boolean("isSandbox").notNull().default(false),
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 		closedAt: timestamp("closedAt"),
@@ -237,6 +239,8 @@ export const leadActivity = pgTable(
 			onDelete: "set null",
 		}),
 		agentId: text("agentId"),
+		// M2-02 Sandbox flag (herdado do lead pai)
+		isSandbox: boolean("isSandbox").notNull().default(false),
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 	},
 	(table) => [

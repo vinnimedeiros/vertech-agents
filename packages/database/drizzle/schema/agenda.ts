@@ -129,6 +129,9 @@ export const calendarEvent = pgTable(
 
 		reminder: boolean("reminder").notNull().default(true),
 
+		// M2-02 Sandbox flag
+		isSandbox: boolean("isSandbox").notNull().default(false),
+
 		createdBy: text("createdBy").references(() => user.id, {
 			onDelete: "set null",
 		}),

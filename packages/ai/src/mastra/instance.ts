@@ -2,6 +2,7 @@ import { Mastra } from "@mastra/core";
 import { getArchitectAgent } from "./agents/architect";
 import { getCommercialAgent } from "./agents/commercial";
 import { getMastraStorage } from "./storage";
+import { atendenteTools } from "./tools/atendente";
 
 /**
  * Instancia singleton do Mastra pro projeto Vertech.
@@ -26,6 +27,10 @@ export function getMastra(): Mastra {
 				commercialAgent: getCommercialAgent(),
 				architectAgent: getArchitectAgent(),
 			},
+			// Registry global: Studio descobre tools mesmo quando agentes
+			// resolvem `tools` dinamicamente via callback (commercialAgent é
+			// multi-tenant e só carrega filtro de tools em runtime).
+			tools: atendenteTools as never,
 			storage: getMastraStorage(),
 		});
 	}

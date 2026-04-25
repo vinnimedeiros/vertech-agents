@@ -44,6 +44,15 @@ function getAgentId(ctx: ContextLike): string | undefined {
 	return ctx?.get?.("agentId") as string | undefined;
 }
 
+/**
+ * M2-02 Sandbox: lê flag `isSandbox` do runtimeContext.
+ * Se `true`, tools setam coluna isSandbox=true em lead/leadActivity/calendarEvent
+ * pra isolar dados de teste do Atendente sem mexer em prod.
+ */
+function isSandboxRun(ctx: ContextLike): boolean {
+	return Boolean(ctx?.get?.("isSandbox"));
+}
+
 // ============================================================
 // 1. criarLead — Cria novo lead no pipeline padrão da org
 // ============================================================
@@ -97,6 +106,7 @@ export const criarLead = createTool({
 				stageId: stageRow.id,
 				title: titulo ?? nome,
 				value: valor ? String(valor) : null,
+				isSandbox: isSandboxRun(runtimeContext as ContextLike),
 			})
 			.returning();
 
@@ -131,6 +141,7 @@ export const moverLeadStage = createTool({
 			title: "Stage alterado pelo Atendente",
 			content: `Movido pro stage ${context.stageId}`,
 			agentId,
+			isSandbox: isSandboxRun(runtimeContext as ContextLike),
 		});
 
 		return { ok: true };
@@ -334,6 +345,7 @@ export const agendarEvento = createTool({
 		});
 		if (!calRow) throw new Error("Org sem calendar configurado");
 
+		const sandbox = isSandboxRun(runtimeContext as ContextLike);
 		const [evento] = await db
 			.insert(calendarEvent)
 			.values({
@@ -343,6 +355,7 @@ export const agendarEvento = createTool({
 				description: context.descricao,
 				startAt: new Date(context.inicioISO),
 				duration: context.duracao,
+				isSandbox: sandbox,
 			})
 			.returning();
 
@@ -354,6 +367,7 @@ export const agendarEvento = createTool({
 				content: `Início: ${context.inicioISO}, duração: ${context.duracao}`,
 				metadata: { eventoId: evento.id },
 				agentId: getAgentId(runtimeContext as ContextLike),
+				isSandbox: sandbox,
 			});
 		}
 
@@ -384,6 +398,7 @@ export const criarTarefa = createTool({
 				title: context.titulo,
 				content: context.descricao,
 				agentId: getAgentId(runtimeContext as ContextLike),
+				isSandbox: isSandboxRun(runtimeContext as ContextLike),
 			})
 			.returning();
 		return { tarefaId: activity.id, ok: true };
@@ -413,6 +428,7 @@ export const pedirHumano = createTool({
 			content: context.motivo,
 			metadata: { handoff: true, urgencia: context.urgencia },
 			agentId: getAgentId(runtimeContext as ContextLike),
+			isSandbox: isSandboxRun(runtimeContext as ContextLike),
 		});
 		console.warn(
 			"[pedirHumano STUB] M2-01 — Assistente (M2-05) fará notificação real no grupo WhatsApp.",
@@ -448,6 +464,7 @@ export const enviarPropostaPdf = createTool({
 				valor: context.valor,
 			},
 			agentId: getAgentId(runtimeContext as ContextLike),
+			isSandbox: isSandboxRun(runtimeContext as ContextLike),
 		});
 		console.warn(
 			"[enviarPropostaPdf STUB] M2-01 — service de PDF gen + envio WA pendente.",

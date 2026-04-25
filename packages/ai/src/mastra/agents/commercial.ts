@@ -66,7 +66,14 @@ export function getCommercialAgent(): Agent {
 			tools: async ({ requestContext }) => {
 				const agentId = requestContext?.get?.("agentId") as string | undefined;
 				if (!agentId) return {};
+				const isSandbox = Boolean(requestContext?.get?.("isSandbox"));
 				const record = await loadAgentFromContext(requestContext);
+
+				// M2-02: em sandbox OU quando enabledTools vazio (agente legacy),
+				// expõe TODAS atendenteTools. Caso contrário, filtra por configuração.
+				if (isSandbox || record.enabledTools.length === 0) {
+					return commercialTools as never;
+				}
 				return filterTools(record.enabledTools);
 			},
 

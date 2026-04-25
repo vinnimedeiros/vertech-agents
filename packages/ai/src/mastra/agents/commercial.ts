@@ -3,20 +3,29 @@ import { agent as agentTable, db, eq } from "@repo/database";
 import { buildInstructions } from "../instructions/builder";
 import { getCommercialAgentMemory } from "../memory/config";
 import { commercialTools } from "../tools/commercial";
+import { getTeamMembers } from "./team-members";
 
 /**
- * Agente comercial dinamico — UMA instancia que le config do banco via
- * `requestContext` pra cada invocacao. Multi-tenant por design.
+ * Atendente — Supervisor do TIME comercial Vertech V3.
+ *
+ * Multi-tenant via `requestContext.agentId` (lê config do banco em runtime).
+ * **Supervisor Pattern Mastra** (M1-02 do Roadmap V3): estrutura pronta pra
+ * delegar pra sub-agents adicionados em M2-03 (Analista), M2-04 (Campanhas)
+ * e M2-05 (Assistente). Em M1-02 stub `getTeamMembers()` retorna `{}`,
+ * Atendente opera solo.
  *
  * Lazy init via `getCommercialAgent()` — permite importar o package em
  * contextos sem DATABASE_URL (testes, static analysis).
  *
- * `requestContext` e populado pelo runtime invoker com:
+ * `requestContext` populado pelo runtime invoker com:
  * - agentId: string
  * - organizationId: string
  * - conversationId: string
  * - contactId: string
  * - whatsappInstanceId: string | null
+ *
+ * Refs: docs/PROJECT-ROADMAP-V3.md (M1-02), team-members.ts, Mastra Supervisor
+ * Pattern (https://mastra.ai/docs/agents/supervisor-agents).
  */
 let agentInstance: Agent | null = null;
 
@@ -24,8 +33,9 @@ export function getCommercialAgent(): Agent {
 	if (!agentInstance) {
 		agentInstance = new Agent({
 			id: "commercial-agent",
-			name: "Commercial Agent",
-			description: "Agente comercial dinamico multi-tenant da Vertech",
+			name: "Atendente (Supervisor)",
+			description:
+				"Atendente comercial Vertech — Supervisor do TIME. Conversa com leads via WhatsApp e coordena Analista/Campanhas/Assistente quando necessário.",
 
 			model: async ({ requestContext }) => {
 				const agentId = requestContext?.get?.("agentId") as string | undefined;
@@ -37,7 +47,7 @@ export function getCommercialAgent(): Agent {
 			instructions: async ({ requestContext }) => {
 				const agentId = requestContext?.get?.("agentId") as string | undefined;
 				if (!agentId) {
-					return "Agente comercial dinâmico multi-tenant da Vertech. Configurar `requestContext.agentId` em runtime pra resolver model/instructions/tools do banco.";
+					return "Atendente Supervisor do TIME comercial Vertech. Configurar `requestContext.agentId` em runtime pra resolver model/instructions/tools do banco.";
 				}
 				const record = await loadAgentFromContext(requestContext);
 				return buildInstructions(record);
@@ -51,6 +61,17 @@ export function getCommercialAgent(): Agent {
 			},
 
 			memory: getCommercialAgentMemory(),
+
+			// Sub-agents do TIME (vazios em M1-02 stub, populados em M2-03/04/05).
+			// Quando preenchidos, Mastra descobre e Atendente delega via `description`
+			// de cada sub-agent + `instructions` do Atendente que mencionam o time.
+			agents: getTeamMembers(),
+
+			// Iteration limit anti-loop (R2 mitigation — multi-agent failure 41-86%).
+			// 10 steps cobre delegação típica (Atendente → 1-2 sub-agents → resposta).
+			defaultOptions: {
+				maxSteps: 10,
+			},
 		});
 	}
 	return agentInstance;

@@ -9,6 +9,11 @@
 export { RequestContext } from "@mastra/core/request-context";
 export { getArchitectAgent } from "./agents/architect";
 export { getCommercialAgent } from "./agents/commercial";
+export {
+	getTeamMembers,
+	TEAM_MEMBER_IDS,
+	type TeamMemberId,
+} from "./agents/team-members";
 export { getArchitectAgentMemory } from "./memory/architect";
 export { getCommercialAgentMemory } from "./memory/config";
 export { getArchitectWorkingMemory } from "./memory/architect-read";

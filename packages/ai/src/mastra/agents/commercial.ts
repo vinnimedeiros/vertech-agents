@@ -1,5 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { agent as agentTable, db, eq } from "@repo/database";
+import { getAtendenteModeInstructions } from "../instructions/atendente-modes";
 import { buildInstructions } from "../instructions/builder";
 import { getCommercialAgentMemory } from "../memory/config";
 import { commercialTools } from "../tools/commercial";
@@ -50,7 +51,16 @@ export function getCommercialAgent(): Agent {
 					return "Atendente Supervisor do TIME comercial Vertech. Configurar `requestContext.agentId` em runtime pra resolver model/instructions/tools do banco.";
 				}
 				const record = await loadAgentFromContext(requestContext);
-				return buildInstructions(record);
+				const base = buildInstructions(record);
+
+				// M2-01: injeta bloco do modo contextual (SDR/closer/pós-venda).
+				// Modo vem de requestContext.atendenteMode OU é inferido do stage.
+				const mode = requestContext?.get?.("atendenteMode") as
+					| string
+					| undefined;
+				const modeBlock = getAtendenteModeInstructions(mode);
+
+				return modeBlock ? `${base}\n\n${modeBlock}` : base;
 			},
 
 			tools: async ({ requestContext }) => {
@@ -99,16 +109,16 @@ async function loadAgentFromContext(requestContext: RequestContextLike) {
 }
 
 /**
- * Filtra o registry de tools pelas chaves habilitadas no agente.
- * Em 07A o registry esta vazio — retorna `{}`. Phase 08 populara.
+ * Filtra o registry de tools pelas chaves habilitadas no agente (M2-01).
+ * Registry populado em `tools/atendente/index.ts` com 11 tools core.
  */
 function filterTools(enabledKeys: string[]) {
-	const registry = commercialTools as Record<string, never>;
-	const out: Record<string, never> = {};
+	const registry = commercialTools as Record<string, unknown>;
+	const out: Record<string, unknown> = {};
 	for (const key of enabledKeys) {
 		if (key in registry) {
 			out[key] = registry[key];
 		}
 	}
-	return out;
+	return out as never;
 }

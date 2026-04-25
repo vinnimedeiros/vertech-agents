@@ -34,6 +34,15 @@ export {
 	qualificacaoScorer,
 	toneScorer,
 } from "./scorers";
+export {
+	ATENDENTE_MODES,
+	getAtendenteModeInstructions,
+	inferModeFromStage,
+} from "./instructions/atendente-modes";
+export {
+	atendenteTools,
+	type AtendenteToolKey,
+} from "./tools/atendente";
 export { getArchitectWorkingMemory } from "./memory/architect-read";
 export {
 	getArchitectMessages,

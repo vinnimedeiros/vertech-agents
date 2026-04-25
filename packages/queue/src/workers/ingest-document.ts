@@ -60,7 +60,15 @@ export function startIngestDocumentWorker(): Worker {
 	});
 
 	workerInstance.on("error", (err) => {
-		console.error(`[ingest-document-worker] worker error: ${err.message}`);
+		const code = (err as { code?: string })?.code;
+		const msg = err.message || "(sem mensagem)";
+		const hint =
+			code === "ECONNREFUSED"
+				? " — Redis não está rodando. Abra Docker Desktop."
+				: "";
+		console.error(
+			`[ingest-document-worker] worker error: ${msg}${code ? ` [${code}]` : ""}${hint}`,
+		);
 	});
 
 	return workerInstance;

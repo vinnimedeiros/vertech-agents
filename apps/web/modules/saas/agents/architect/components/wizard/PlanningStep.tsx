@@ -3,7 +3,7 @@
 import { Button } from "@ui/components/button";
 import { Textarea } from "@ui/components/textarea";
 import { Loader2Icon, SparklesIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { ArchitectArtifact } from "../../lib/artifact-types";
 
@@ -35,6 +35,7 @@ const CAPABILITY_LABELS: Record<string, string> = {
 type Props = {
 	sessionId: string;
 	existingPlan?: ArchitectArtifact;
+	onArtifactUpdated?: (artifact: ArchitectArtifact) => void;
 	onApproved: (artifact: ArchitectArtifact) => void;
 };
 
@@ -48,6 +49,7 @@ type Props = {
 export function PlanningStep({
 	sessionId,
 	existingPlan,
+	onArtifactUpdated,
 	onApproved,
 }: Props) {
 	const [plan, setPlan] = useState<ArchitectArtifact | null>(
@@ -57,10 +59,17 @@ export function PlanningStep({
 	const [showAdjustment, setShowAdjustment] = useState(false);
 	const [adjustmentText, setAdjustmentText] = useState("");
 	const [isApproving, setIsApproving] = useState(false);
+	// Dedup ref: React strict mode em dev double-monta o componente e
+	// dispararia POST /plan 2x simultâneo. Ref persiste entre re-mounts
+	// sincronizados do mesmo sessionId, bloqueando o segundo fetch.
+	// Descoberto via Playwright test 2026-04-21 (blueprints duplicados).
+	const planFetchInFlight = useRef<string | null>(null);
 
 	// Gera plan inicial se ainda não existe
 	useEffect(() => {
 		if (plan || !sessionId) return;
+		if (planFetchInFlight.current === sessionId) return;
+		planFetchInFlight.current = sessionId;
 		let cancelled = false;
 		(async () => {
 			try {
@@ -86,6 +95,9 @@ export function PlanningStep({
 				);
 			} finally {
 				if (!cancelled) setIsGenerating(false);
+				// Libera ref só após complete (success ou error) pra permitir
+				// retry manual se LLM falhar. Cleanup dispara antes em unmount.
+				planFetchInFlight.current = null;
 			}
 		})();
 		return () => {
@@ -115,9 +127,12 @@ export function PlanningStep({
 				artifact: ArchitectArtifact;
 			};
 			setPlan(artifact);
+			onArtifactUpdated?.(artifact);
 			setAdjustmentText("");
 			setShowAdjustment(false);
-			toast.success("Plano ajustado.");
+			toast.success(
+				"Plano ajustado. Revise e clique em 'Aprovar plano' pra continuar.",
+			);
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : "Erro ao ajustar plano.",

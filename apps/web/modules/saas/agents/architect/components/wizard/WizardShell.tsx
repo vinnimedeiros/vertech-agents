@@ -121,17 +121,6 @@ export function WizardShell({
 				setBusinessProfile(biz);
 				setBlueprint(bp);
 
-				// Deduz step atual pelo status dos artefatos
-				const doneSet = new Set<WizardStep>();
-				if (biz?.status === "APPROVED") {
-					doneSet.add("idealization");
-				}
-				if (bp?.status === "APPROVED") {
-					doneSet.add("planning");
-				}
-
-				setCompleted(doneSet);
-
 				if (bp?.status === "APPROVED") {
 					setStep("knowledge");
 				} else if (bp) {
@@ -151,6 +140,26 @@ export function WizardShell({
 			aborted = true;
 		};
 	}, [sessionId]);
+
+	// Fix H6 Smith verify (2026-04-21): re-sync `completed` set toda vez que
+	// o status de um artefato mudar. Se user refinou (REGENERATED), remove
+	// automaticamente da set pra bloquear navegação forward via Stepper.
+	useEffect(() => {
+		setCompleted((prev) => {
+			const next = new Set(prev);
+			if (businessProfile?.status === "APPROVED") {
+				next.add("idealization");
+			} else {
+				next.delete("idealization");
+			}
+			if (blueprint?.status === "APPROVED") {
+				next.add("planning");
+			} else {
+				next.delete("planning");
+			}
+			return next;
+		});
+	}, [businessProfile?.status, blueprint?.status]);
 
 	const markCompleted = (target: WizardStep) => {
 		setCompleted((prev) => new Set(prev).add(target));
@@ -223,6 +232,7 @@ export function WizardShell({
 					<PlanningStep
 						sessionId={sessionId}
 						existingPlan={blueprint ?? undefined}
+						onArtifactUpdated={setBlueprint}
 						onApproved={(artifact) => {
 							setBlueprint(artifact);
 							markCompleted("planning");

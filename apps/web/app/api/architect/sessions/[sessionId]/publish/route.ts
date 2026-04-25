@@ -94,22 +94,32 @@ export async function POST(
 				{ status: 409 },
 			);
 		}
-		// Wizard: ao chegar no Step 4 (Criação) o user já passou pelos
-		// Steps 1 e 2 (guard no próprio wizard). Ajuste posterior no plano
-		// rebate status pra REGENERATED — não exige re-aprovação.
-		// Clique no "Criar agente" é o aprovar final implícito.
-		// Marca ambos como APPROVED agora, antes da transação atômica.
+
+		// Safety rail H6 (fix Smith verify 2026-04-21).
+		// Não forçar APPROVED. Se artefato não está aprovado (user refinou
+		// e não clicou "Aprovar versão ajustada"), recusar publish com 409.
+		// UI deve mandar user de volta ao step correto pra aprovar.
 		if (businessProfile.status !== "APPROVED") {
-			await db
-				.update(agentArtifact)
-				.set({ status: "APPROVED", approvedAt: new Date() })
-				.where(eq(agentArtifact.id, businessProfile.id));
+			return NextResponse.json(
+				{
+					error: "ANALYSIS_NOT_APPROVED",
+					message:
+						"Você ajustou a análise e ainda não aprovou a versão nova. Volte ao Step 1 e clique em 'Aprovar'.",
+					artifactStatus: businessProfile.status,
+				},
+				{ status: 409 },
+			);
 		}
 		if (blueprint.status !== "APPROVED") {
-			await db
-				.update(agentArtifact)
-				.set({ status: "APPROVED", approvedAt: new Date() })
-				.where(eq(agentArtifact.id, blueprint.id));
+			return NextResponse.json(
+				{
+					error: "PLAN_NOT_APPROVED",
+					message:
+						"Você ajustou o plano e ainda não aprovou a versão nova. Volte ao Step 2 e clique em 'Aprovar plano'.",
+					artifactStatus: blueprint.status,
+				},
+				{ status: 409 },
+			);
 		}
 
 		// Wizard não usa Mastra working memory — artefatos aprovados são

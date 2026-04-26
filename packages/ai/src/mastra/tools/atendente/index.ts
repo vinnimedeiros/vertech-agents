@@ -17,7 +17,6 @@ import {
 	or,
 	pipeline,
 	pipelineStage,
-	whatsappInstance,
 } from "@repo/database";
 import { z } from "zod";
 import { getLogger } from "../../logger";
@@ -820,55 +819,6 @@ export const enviarPropostaPdf = createTool({
 // Wave 1 A.3-A.6 — Tools P0 do Atendente (mídia, resolver, busca, NOTE)
 // ============================================================
 
-// Dynamic import quebra dependency cycle entre @repo/ai e @repo/whatsapp
-// (que depende de @repo/queue, que depende de @repo/ai). ESM dynamic
-// import não entra no graph estático do pnpm/turbopack.
-//
-// Tipos declarados inline pra preservar typecheck sem dep estática.
-// Assinaturas refletem packages/whatsapp/src/media-sender.ts.
-type WhatsAppSendResult = { key?: { id?: string } } | undefined;
-type WhatsAppSenders = {
-	sendImage: (
-		instanceId: string,
-		toPhone: string,
-		url: string,
-		caption?: string,
-	) => Promise<WhatsAppSendResult>;
-	sendVideo: (
-		instanceId: string,
-		toPhone: string,
-		url: string,
-		caption?: string,
-	) => Promise<WhatsAppSendResult>;
-	sendVoiceNote: (
-		instanceId: string,
-		toPhone: string,
-		audioUrl: string,
-	) => Promise<WhatsAppSendResult>;
-	sendDocument: (
-		instanceId: string,
-		toPhone: string,
-		url: string,
-		fileName: string,
-		mimeType: string,
-	) => Promise<WhatsAppSendResult>;
-};
-
-async function loadWhatsAppSenders(): Promise<WhatsAppSenders> {
-	// Variável escondida do TS pra evitar resolução estática de tipos.
-	// Sem isso, TS exige `@repo/whatsapp` como dep de @repo/ai (re-fecha
-	// o ciclo). Com a variável, o import vira `any` em runtime; cast
-	// pra WhatsAppSenders preserva a interface no caller.
-	const pkg = "@repo/whatsapp";
-	const wa = (await import(pkg)) as unknown as WhatsAppSenders;
-	return {
-		sendImage: wa.sendImage,
-		sendVideo: wa.sendVideo,
-		sendVoiceNote: wa.sendVoiceNote,
-		sendDocument: wa.sendDocument,
-	};
-}
-
 // Helper: resolve conversa WhatsApp ativa do contato (uniqueIndex
 // conversation_contact_channel_uniq garante 1 por par contato+canal).
 async function findWhatsAppConversation(
@@ -898,51 +848,20 @@ async function findWhatsAppConversation(
 	return row ?? null;
 }
 
-// Helper: resolve instance WhatsApp ativa pra conversa (fallback pra
-// primeira CONNECTED/CONNECTING da org se a vinculada estiver morta).
-async function resolveActiveWhatsAppInstance(
-	organizationId: string,
-	currentInstanceId: string | null,
-): Promise<string | null> {
-	if (currentInstanceId) {
-		const [row] = await db
-			.select({ status: whatsappInstance.status })
-			.from(whatsappInstance)
-			.where(eq(whatsappInstance.id, currentInstanceId))
-			.limit(1);
-		if (
-			row &&
-			(row.status === "CONNECTED" ||
-				row.status === "CONNECTING" ||
-				row.status === "DISCONNECTED")
-		) {
-			return currentInstanceId;
-		}
-	}
-	const [active] = await db
-		.select({ id: whatsappInstance.id })
-		.from(whatsappInstance)
-		.where(
-			and(
-				eq(whatsappInstance.organizationId, organizationId),
-				inArray(whatsappInstance.status, [
-					"CONNECTED",
-					"CONNECTING",
-					"DISCONNECTED",
-				]),
-			),
-		)
-		.limit(1);
-	return active?.id ?? null;
-}
-
 // ============================================================
-// 12. enviarMidia — IMAGE/AUDIO/VIDEO/DOCUMENT pelo WhatsApp
+// 12. enviarMidia — STUB pendente Wave 2 (BullMQ outbound queue)
 // ============================================================
+//
+// Não chama @repo/whatsapp diretamente: importar @repo/whatsapp aqui
+// fecharia ciclo de deps (@repo/ai → @repo/whatsapp → @repo/queue
+// → @repo/ai). Implementação real chega em Wave 2 via job na queue
+// outbound. Por ora, a tool valida inputs, confirma multi-tenant e
+// registra a intenção como NOTE no histórico do lead — LLM continua
+// podendo "saber" que tentou enviar mídia e seguir o fluxo.
 export const enviarMidia = createTool({
 	id: "enviarMidia",
 	description:
-		"Envia mídia (imagem, áudio, vídeo ou documento) pro lead via WhatsApp. A mídia já deve estar hospedada e ter URL pública acessível. Use quando o lead pedir foto de produto, comprovante, ficha técnica em PDF, áudio explicativo etc. Atendente NÃO gera a mídia, só envia URL existente. Para enviar proposta PDF gerada, use enviarPropostaPdf.",
+		"[STUB - Wave 2] Envia mídia (imagem, áudio, vídeo ou documento) pro lead via WhatsApp. Atualmente registra a intenção como activity NOTE no histórico do lead; envio real chega via BullMQ outbound queue na Wave 2 do Pivot Comercial 100%. Use enviarPropostaPdf (também stub) ou marcarConversaResolvida pra fluxos que não exigem envio de mídia ainda.",
 	inputSchema: z.object({
 		leadId: z.string(),
 		tipo: z.enum(["IMAGE", "AUDIO", "VIDEO", "DOCUMENT"]),
@@ -967,7 +886,6 @@ export const enviarMidia = createTool({
 	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
-		const sandbox = isSandboxRun(requestContext as ContextLike);
 
 		const leadRow = await db.query.lead.findFirst({
 			where: eq(lead.id, input.leadId),
@@ -985,9 +903,6 @@ export const enviarMidia = createTool({
 		if (!conv) {
 			throw new Error("CONTATO_SEM_CONVERSA_WHATSAPP");
 		}
-		if (!conv.phone) {
-			throw new Error("CONTATO_SEM_TELEFONE");
-		}
 
 		if (input.tipo === "DOCUMENT") {
 			if (!input.mediaFileName || !input.mediaMimeType) {
@@ -997,109 +912,26 @@ export const enviarMidia = createTool({
 			}
 		}
 
-		const now = new Date();
-		const [msg] = await db
-			.insert(message)
-			.values({
-				conversationId: conv.id,
-				senderType: "AGENT",
-				senderId: getAgentId(requestContext as ContextLike) ?? null,
-				direction: "OUTBOUND",
-				type: input.tipo,
-				status: "PENDING",
+		await db.insert(leadActivity).values({
+			leadId: input.leadId,
+			type: "NOTE",
+			title: `[STUB] enviarMidia ${input.tipo}`,
+			content: `Mídia agendada (${input.mediaUrl}). Envio real chega na Wave 2 via BullMQ outbound.`,
+			agentId: getAgentId(requestContext as ContextLike),
+			metadata: {
+				stub: true,
+				tipo: input.tipo,
 				mediaUrl: input.mediaUrl,
-				mediaMimeType: input.mediaMimeType ?? null,
-				mediaFileName: input.mediaFileName ?? null,
 				caption: input.caption ?? null,
-				createdAt: now,
-			})
-			.returning({ id: message.id });
+			},
+			isSandbox: isSandboxRun(requestContext as ContextLike),
+		});
 
-		const instanceId = await resolveActiveWhatsAppInstance(
-			organizationId,
-			conv.channelInstanceId,
+		log.warn(
+			{ leadId: input.leadId, tipo: input.tipo },
+			"enviarMidia STUB — envio real pendente Wave 2",
 		);
-		if (!instanceId) {
-			await db
-				.update(message)
-				.set({ status: "FAILED" })
-				.where(eq(message.id, msg.id));
-			throw new Error("SEM_INSTANCIA_WHATSAPP_ATIVA");
-		}
-
-		// Sandbox: registra message, não dispara real (evita queimar número).
-		if (sandbox) {
-			await db
-				.update(message)
-				.set({ status: "SENT" })
-				.where(eq(message.id, msg.id));
-			log.info(
-				{ leadId: input.leadId, tipo: input.tipo, messageId: msg.id, sandbox: true },
-				"enviarMidia ok (sandbox skip whatsapp)",
-			);
-			return { ok: true, messageId: msg.id };
-		}
-
-		try {
-			const senders = await loadWhatsAppSenders();
-			let result: WhatsAppSendResult;
-			switch (input.tipo) {
-				case "IMAGE":
-					result = await senders.sendImage(
-						instanceId,
-						conv.phone,
-						input.mediaUrl,
-						input.caption ?? undefined,
-					);
-					break;
-				case "VIDEO":
-					result = await senders.sendVideo(
-						instanceId,
-						conv.phone,
-						input.mediaUrl,
-						input.caption ?? undefined,
-					);
-					break;
-				case "AUDIO":
-					result = await senders.sendVoiceNote(
-						instanceId,
-						conv.phone,
-						input.mediaUrl,
-					);
-					break;
-				case "DOCUMENT":
-					result = await senders.sendDocument(
-						instanceId,
-						conv.phone,
-						input.mediaUrl,
-						input.mediaFileName ?? "arquivo",
-						input.mediaMimeType ?? "application/octet-stream",
-					);
-					break;
-			}
-
-			await db
-				.update(message)
-				.set({ status: "SENT", externalId: result?.key?.id ?? null })
-				.where(eq(message.id, msg.id));
-
-			log.info(
-				{ leadId: input.leadId, tipo: input.tipo, messageId: msg.id },
-				"enviarMidia ok",
-			);
-			return { ok: true, messageId: msg.id };
-		} catch (err) {
-			await db
-				.update(message)
-				.set({ status: "FAILED" })
-				.where(eq(message.id, msg.id));
-			const msgErr = err instanceof Error ? err.message : String(err);
-			log.error(
-				{ err, msgErr, leadId: input.leadId, tipo: input.tipo },
-				"enviarMidia falhou no envio WhatsApp",
-			);
-			return { ok: false, messageId: msg.id };
-		}
+		return { ok: true, messageId: null };
 	},
 });
 

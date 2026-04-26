@@ -12,6 +12,7 @@ import {
 	lead,
 	leadActivity,
 	message,
+	notInArray,
 	pipeline,
 	pipelineStage,
 } from "@repo/database";
@@ -52,12 +53,87 @@ function isSandboxRun(ctx: ContextLike): boolean {
 }
 
 // ============================================================
-// 1. criarLead — Cria novo lead no pipeline padrão da org
+// Helpers compartilhados — Wave 1 A.2 + A.7
 // ============================================================
+
+// Resolve pipeline ativo da org. Prefere `isDefault=true`. Se não houver
+// flag setada, fallback pro primeiro pipeline da org (ordem de criação).
+async function resolveOrgPipeline(
+	organizationId: string,
+	pipelineId?: string,
+): Promise<{ id: string }> {
+	if (pipelineId) {
+		const explicit = await db.query.pipeline.findFirst({
+			where: and(
+				eq(pipeline.id, pipelineId),
+				eq(pipeline.organizationId, organizationId),
+			),
+			columns: { id: true },
+		});
+		if (!explicit) {
+			throw new Error("PIPELINE_NAO_PERTENCE_ORG");
+		}
+		return explicit;
+	}
+
+	const defaultPipe = await db.query.pipeline.findFirst({
+		where: and(
+			eq(pipeline.organizationId, organizationId),
+			eq(pipeline.isDefault, true),
+		),
+		columns: { id: true },
+	});
+	if (defaultPipe) return defaultPipe;
+
+	const fallback = await db.query.pipeline.findFirst({
+		where: eq(pipeline.organizationId, organizationId),
+		columns: { id: true },
+	});
+	if (!fallback) throw new Error("Org sem pipeline configurado");
+	return fallback;
+}
+
+// Procura lead aberto (stage não-WON e não-LOST) pra um contato em um
+// pipeline específico. Retorna leadId se houver, senão null.
+async function findOpenLeadForContact(
+	contactId: string,
+	pipelineId: string,
+): Promise<string | null> {
+	const stages = await db.query.pipelineStage.findMany({
+		where: eq(pipelineStage.pipelineId, pipelineId),
+		columns: { id: true, category: true },
+	});
+	const closedStageIds = stages
+		.filter((s) => s.category === "WON" || s.category === "LOST")
+		.map((s) => s.id);
+
+	const conditions = [
+		eq(lead.contactId, contactId),
+		eq(lead.pipelineId, pipelineId),
+	];
+	if (closedStageIds.length > 0) {
+		conditions.push(notInArray(lead.stageId, closedStageIds));
+	}
+
+	const existing = await db.query.lead.findFirst({
+		where: and(...conditions),
+		columns: { id: true },
+	});
+	return existing?.id ?? null;
+}
+
+// ============================================================
+// 1. criarLead — Cria novo lead (cria contato se necessário)
+// ============================================================
+//
+// Pivot Comercial 100% Wave 1 A.2 — fix duplicação de contato.
+// Antes: sempre inseria contato novo. Depois: lookup (org, phone) e
+// reusa contato existente. Bloqueia criação se já há lead aberto pra
+// esse contato no pipeline default.
 export const criarLead = createTool({
 	id: "criarLead",
 	description:
-		"Cria um novo lead no pipeline. Use quando o contato demonstrar interesse comercial. Requer nome do lead.",
+		"Cria um novo lead no pipeline. Use quando o contato demonstrar interesse comercial. Reusa contato existente se já houver um com mesmo telefone na organização (não duplica). Se o contato já tem um lead aberto, retorna LEAD_DUPLICADO_PARA_CONTATO com o leadId existente.",
 	inputSchema: z.object({
 		nome: z.string().describe("Nome do lead"),
 		telefone: z.string().optional().describe("Telefone WhatsApp"),
@@ -68,6 +144,7 @@ export const criarLead = createTool({
 	outputSchema: z.object({
 		leadId: z.string(),
 		ok: z.boolean(),
+		contactReused: z.boolean(),
 	}),
 	execute: async (input: any, ctx: any) => {
 		const requestContext = ctx?.requestContext;
@@ -75,10 +152,7 @@ export const criarLead = createTool({
 			const organizationId = requireOrgId(requestContext as ContextLike);
 			const { nome, telefone, email, titulo, valor } = input;
 
-			const pipelineRow = await db.query.pipeline.findFirst({
-				where: eq(pipeline.organizationId, organizationId),
-			});
-			if (!pipelineRow) throw new Error("Org sem pipeline configurado");
+			const pipelineRow = await resolveOrgPipeline(organizationId);
 
 			const stageRow = await db.query.pipelineStage.findFirst({
 				where: eq(pipelineStage.pipelineId, pipelineRow.id),
@@ -86,36 +160,178 @@ export const criarLead = createTool({
 			});
 			if (!stageRow) throw new Error("Pipeline sem stages");
 
-			const [contactRow] = await db
-				.insert(contact)
-				.values({
-					organizationId,
-					name: nome,
-					phone: telefone,
-					email,
-					source: "agent",
-				})
-				.returning();
+			let contactId: string;
+			let contactReused = false;
+
+			if (telefone) {
+				const existing = await db.query.contact.findFirst({
+					where: and(
+						eq(contact.organizationId, organizationId),
+						eq(contact.phone, telefone),
+					),
+					columns: { id: true, name: true },
+				});
+
+				if (existing) {
+					contactId = existing.id;
+					contactReused = true;
+					// Atualiza nome SOMENTE se o existente está vazio. Não sobrescreve
+					// nome real informado anteriormente (UX: agente não deve renomear
+					// contato sem decisão consciente).
+					if (!existing.name?.trim() && nome) {
+						await db
+							.update(contact)
+							.set({ name: nome, updatedAt: new Date() })
+							.where(eq(contact.id, existing.id));
+					}
+				} else {
+					const [created] = await db
+						.insert(contact)
+						.values({
+							organizationId,
+							name: nome,
+							phone: telefone,
+							email,
+							source: "agent",
+						})
+						.returning({ id: contact.id });
+					contactId = created.id;
+				}
+			} else {
+				const [created] = await db
+					.insert(contact)
+					.values({
+						organizationId,
+						name: nome,
+						email,
+						source: "agent",
+					})
+					.returning({ id: contact.id });
+				contactId = created.id;
+			}
+
+			const openLeadId = await findOpenLeadForContact(
+				contactId,
+				pipelineRow.id,
+			);
+			if (openLeadId) {
+				log.warn(
+					{ contactId, openLeadId },
+					"criarLead bloqueado: contato já tem lead aberto",
+				);
+				throw new Error(
+					`LEAD_DUPLICADO_PARA_CONTATO: contato já tem lead aberto ${openLeadId}. Use vincularLeadAContato com pipelineId diferente OU continue trabalhando o lead existente.`,
+				);
+			}
 
 			const [leadRow] = await db
 				.insert(lead)
 				.values({
 					organizationId,
-					contactId: contactRow.id,
+					contactId,
 					pipelineId: pipelineRow.id,
 					stageId: stageRow.id,
 					title: titulo ?? nome,
 					value: valor ? String(valor) : null,
 					isSandbox: isSandboxRun(requestContext as ContextLike),
 				})
-				.returning();
+				.returning({ id: lead.id });
 
-			log.info({ leadId: leadRow.id, nome }, "criarLead ok");
-			return { leadId: leadRow.id, ok: true };
+			log.info(
+				{ leadId: leadRow.id, contactId, contactReused, nome },
+				"criarLead ok",
+			);
+			return { leadId: leadRow.id, ok: true, contactReused };
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
 			log.error({ err, msg }, "criarLead falhou");
 			throw new Error(`Falha ao criar lead: ${msg}`);
+		}
+	},
+});
+
+// ============================================================
+// 1b. vincularLeadAContato — Cria lead pra contato existente
+// ============================================================
+//
+// Pivot Comercial 100% Wave 1 A.7. Útil quando agente identifica
+// oportunidade pra contato JÁ cadastrado (sincronizado do WhatsApp ou
+// criado anteriormente). Não cria contato novo.
+export const vincularLeadAContato = createTool({
+	id: "vincularLeadAContato",
+	description:
+		"Cria um novo lead vinculado a um contato JÁ existente na base (sincronizado do WhatsApp ou criado anteriormente). Use quando o contato já está cadastrado e você quer abrir uma nova oportunidade comercial pra ele. Requer contactId. Não cria contato novo (para isso use criarLead). Aceita pipelineId opcional (default: pipeline padrão da organização).",
+	inputSchema: z.object({
+		contactId: z.string(),
+		titulo: z.string().optional(),
+		valor: z.number().nonnegative().optional(),
+		pipelineId: z
+			.string()
+			.optional()
+			.describe("Pipeline destino (default: pipeline padrão da org)"),
+	}),
+	outputSchema: z.object({ leadId: z.string(), ok: z.boolean() }),
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
+		try {
+			const organizationId = requireOrgId(requestContext as ContextLike);
+			const { contactId, titulo, valor, pipelineId } = input;
+
+			const contactRow = await db.query.contact.findFirst({
+				where: eq(contact.id, contactId),
+				columns: { id: true, name: true, organizationId: true },
+			});
+			if (!contactRow) {
+				throw new Error(`contato ${contactId} não encontrado`);
+			}
+			if (contactRow.organizationId !== organizationId) {
+				throw new Error("CONTATO_NAO_PERTENCE_ORG");
+			}
+
+			const pipelineRow = await resolveOrgPipeline(organizationId, pipelineId);
+
+			const stageRow = await db.query.pipelineStage.findFirst({
+				where: eq(pipelineStage.pipelineId, pipelineRow.id),
+				orderBy: (s, { asc }) => asc(s.position),
+			});
+			if (!stageRow) throw new Error("Pipeline sem stages");
+
+			const openLeadId = await findOpenLeadForContact(
+				contactId,
+				pipelineRow.id,
+			);
+			if (openLeadId) {
+				log.warn(
+					{ contactId, openLeadId, pipelineId: pipelineRow.id },
+					"vincularLeadAContato bloqueado: lead aberto existente",
+				);
+				throw new Error(
+					`LEAD_DUPLICADO_PARA_CONTATO: contato já tem lead aberto ${openLeadId} neste pipeline. Continue trabalhando o lead existente OU use outro pipelineId.`,
+				);
+			}
+
+			const [leadRow] = await db
+				.insert(lead)
+				.values({
+					organizationId,
+					contactId,
+					pipelineId: pipelineRow.id,
+					stageId: stageRow.id,
+					title: titulo ?? contactRow.name ?? "Novo lead",
+					value: valor !== undefined ? String(valor) : null,
+					isSandbox: isSandboxRun(requestContext as ContextLike),
+				})
+				.returning({ id: lead.id });
+
+			log.info(
+				{ leadId: leadRow.id, contactId, pipelineId: pipelineRow.id },
+				"vincularLeadAContato ok",
+			);
+			return { leadId: leadRow.id, ok: true };
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			log.error({ err, msg }, "vincularLeadAContato falhou");
+			throw new Error(`Falha ao vincular lead: ${msg}`);
 		}
 	},
 });
@@ -602,6 +818,7 @@ export const enviarPropostaPdf = createTool({
 // ============================================================
 export const atendenteTools = {
 	criarLead,
+	vincularLeadAContato,
 	moverLeadStage,
 	atualizarLead,
 	definirTemperatura,

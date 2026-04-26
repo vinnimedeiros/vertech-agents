@@ -178,8 +178,8 @@ export function AgentEditorShell({
 				</aside>
 			</div>
 
-			{/* Bottom: chat + logs colapsados, expandem empurrando workflow */}
-			<div className="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-2">
+			{/* Bottom: chat + logs colapsados, expandem independentemente */}
+			<div className="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-end">
 				<CollapsiblePanel
 					open={chatOpen}
 					onToggle={() => setChatOpen(!chatOpen)}
@@ -244,7 +244,7 @@ function CollapsiblePanel({
 		<section
 			className={cn(
 				PANEL_CLASSES,
-				"flex flex-col transition-[height] duration-300 ease-out",
+				"flex flex-1 flex-col transition-[height] duration-300 ease-out",
 				open ? "h-52" : "h-9",
 			)}
 		>

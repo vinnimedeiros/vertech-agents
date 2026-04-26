@@ -530,14 +530,15 @@ export async function reorderStagesAction(
 	const now = new Date();
 	// Wave 1 G.P0.3 — UPDATE único com CASE WHEN em vez de loop.
 	// Antes: N stages = N round-trips. Agora: 1 query.
+	// Reduce em vez de sql.join (API interna do Drizzle, instável entre versões).
 	if (orderedStageIds.length > 0) {
-		const cases = sql.join(
-			orderedStageIds.map(
+		const cases = orderedStageIds
+			.map(
 				(stageId, i) =>
 					sql`WHEN ${pipelineStage.id} = ${stageId} THEN ${i}::int`,
-			),
-			sql.raw(" "),
-		);
+			)
+			.reduce((acc, frag) => sql`${acc} ${frag}`, sql``);
+
 		await db
 			.update(pipelineStage)
 			.set({

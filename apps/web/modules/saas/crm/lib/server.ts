@@ -284,13 +284,24 @@ export const listProposalsByOrg = cache(async (organizationId: string) => {
 		.orderBy(desc(proposal.updatedAt));
 });
 
-export const listActivitiesByLead = cache(async (leadId: string) => {
-	return db
-		.select()
-		.from(leadActivity)
-		.where(eq(leadActivity.leadId, leadId))
-		.orderBy(desc(leadActivity.createdAt));
-});
+/**
+ * Lista atividades de um lead. Filtra `isSandbox=false` por default
+ * (Wave 1 fix QA-1) — timeline real não mostra atividades de teste
+ * geradas pelo Atendente em sandbox.
+ */
+export const listActivitiesByLead = cache(
+	async (leadId: string, options?: { includeSandbox?: boolean }) => {
+		const conditions = [eq(leadActivity.leadId, leadId)];
+		if (!options?.includeSandbox) {
+			conditions.push(eq(leadActivity.isSandbox, false));
+		}
+		return db
+			.select()
+			.from(leadActivity)
+			.where(and(...conditions))
+			.orderBy(desc(leadActivity.createdAt));
+	},
+);
 
 // ============================================================
 // Status Templates (Phase 04F)

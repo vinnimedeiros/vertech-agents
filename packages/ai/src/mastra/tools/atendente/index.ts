@@ -155,7 +155,7 @@ export const criarLead = createTool({
 		ok: z.boolean(),
 		contactReused: z.boolean(),
 	}),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		try {
 			const organizationId = requireOrgId(requestContext as ContextLike);
@@ -280,7 +280,7 @@ export const vincularLeadAContato = createTool({
 			.describe("Pipeline destino (default: pipeline padrão da org)"),
 	}),
 	outputSchema: z.object({ leadId: z.string(), ok: z.boolean() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		try {
 			const organizationId = requireOrgId(requestContext as ContextLike);
@@ -357,7 +357,7 @@ export const moverLeadStage = createTool({
 		stageId: z.string().describe("ID do stage destino (ver verHistoricoLead pra opções)"),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		const agentId = getAgentId(requestContext as ContextLike);
@@ -476,7 +476,7 @@ export const atualizarLead = createTool({
 		ok: z.boolean(),
 		updatedFields: z.array(z.string()),
 	}),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const { leadId, patch } = input as { leadId: string; patch: LeadPatch };
@@ -525,7 +525,7 @@ export const definirTemperatura = createTool({
 		temperatura: z.enum(["COLD", "WARM", "HOT"]),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 
@@ -561,7 +561,7 @@ export const verHistoricoLead = createTool({
 		atividades: z.array(z.object({ type: z.string(), title: z.string(), createdAt: z.string() })),
 		mensagensCount: z.number(),
 	}),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		const limite = input.limite ?? 20;
@@ -620,7 +620,7 @@ export const buscarConhecimento = createTool({
 		trechos: z.array(z.object({ texto: z.string(), score: z.number() })),
 		stub: z.boolean(),
 	}),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		// TODO M2-02: wire `searchKnowledgeBase` (Phase 08-alpha pgvector)
@@ -645,7 +645,7 @@ export const verDisponibilidade = createTool({
 			z.object({ inicio: z.string(), titulo: z.string() }),
 		),
 	}),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const calRow = await db.query.calendar.findFirst({
@@ -687,7 +687,7 @@ export const agendarEvento = createTool({
 		leadId: z.string().optional().describe("Vincular evento a lead"),
 	}),
 	outputSchema: z.object({ eventoId: z.string(), ok: z.boolean() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const calRow = await db.query.calendar.findFirst({
@@ -738,7 +738,7 @@ export const criarTarefa = createTool({
 		descricao: z.string().optional(),
 	}),
 	outputSchema: z.object({ tarefaId: z.string(), ok: z.boolean() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		const [activity] = await db
@@ -769,14 +769,14 @@ export const pedirHumano = createTool({
 		urgencia: z.enum(["baixa", "média", "alta"]).default("média"),
 	}),
 	outputSchema: z.object({ ok: z.boolean(), notificacaoEnviada: z.boolean() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		// Registra atividade — notificação real fica pro Assistente (M2-05)
 		await db.insert(leadActivity).values({
 			leadId: input.leadId,
 			type: "SYSTEM",
-			title: `🚨 Handoff humano solicitado (${input.urgencia})`,
+			title: `[URGENTE] Handoff humano solicitado (${input.urgencia})`,
 			content: input.motivo,
 			metadata: { handoff: true, urgencia: input.urgencia },
 			agentId: getAgentId(requestContext as ContextLike),
@@ -801,7 +801,7 @@ export const enviarPropostaPdf = createTool({
 		observacoes: z.string().optional(),
 	}),
 	outputSchema: z.object({ ok: z.boolean(), pdfUrl: z.string().nullable() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		await db.insert(leadActivity).values({
@@ -921,7 +921,7 @@ export const enviarMidia = createTool({
 		ok: z.boolean(),
 		messageId: z.string().nullable(),
 	}),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const sandbox = isSandboxRun(requestContext as ContextLike);
@@ -1074,7 +1074,7 @@ export const marcarConversaResolvida = createTool({
 			.describe("Motivo do encerramento (registrado em activity NOTE)"),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const agentId = getAgentId(requestContext as ContextLike);
@@ -1149,7 +1149,7 @@ export const buscarLeadOuContato = createTool({
 		),
 		total: z.number(),
 	}),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const pattern = `%${input.query}%`;
@@ -1240,7 +1240,13 @@ export const buscarLeadOuContato = createTool({
 
 				for (const r of contactHits) {
 					// Evita duplicar contatos já presentes via leads
-					const alreadyAsLead = resultados.some(
+					// Wave 1 fix QA-5 — dedup só quando phone E email têm valor
+				// real. Sem este guard, dois contatos com phone/email null
+				// seriam considerados a mesma pessoa silenciosamente.
+				const alreadyAsLead =
+					r.phone != null &&
+					r.email != null &&
+					resultados.some(
 						(x) =>
 							x.tipo === "LEAD" &&
 							x.telefone === r.phone &&
@@ -1281,7 +1287,7 @@ export const comentarLead = createTool({
 		comentario: z.string().min(1).max(2000),
 	}),
 	outputSchema: z.object({ ok: z.boolean(), activityId: z.string() }),
-	execute: async (input: any, ctx: any) => {
+	execute: async (input, ctx) => {
 		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const agentId = getAgentId(requestContext as ContextLike);

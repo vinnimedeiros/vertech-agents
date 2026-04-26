@@ -123,7 +123,7 @@ export async function bulkMoveLeadsAction(
 			.set({
 				stageId: toStageId,
 				pipelineId: targetStage.pipelineId,
-				stageDates: sql`COALESCE(${lead.stageDates}::jsonb, '{}'::jsonb) || ${stageDatesPatch}::jsonb`,
+				stageDates: sql`(COALESCE(${lead.stageDates}::jsonb, '{}'::jsonb) || ${stageDatesPatch}::jsonb)::json`,
 				updatedAt: now,
 			})
 			.where(inArray(lead.id, idsToMove));

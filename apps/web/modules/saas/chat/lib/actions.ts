@@ -709,6 +709,21 @@ export async function retryMessageAction(
 ): Promise<{ ok: boolean; status: "SENT" | "FAILED" }> {
 	const user = await requireAuthed();
 
+	// Wave 1 fix QA-2 — lookup minimal pra obter conversationId, validar
+	// acesso ANTES de carregar dados completos da message. Evita IDOR
+	// parcial (user de outra org descobrir messageId existente).
+	const [msgMeta] = await db
+		.select({ id: message.id, conversationId: message.conversationId })
+		.from(message)
+		.where(eq(message.id, messageId))
+		.limit(1);
+
+	if (!msgMeta) {
+		throw new Error("Mensagem não encontrada");
+	}
+
+	const conv = await assertConversationAccess(user.id, msgMeta.conversationId);
+
 	const [msg] = await db
 		.select()
 		.from(message)
@@ -724,8 +739,6 @@ export async function retryMessageAction(
 	if (msg.direction !== "OUTBOUND") {
 		throw new Error("Apenas mensagens OUTBOUND podem ser reenviadas");
 	}
-
-	const conv = await assertConversationAccess(user.id, msg.conversationId);
 	if (conv.channel !== "WHATSAPP") {
 		throw new Error("Retry suportado apenas em conversas WhatsApp");
 	}
@@ -791,9 +804,16 @@ export async function retryMessageAction(
 		revalidateChat(organizationSlug);
 		return { ok: true, status: "SENT" };
 	} catch (err) {
+		// TODO Wave 2: trocar todos os console.error/warn deste arquivo por
+		// logger pino centralizado quando @repo/logger for criado. Mantido
+		// console.error aqui pra consistência com sendMediaMessageAction
+		// (linhas 364/374/524/534) — substituição em massa numa única story.
 		console.error(
 			"[retryMessageAction] reenvio falhou",
-			err instanceof Error ? err.message : err,
+			JSON.stringify({
+				messageId,
+				errorMessage: err instanceof Error ? err.message : String(err),
+			}),
 		);
 		await db
 			.update(message)

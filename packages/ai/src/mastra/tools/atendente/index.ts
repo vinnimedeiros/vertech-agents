@@ -71,9 +71,9 @@ export const criarLead = createTool({
 		leadId: z.string(),
 		ok: z.boolean(),
 	}),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
 		try {
-			const organizationId = requireOrgId(runtimeContext as ContextLike);
+			const organizationId = requireOrgId(requestContext as ContextLike);
 			const { nome, telefone, email, titulo, valor } = context;
 
 			const pipelineRow = await db.query.pipeline.findFirst({
@@ -107,7 +107,7 @@ export const criarLead = createTool({
 					stageId: stageRow.id,
 					title: titulo ?? nome,
 					value: valor ? String(valor) : null,
-					isSandbox: isSandboxRun(runtimeContext as ContextLike),
+					isSandbox: isSandboxRun(requestContext as ContextLike),
 				})
 				.returning();
 
@@ -133,9 +133,9 @@ export const moverLeadStage = createTool({
 		stageId: z.string().describe("ID do stage destino (ver verHistoricoLead pra opções)"),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
-		const agentId = getAgentId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
+		const agentId = getAgentId(requestContext as ContextLike);
 
 		await db
 			.update(lead)
@@ -148,7 +148,7 @@ export const moverLeadStage = createTool({
 			title: "Stage alterado pelo Atendente",
 			content: `Movido pro stage ${context.stageId}`,
 			agentId,
-			isSandbox: isSandboxRun(runtimeContext as ContextLike),
+			isSandbox: isSandboxRun(requestContext as ContextLike),
 		});
 
 		return { ok: true };
@@ -169,8 +169,8 @@ export const atualizarLead = createTool({
 		valor: z.number().optional(),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
 		const updates: Record<string, unknown> = {};
 		if (context.titulo !== undefined) updates.title = context.titulo;
 		if (context.descricao !== undefined) updates.description = context.descricao;
@@ -194,8 +194,8 @@ export const definirTemperatura = createTool({
 		temperatura: z.enum(["COLD", "WARM", "HOT"]),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
 		await db
 			.update(lead)
 			.set({ temperature: context.temperatura })
@@ -219,8 +219,8 @@ export const verHistoricoLead = createTool({
 		atividades: z.array(z.object({ type: z.string(), title: z.string(), createdAt: z.string() })),
 		mensagensCount: z.number(),
 	}),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
 		const limite = context.limite ?? 20;
 
 		const atividades = await db.query.leadActivity.findMany({
@@ -277,8 +277,8 @@ export const buscarConhecimento = createTool({
 		trechos: z.array(z.object({ texto: z.string(), score: z.number() })),
 		stub: z.boolean(),
 	}),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
 		// TODO M2-02: wire `searchKnowledgeBase` (Phase 08-alpha pgvector)
 		console.warn(
 			"[buscarConhecimento STUB] M2-01 — wire pendente RAG-1 pgvector. Query:",
@@ -304,8 +304,8 @@ export const verDisponibilidade = createTool({
 			z.object({ inicio: z.string(), titulo: z.string() }),
 		),
 	}),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		const organizationId = requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		const organizationId = requireOrgId(requestContext as ContextLike);
 		const calRow = await db.query.calendar.findFirst({
 			where: eq(calendar.organizationId, organizationId),
 		});
@@ -345,14 +345,14 @@ export const agendarEvento = createTool({
 		leadId: z.string().optional().describe("Vincular evento a lead"),
 	}),
 	outputSchema: z.object({ eventoId: z.string(), ok: z.boolean() }),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		const organizationId = requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		const organizationId = requireOrgId(requestContext as ContextLike);
 		const calRow = await db.query.calendar.findFirst({
 			where: eq(calendar.organizationId, organizationId),
 		});
 		if (!calRow) throw new Error("Org sem calendar configurado");
 
-		const sandbox = isSandboxRun(runtimeContext as ContextLike);
+		const sandbox = isSandboxRun(requestContext as ContextLike);
 		const [evento] = await db
 			.insert(calendarEvent)
 			.values({
@@ -373,7 +373,7 @@ export const agendarEvento = createTool({
 				title: `Agendado: ${context.titulo}`,
 				content: `Início: ${context.inicioISO}, duração: ${context.duracao}`,
 				metadata: { eventoId: evento.id },
-				agentId: getAgentId(runtimeContext as ContextLike),
+				agentId: getAgentId(requestContext as ContextLike),
 				isSandbox: sandbox,
 			});
 		}
@@ -395,8 +395,8 @@ export const criarTarefa = createTool({
 		descricao: z.string().optional(),
 	}),
 	outputSchema: z.object({ tarefaId: z.string(), ok: z.boolean() }),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
 		const [activity] = await db
 			.insert(leadActivity)
 			.values({
@@ -404,8 +404,8 @@ export const criarTarefa = createTool({
 				type: "TASK",
 				title: context.titulo,
 				content: context.descricao,
-				agentId: getAgentId(runtimeContext as ContextLike),
-				isSandbox: isSandboxRun(runtimeContext as ContextLike),
+				agentId: getAgentId(requestContext as ContextLike),
+				isSandbox: isSandboxRun(requestContext as ContextLike),
 			})
 			.returning();
 		return { tarefaId: activity.id, ok: true };
@@ -425,8 +425,8 @@ export const pedirHumano = createTool({
 		urgencia: z.enum(["baixa", "média", "alta"]).default("média"),
 	}),
 	outputSchema: z.object({ ok: z.boolean(), notificacaoEnviada: z.boolean() }),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
 		// Registra atividade — notificação real fica pro Assistente (M2-05)
 		await db.insert(leadActivity).values({
 			leadId: context.leadId,
@@ -434,8 +434,8 @@ export const pedirHumano = createTool({
 			title: `🚨 Handoff humano solicitado (${context.urgencia})`,
 			content: context.motivo,
 			metadata: { handoff: true, urgencia: context.urgencia },
-			agentId: getAgentId(runtimeContext as ContextLike),
-			isSandbox: isSandboxRun(runtimeContext as ContextLike),
+			agentId: getAgentId(requestContext as ContextLike),
+			isSandbox: isSandboxRun(requestContext as ContextLike),
 		});
 		console.warn(
 			"[pedirHumano STUB] M2-01 — Assistente (M2-05) fará notificação real no grupo WhatsApp.",
@@ -458,8 +458,8 @@ export const enviarPropostaPdf = createTool({
 		observacoes: z.string().optional(),
 	}),
 	outputSchema: z.object({ ok: z.boolean(), pdfUrl: z.string().nullable() }),
-	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		requireOrgId(runtimeContext as ContextLike);
+	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+		requireOrgId(requestContext as ContextLike);
 		await db.insert(leadActivity).values({
 			leadId: context.leadId,
 			type: "NOTE",
@@ -470,8 +470,8 @@ export const enviarPropostaPdf = createTool({
 				plano: context.plano,
 				valor: context.valor,
 			},
-			agentId: getAgentId(runtimeContext as ContextLike),
-			isSandbox: isSandboxRun(runtimeContext as ContextLike),
+			agentId: getAgentId(requestContext as ContextLike),
+			isSandbox: isSandboxRun(requestContext as ContextLike),
 		});
 		console.warn(
 			"[enviarPropostaPdf STUB] M2-01 — service de PDF gen + envio WA pendente.",

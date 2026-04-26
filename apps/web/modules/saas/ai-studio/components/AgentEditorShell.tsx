@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { studioToasts } from "../lib/studio-toasts";
 import { AgentEditorNav, type Section } from "./AgentEditorNav";
 import { AgentWorkflow } from "./AgentWorkflow";
 
@@ -108,7 +109,11 @@ export function AgentEditorShell({
 						</span>
 					</nav>
 				</div>
-				<Button size="sm" disabled className="h-7 text-[12px]">
+				<Button
+					size="sm"
+					className="h-7 text-[12px]"
+					onClick={() => studioToasts.comingSoon()}
+				>
 					Salvar
 				</Button>
 			</header>

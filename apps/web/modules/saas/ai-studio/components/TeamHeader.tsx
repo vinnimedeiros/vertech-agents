@@ -4,6 +4,7 @@ import { Button } from "@ui/components/button";
 import { cn } from "@ui/lib";
 import { ArrowLeftIcon, ExternalLinkIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
+import { studioToasts } from "../lib/studio-toasts";
 import { TeamStatusBadge } from "./TeamStatusBadge";
 
 type TeamLike = {
@@ -71,6 +72,7 @@ export function TeamHeader({ team, organizationSlug, inspectorHref }: Props) {
 					variant="outline"
 					size="sm"
 					className="h-8 gap-1.5 text-[12px]"
+					onClick={() => studioToasts.comingSoon()}
 				>
 					<PencilIcon className="size-3.5" />
 					Editar
@@ -81,7 +83,12 @@ export function TeamHeader({ team, organizationSlug, inspectorHref }: Props) {
 					asChild
 					className="h-8 gap-1.5 text-[12px]"
 				>
-					<a href={inspectorHref} target="_blank" rel="noopener noreferrer">
+					<a
+						href={inspectorHref}
+						target="_blank"
+						rel="noopener noreferrer"
+						onClick={() => studioToasts.inspectorOpening()}
+					>
 						<ExternalLinkIcon className="size-3.5" />
 						Inspetor
 					</a>

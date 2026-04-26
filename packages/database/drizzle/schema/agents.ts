@@ -156,6 +156,11 @@ export const agent = pgTable(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
+		// Phase 11: vínculo com TIME. Nullable durante migration; obrigatório após backfill.
+		// FK declarada em teams.ts via teamMember (n:m). Coluna direta aqui é
+		// atalho de query (qual TIME esse agent pertence), não relação principal.
+		teamId: text("teamId"),
+
 		// Identidade
 		name: text("name").notNull(),
 		role: text("role"),
@@ -246,6 +251,7 @@ export const agent = pgTable(
 	(table) => [
 		index("agent_org_status_idx").on(table.organizationId, table.status),
 		index("agent_whatsapp_instance_idx").on(table.whatsappInstanceId),
+		index("agent_team_idx").on(table.teamId),
 	],
 );
 

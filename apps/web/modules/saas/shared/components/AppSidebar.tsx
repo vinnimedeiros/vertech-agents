@@ -54,10 +54,12 @@ export function AppSidebar() {
 						isActive: pathname.startsWith(`${base}/crm/agenda`),
 					},
 					{
-						label: "Agentes",
-						href: `${base}/agents`,
+						label: "AI Studio",
+						href: `${base}/ai-studio`,
 						icon: SparklesIcon,
-						isActive: pathname.startsWith(`${base}/agents`),
+						isActive:
+							pathname.startsWith(`${base}/ai-studio`) ||
+							pathname.startsWith(`${base}/agents`),
 					},
 					{
 						label: "Ajustes",

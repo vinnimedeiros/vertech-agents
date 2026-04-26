@@ -100,9 +100,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 					path: `${base}/crm/integracoes`,
 				},
 				{
-					label: "Agentes",
+					label: "AI Studio",
 					icon: SparklesIcon,
-					path: `${base}/agents`,
+					path: `${base}/ai-studio`,
 				},
 				{
 					label: "Configurações",
@@ -134,7 +134,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 				{
 					label: "Novo agente",
 					icon: PlusIcon,
-					path: `${base}/agents/new`,
+					path: `${base}/ai-studio`,
 				},
 			]
 		: [];

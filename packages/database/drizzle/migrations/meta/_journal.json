@@ -134,6 +134,13 @@
       "when": 1777157878799,
       "tag": "0018_faulty_pandemic",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1777174133309,
+      "tag": "0019_wandering_ozymandias",
+      "breakpoints": true
     }
   ]
 }

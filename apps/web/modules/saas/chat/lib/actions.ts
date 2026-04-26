@@ -113,12 +113,14 @@ async function assertConversationAccess(userId: string, conversationId: string) 
 
 async function getContactPhoneForConversation(conversationId: string) {
 	const [row] = await db
-		.select({ phone: contact.phone })
+		.select({ phone: contact.phone, whatsappJid: contact.whatsappJid })
 		.from(conversation)
 		.innerJoin(contact, eq(conversation.contactId, contact.id))
 		.where(eq(conversation.id, conversationId))
 		.limit(1);
-	return row?.phone ?? null;
+	// Preferir whatsappJid (preserva @lid quando aplicável). Fallback
+	// pra phone bruto (legacy) — jidOf normaliza pra @s.whatsapp.net.
+	return row?.whatsappJid ?? row?.phone ?? null;
 }
 
 /**

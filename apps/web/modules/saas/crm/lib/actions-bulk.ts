@@ -9,6 +9,7 @@ import {
 	lead,
 	pipeline,
 	pipelineStage,
+	sql,
 } from "@repo/database";
 import { bus } from "@repo/events";
 import { getSession } from "@saas/auth/lib/server";
@@ -108,26 +109,25 @@ export async function bulkMoveLeadsAction(
 	}
 
 	const now = new Date();
+	const idsToMove = foundLeads
+		.filter((l) => l.stageId !== toStageId)
+		.map((l) => l.id);
 
-	await db.transaction(async (tx) => {
-		for (const l of foundLeads) {
-			if (l.stageId === toStageId) continue;
-			const currentDates = (l.stageDates ?? {}) as Record<string, string>;
-			const nextDates = {
-				...currentDates,
-				[toStageId]: now.toISOString(),
-			};
-			await tx
-				.update(lead)
-				.set({
-					stageId: toStageId,
-					pipelineId: targetStage.pipelineId,
-					stageDates: nextDates,
-					updatedAt: now,
-				})
-				.where(eq(lead.id, l.id));
-		}
-	});
+	// Wave 1 G.P0.3 — UPDATE único em vez de loop. Antes: 50 leads = 50 round-trips.
+	// Agora: 1 query usando jsonb concat pra mesclar stageDates de cada lead com
+	// o novo timestamp do toStageId.
+	if (idsToMove.length > 0) {
+		const stageDatesPatch = JSON.stringify({ [toStageId]: now.toISOString() });
+		await db
+			.update(lead)
+			.set({
+				stageId: toStageId,
+				pipelineId: targetStage.pipelineId,
+				stageDates: sql`COALESCE(${lead.stageDates}::jsonb, '{}'::jsonb) || ${stageDatesPatch}::jsonb`,
+				updatedAt: now,
+			})
+			.where(inArray(lead.id, idsToMove));
+	}
 
 	// Emitir um evento lead.stage.changed por lead (stage diferente)
 	for (const l of foundLeads) {

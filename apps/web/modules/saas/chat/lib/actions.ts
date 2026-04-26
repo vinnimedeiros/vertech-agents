@@ -694,3 +694,111 @@ export async function deleteConversationAction(
 	await db.delete(conversation).where(eq(conversation.id, conversationId));
 	revalidateChat(organizationSlug);
 }
+
+// ============================================================
+// Retry de mensagem FAILED — Wave 1 G.P0.2
+// ============================================================
+//
+// Operador clica "Tentar de novo" no MessageBubble FAILED. Re-dispara
+// envio via WhatsApp baseado no `type` da message original. Retry
+// automático/queue durável fica pra Wave 2 (BullMQ outbound).
+
+export async function retryMessageAction(
+	messageId: string,
+	organizationSlug?: string,
+): Promise<{ ok: boolean; status: "SENT" | "FAILED" }> {
+	const user = await requireAuthed();
+
+	const [msg] = await db
+		.select()
+		.from(message)
+		.where(eq(message.id, messageId))
+		.limit(1);
+
+	if (!msg) {
+		throw new Error("Mensagem não encontrada");
+	}
+	if (msg.status !== "FAILED") {
+		throw new Error("Apenas mensagens FAILED podem ser reenviadas");
+	}
+	if (msg.direction !== "OUTBOUND") {
+		throw new Error("Apenas mensagens OUTBOUND podem ser reenviadas");
+	}
+
+	const conv = await assertConversationAccess(user.id, msg.conversationId);
+	if (conv.channel !== "WHATSAPP") {
+		throw new Error("Retry suportado apenas em conversas WhatsApp");
+	}
+
+	const instanceId = await resolveWhatsAppInstanceId(
+		msg.conversationId,
+		conv.organizationId,
+		conv.channelInstanceId,
+	);
+	const phone = await getContactPhoneForConversation(msg.conversationId);
+
+	if (!instanceId || !phone) {
+		throw new Error("Instância WhatsApp ou telefone do contato indisponível");
+	}
+
+	try {
+		let result: any;
+		switch (msg.type) {
+			case "TEXT":
+				result = await sendWhatsAppText(instanceId, phone, msg.text ?? "");
+				break;
+			case "IMAGE":
+				if (!msg.mediaUrl) throw new Error("Mensagem IMAGE sem mediaUrl");
+				result = await sendWhatsAppImage(
+					instanceId,
+					phone,
+					msg.mediaUrl,
+					msg.caption ?? undefined,
+				);
+				break;
+			case "VIDEO":
+				if (!msg.mediaUrl) throw new Error("Mensagem VIDEO sem mediaUrl");
+				result = await sendWhatsAppVideo(
+					instanceId,
+					phone,
+					msg.mediaUrl,
+					msg.caption ?? undefined,
+				);
+				break;
+			case "AUDIO":
+				if (!msg.mediaUrl) throw new Error("Mensagem AUDIO sem mediaUrl");
+				result = await sendWhatsAppVoiceNote(instanceId, phone, msg.mediaUrl);
+				break;
+			case "DOCUMENT":
+				if (!msg.mediaUrl) throw new Error("Mensagem DOCUMENT sem mediaUrl");
+				result = await sendWhatsAppDocument(
+					instanceId,
+					phone,
+					msg.mediaUrl,
+					msg.mediaFileName ?? "arquivo",
+					msg.mediaMimeType ?? "application/octet-stream",
+				);
+				break;
+			default:
+				throw new Error(`Tipo ${msg.type} não suporta retry`);
+		}
+
+		await db
+			.update(message)
+			.set({ status: "SENT", externalId: result?.key?.id ?? null })
+			.where(eq(message.id, messageId));
+
+		revalidateChat(organizationSlug);
+		return { ok: true, status: "SENT" };
+	} catch (err) {
+		console.error(
+			"[retryMessageAction] reenvio falhou",
+			err instanceof Error ? err.message : err,
+		);
+		await db
+			.update(message)
+			.set({ status: "FAILED" })
+			.where(eq(message.id, messageId));
+		return { ok: false, status: "FAILED" };
+	}
+}

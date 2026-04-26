@@ -13,22 +13,28 @@ export async function listCalendarsForOrg(organizationId: string) {
 
 /**
  * Lista events de uma org num range [from, to]. Inclui endpoints.
- * Futuro: filtrar por calendar.visible.
+ * Filtra `isSandbox=false` por default (Wave 1 G.P0.1) — sandbox
+ * playground deve passar `includeSandbox: true` quando exibir eventos
+ * de teste. Futuro: filtrar por calendar.visible.
  */
 export async function listEventsInRange(
 	organizationId: string,
 	from: Date,
 	to: Date,
+	options?: { includeSandbox?: boolean },
 ) {
+	const conditions = [
+		eq(calendarEvent.organizationId, organizationId),
+		gte(calendarEvent.startAt, from),
+		lte(calendarEvent.startAt, to),
+	];
+	if (!options?.includeSandbox) {
+		conditions.push(eq(calendarEvent.isSandbox, false));
+	}
+
 	return db
 		.select()
 		.from(calendarEvent)
-		.where(
-			and(
-				eq(calendarEvent.organizationId, organizationId),
-				gte(calendarEvent.startAt, from),
-				lte(calendarEvent.startAt, to),
-			),
-		)
+		.where(and(...conditions))
 		.orderBy(asc(calendarEvent.startAt));
 }

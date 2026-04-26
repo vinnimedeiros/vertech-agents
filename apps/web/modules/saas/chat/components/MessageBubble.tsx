@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageMediaRenderer } from "@saas/chat/components/MessageMediaRenderer";
+import { retryMessageAction } from "@saas/chat/lib/actions";
 import type { ChatMessage } from "@saas/chat/lib/server";
 import { cn } from "@ui/lib";
 import {
@@ -8,11 +9,16 @@ import {
 	CheckCheckIcon,
 	CheckIcon,
 	ClockIcon,
+	Loader2Icon,
+	RotateCwIcon,
 	TriangleAlertIcon,
 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 type Props = {
 	message: ChatMessage;
+	organizationSlug?: string;
 };
 
 function formatTime(d: Date): string {
@@ -35,7 +41,27 @@ function StatusIcon({ status }: { status: ChatMessage["status"] }) {
 	return <CheckIcon className={cn(base, "text-foreground/50")} />;
 }
 
-export function MessageBubble({ message }: Props) {
+export function MessageBubble({ message, organizationSlug }: Props) {
+	const [retrying, setRetrying] = useState(false);
+
+	const handleRetry = async () => {
+		setRetrying(true);
+		try {
+			const res = await retryMessageAction(message.id, organizationSlug);
+			if (res.status === "SENT") {
+				toast.success("Mensagem reenviada");
+			} else {
+				toast.error("Reenvio falhou. Verifique a instância WhatsApp.");
+			}
+		} catch (err) {
+			toast.error(
+				err instanceof Error ? err.message : "Erro ao reenviar mensagem",
+			);
+		} finally {
+			setRetrying(false);
+		}
+	};
+
 	if (message.senderType === "SYSTEM") {
 		return (
 			<div className="flex justify-center py-1">
@@ -95,6 +121,25 @@ export function MessageBubble({ message }: Props) {
 				>
 					<span>{formatTime(message.createdAt)}</span>
 					{isOutbound ? <StatusIcon status={message.status} /> : null}
+					{isOutbound && message.status === "FAILED" ? (
+						<button
+							type="button"
+							onClick={handleRetry}
+							disabled={retrying}
+							className={cn(
+								"ml-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px]",
+								"text-rose-500 transition-colors hover:bg-rose-500/10 hover:text-rose-400",
+								"disabled:opacity-60",
+							)}
+						>
+							{retrying ? (
+								<Loader2Icon className="size-3 animate-spin" />
+							) : (
+								<RotateCwIcon className="size-3" />
+							)}
+							Tentar de novo
+						</button>
+					) : null}
 				</div>
 			</div>
 		</div>

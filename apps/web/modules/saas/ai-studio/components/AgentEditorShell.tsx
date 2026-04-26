@@ -113,13 +113,88 @@ export function AgentEditorShell({
 				</Button>
 			</header>
 
-			{/* Main area: 2 colunas. Esquerda nav+chat. Direita workflow+logs */}
-			<div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
-				{/* Coluna esquerda: nav (em cima) + chat (embaixo) */}
-				<div className="flex flex-1 flex-col gap-3">
-					<aside className={cn(PANEL_CLASSES, "min-h-0 flex-1 p-2")}>
-						<AgentEditorNav current={section} onChange={handleSectionChange} />
+			{/* Main area: grid com áreas. Nav fina top-left, workflow top-right,
+			    chat span esquerda+meio bottom, logs bottom-right */}
+			<div
+				className="grid min-h-0 flex-1 gap-3 overflow-hidden"
+				style={{
+					gridTemplateColumns: "11rem 1fr 1fr",
+					gridTemplateRows: "minmax(0, 1fr) auto",
+					gridTemplateAreas: '"nav workflow workflow" "chat chat logs"',
+				}}
+			>
+				{/* Nav fina top-left */}
+				<aside
+					style={{ gridArea: "nav" }}
+					className={cn(PANEL_CLASSES, "min-h-0 p-2")}
+				>
+					<AgentEditorNav current={section} onChange={handleSectionChange} />
+				</aside>
+
+				{/* Workflow + properties top-right (span 2 cols) */}
+				<div
+					style={{ gridArea: "workflow" }}
+					className="relative min-h-0 overflow-hidden"
+				>
+					<AgentWorkflow
+						agent={{
+							id: agent.id,
+							name: agent.name,
+							model: agent.model,
+							enabledTools: agent.enabledTools,
+							knowledgeDocIds: agent.knowledgeDocIds,
+						}}
+						onNodeSelect={handleNodeSelect}
+					/>
+
+					{/* Persona badge floating top-left */}
+					<div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2 rounded-lg border border-border/40 bg-background/85 px-2.5 py-1.5 backdrop-blur">
+						<Avatar className="size-6 rounded-md">
+							<AvatarFallback className="rounded-md bg-primary/10 text-[10px] text-primary">
+								{agent.name
+									.split(/\s+/)
+									.map((w) => w[0])
+									.slice(0, 2)
+									.join("")
+									.toUpperCase()}
+							</AvatarFallback>
+						</Avatar>
+						<div className="flex flex-col leading-none">
+							<span
+								className="font-medium text-[12px] text-foreground"
+								style={{ fontFamily: "var(--font-satoshi)" }}
+							>
+								{agent.name}
+							</span>
+							<span className="text-[10px] text-muted-foreground">
+								{agent.role ?? "Agente"}
+							</span>
+						</div>
+					</div>
+
+					{/* Properties slide-in absolute */}
+					<aside
+						aria-hidden={!propertiesOpen}
+						className={cn(
+							"pointer-events-auto absolute top-0 right-0 bottom-0 z-20 w-[340px]",
+							"transition-transform duration-300 ease-out",
+							propertiesOpen
+								? "translate-x-0"
+								: "translate-x-[calc(100%+1rem)]",
+						)}
+					>
+						<div className={cn(PANEL_CLASSES, "h-full")}>
+							<PropertiesPanel
+								section={section}
+								agent={agent}
+								onClose={() => setPropertiesOpen(false)}
+							/>
+						</div>
 					</aside>
+				</div>
+
+				{/* Chat bottom (span nav+meio) */}
+				<div style={{ gridArea: "chat" }}>
 					<CollapsiblePanel
 						open={chatOpen}
 						onToggle={() => setChatOpen(!chatOpen)}
@@ -152,68 +227,8 @@ export function AgentEditorShell({
 					</CollapsiblePanel>
 				</div>
 
-				{/* Coluna direita: workflow+properties (em cima) + logs (embaixo) */}
-				<div className="flex min-w-0 flex-1 flex-col gap-3">
-					{/* Workflow + properties slide-in (sobreposto) */}
-					<div className="relative min-h-0 flex-1 overflow-hidden">
-						<AgentWorkflow
-							agent={{
-								id: agent.id,
-								name: agent.name,
-								model: agent.model,
-								enabledTools: agent.enabledTools,
-								knowledgeDocIds: agent.knowledgeDocIds,
-							}}
-							onNodeSelect={handleNodeSelect}
-						/>
-
-						{/* Persona badge floating top-left */}
-						<div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2 rounded-lg border border-border/40 bg-background/85 px-2.5 py-1.5 backdrop-blur">
-							<Avatar className="size-6 rounded-md">
-								<AvatarFallback className="rounded-md bg-primary/10 text-[10px] text-primary">
-									{agent.name
-										.split(/\s+/)
-										.map((w) => w[0])
-										.slice(0, 2)
-										.join("")
-										.toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<div className="flex flex-col leading-none">
-								<span
-									className="font-medium text-[12px] text-foreground"
-									style={{ fontFamily: "var(--font-satoshi)" }}
-								>
-									{agent.name}
-								</span>
-								<span className="text-[10px] text-muted-foreground">
-									{agent.role ?? "Agente"}
-								</span>
-							</div>
-						</div>
-
-						{/* Properties slide-in absolute */}
-						<aside
-							aria-hidden={!propertiesOpen}
-							className={cn(
-								"pointer-events-auto absolute top-0 right-0 bottom-0 z-20 w-[340px]",
-								"transition-transform duration-300 ease-out",
-								propertiesOpen
-									? "translate-x-0"
-									: "translate-x-[calc(100%+1rem)]",
-							)}
-						>
-							<div className={cn(PANEL_CLASSES, "h-full")}>
-								<PropertiesPanel
-									section={section}
-									agent={agent}
-									onClose={() => setPropertiesOpen(false)}
-								/>
-							</div>
-						</aside>
-					</div>
-
-					{/* Logs colado embaixo da coluna direita */}
+				{/* Logs bottom-right */}
+				<div style={{ gridArea: "logs" }}>
 					<CollapsiblePanel
 						open={logsOpen}
 						onToggle={() => setLogsOpen(!logsOpen)}
@@ -250,7 +265,7 @@ function CollapsiblePanel({
 		<section
 			className={cn(
 				PANEL_CLASSES,
-				"flex shrink-0 flex-col transition-[height] duration-300 ease-out",
+				"flex flex-col transition-[height] duration-300 ease-out",
 				open ? "h-52" : "h-9",
 			)}
 		>

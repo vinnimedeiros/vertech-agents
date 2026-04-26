@@ -116,7 +116,7 @@ export function AgentEditorShell({
 			{/* Main area: 2 colunas. Esquerda nav+chat. Direita workflow+logs */}
 			<div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
 				{/* Coluna esquerda: nav (em cima) + chat (embaixo) */}
-				<div className="flex w-64 shrink-0 flex-col gap-3">
+				<div className="flex flex-1 flex-col gap-3">
 					<aside className={cn(PANEL_CLASSES, "min-h-0 flex-1 p-2")}>
 						<AgentEditorNav current={section} onChange={handleSectionChange} />
 					</aside>

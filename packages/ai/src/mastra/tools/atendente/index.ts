@@ -156,40 +156,145 @@ export const moverLeadStage = createTool({
 });
 
 // ============================================================
-// 3. atualizarLead — Atualiza dados básicos
+// 3. atualizarLead — Patch genérico (10 campos, 1 chamada)
 // ============================================================
+//
+// Pivot Comercial 100% — Wave 1, Bloco A.1.
+// Substitui split antigo de 3 tools (atualizarLead 3 campos +
+// definirTemperatura + outras tools por campo) por padrão genérico.
+// LLM descreve só os campos que muda; demais ficam inalterados.
+//
+// `moverLeadStage` permanece SEPARADA — semântica distinta
+// (mexe em FK + cria activity STAGE_CHANGE).
+
+const PATCH_SCHEMA = z.object({
+	titulo: z.string().min(1).optional(),
+	descricao: z.string().optional(),
+	valor: z.number().nonnegative().optional(),
+	temperatura: z.enum(["COLD", "WARM", "HOT"]).optional(),
+	prioridade: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
+	origem: z.string().optional(),
+	interesses: z.array(z.string()).optional(),
+	responsavelId: z.string().nullable().optional(),
+	tags: z.array(z.string()).optional(),
+	favoritar: z.boolean().optional(),
+	dueDate: z.string().datetime().nullable().optional(),
+});
+
+type LeadPatch = z.infer<typeof PATCH_SCHEMA>;
+
+// Mapeia campos UX-friendly do patch pra colunas reais da tabela `lead`.
+function mapPatchToColumns(patch: LeadPatch): {
+	updates: Record<string, unknown>;
+	updatedFields: string[];
+} {
+	const updates: Record<string, unknown> = {};
+	const updatedFields: string[] = [];
+
+	if (patch.titulo !== undefined) {
+		updates.title = patch.titulo;
+		updatedFields.push("titulo");
+	}
+	if (patch.descricao !== undefined) {
+		updates.description = patch.descricao;
+		updatedFields.push("descricao");
+	}
+	if (patch.valor !== undefined) {
+		updates.value = String(patch.valor);
+		updatedFields.push("valor");
+	}
+	if (patch.temperatura !== undefined) {
+		updates.temperature = patch.temperatura;
+		updatedFields.push("temperatura");
+	}
+	if (patch.prioridade !== undefined) {
+		updates.priority = patch.prioridade;
+		updatedFields.push("prioridade");
+	}
+	if (patch.origem !== undefined) {
+		updates.origin = patch.origem;
+		updatedFields.push("origem");
+	}
+	if (patch.interesses !== undefined) {
+		updates.interests = patch.interesses;
+		updatedFields.push("interesses");
+	}
+	if (patch.responsavelId !== undefined) {
+		updates.assignedTo = patch.responsavelId;
+		updatedFields.push("responsavelId");
+	}
+	if (patch.tags !== undefined) {
+		updates.tags = patch.tags;
+		updatedFields.push("tags");
+	}
+	if (patch.favoritar !== undefined) {
+		updates.starred = patch.favoritar;
+		updatedFields.push("favoritar");
+	}
+	if (patch.dueDate !== undefined) {
+		updates.dueDate = patch.dueDate ? new Date(patch.dueDate) : null;
+		updatedFields.push("dueDate");
+	}
+
+	return { updates, updatedFields };
+}
+
 export const atualizarLead = createTool({
 	id: "atualizarLead",
 	description:
-		"Atualiza dados do lead (título, descrição, valor estimado). NÃO usar pra mover stage — usar moverLeadStage.",
+		"Atualiza um ou mais campos de um lead em uma única chamada. Use SOMENTE os campos que precisa modificar dentro de `patch` (todos opcionais); campos omitidos ficam inalterados. Campos disponíveis: titulo, descricao, valor (BRL), temperatura (COLD/WARM/HOT), prioridade (LOW/NORMAL/HIGH/URGENT), origem (slug do canal), interesses (array de tags), responsavelId (user id ou null), tags (array de strings), favoritar (boolean), dueDate (ISO datetime ou null). Para mover de estágio, use moverLeadStage.",
 	inputSchema: z.object({
 		leadId: z.string(),
-		titulo: z.string().optional(),
-		descricao: z.string().optional(),
-		valor: z.number().optional(),
+		patch: PATCH_SCHEMA,
 	}),
-	outputSchema: z.object({ ok: z.boolean() }),
+	outputSchema: z.object({
+		ok: z.boolean(),
+		updatedFields: z.array(z.string()),
+	}),
 	execute: async (input: any, ctx: any) => {
 		const requestContext = ctx?.requestContext;
-		requireOrgId(requestContext as ContextLike);
-		const updates: Record<string, unknown> = {};
-		if (input.titulo !== undefined) updates.title = input.titulo;
-		if (input.descricao !== undefined) updates.description = input.descricao;
-		if (input.valor !== undefined) updates.value = String(input.valor);
+		const organizationId = requireOrgId(requestContext as ContextLike);
+		const { leadId, patch } = input as { leadId: string; patch: LeadPatch };
 
-		if (Object.keys(updates).length === 0) return { ok: true };
-		await db.update(lead).set(updates).where(eq(lead.id, input.leadId));
-		return { ok: true };
+		const { updates, updatedFields } = mapPatchToColumns(patch);
+
+		if (updatedFields.length === 0) {
+			throw new Error(
+				"patch sem campos: informe ao menos um campo para atualizar",
+			);
+		}
+
+		const existing = await db.query.lead.findFirst({
+			where: eq(lead.id, leadId),
+			columns: { id: true, organizationId: true },
+		});
+		if (!existing) {
+			throw new Error(`lead ${leadId} não encontrado`);
+		}
+		if (existing.organizationId !== organizationId) {
+			throw new Error("LEAD_NAO_PERTENCE_ORG");
+		}
+
+		updates.updatedAt = new Date();
+
+		await db.update(lead).set(updates).where(eq(lead.id, leadId));
+
+		log.info({ leadId, updatedFields }, "atualizarLead ok");
+		return { ok: true, updatedFields };
 	},
 });
 
 // ============================================================
-// 4. definirTemperatura — COLD/WARM/HOT
+// 4. definirTemperatura — alias deprecated de atualizarLead
 // ============================================================
+//
+// @deprecated Use `atualizarLead({ leadId, patch: { temperatura } })`.
+// Mantido como alias durante migração — será removido em
+// Comercial 100% Wave 4.
 export const definirTemperatura = createTool({
 	id: "definirTemperatura",
 	description:
-		"Define temperatura do lead baseado no engajamento. COLD=frio (sem interesse claro), WARM=morno (interesse mas sem urgência), HOT=quente (pronto pra fechar).",
+		"DEPRECATED. Use atualizarLead com patch { temperatura }. Mantido por compatibilidade — define apenas a temperatura do lead (COLD/WARM/HOT).",
 	inputSchema: z.object({
 		leadId: z.string(),
 		temperatura: z.enum(["COLD", "WARM", "HOT"]),
@@ -197,10 +302,20 @@ export const definirTemperatura = createTool({
 	outputSchema: z.object({ ok: z.boolean() }),
 	execute: async (input: any, ctx: any) => {
 		const requestContext = ctx?.requestContext;
-		requireOrgId(requestContext as ContextLike);
+		const organizationId = requireOrgId(requestContext as ContextLike);
+
+		const existing = await db.query.lead.findFirst({
+			where: eq(lead.id, input.leadId),
+			columns: { id: true, organizationId: true },
+		});
+		if (!existing) throw new Error(`lead ${input.leadId} não encontrado`);
+		if (existing.organizationId !== organizationId) {
+			throw new Error("LEAD_NAO_PERTENCE_ORG");
+		}
+
 		await db
 			.update(lead)
-			.set({ temperature: input.temperatura })
+			.set({ temperature: input.temperatura, updatedAt: new Date() })
 			.where(eq(lead.id, input.leadId));
 		return { ok: true };
 	},

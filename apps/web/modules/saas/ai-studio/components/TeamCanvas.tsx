@@ -1,12 +1,27 @@
 "use client";
 
+import {
+	Background,
+	BackgroundVariant,
+	type Edge,
+	Handle,
+	type Node,
+	type NodeProps,
+	type NodeTypes,
+	Position,
+	ReactFlow,
+	ReactFlowProvider,
+	useEdgesState,
+	useNodesState,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { cn } from "@ui/lib";
 import {
 	BookOpenIcon,
-	BotIcon,
 	BrainIcon,
 	HelpCircleIcon,
 	LinkIcon,
+	type LucideIcon,
 	MoreHorizontalIcon,
 	RocketIcon,
 	SparklesIcon,
@@ -25,407 +40,346 @@ type Props = {
 	organizationSlug: string;
 };
 
-const SUB_ROLES: TeamMemberRole[] = ["ANALYST", "CAMPAIGNS", "ASSISTANT"];
-
 const SUB_BIOS: Record<TeamMemberRole, string> = {
 	SUPERVISOR: "Supervisor do TIME — fala com lead, coordena especialistas.",
-	ANALYST: "Inteligência comercial. Lê pipeline, gera relatórios e propõe ações estratégicas.",
-	CAMPAIGNS: "Disparos em massa controlados. Executa campanhas após aprovação humana.",
-	ASSISTANT: "Ponte com equipe humana. Notifica via grupo WhatsApp em handoffs e situações sensíveis.",
+	ANALYST:
+		"Inteligência comercial. Lê pipeline, gera relatórios e propõe ações.",
+	CAMPAIGNS:
+		"Disparos em massa controlados. Executa campanhas após aprovação.",
+	ASSISTANT:
+		"Ponte com equipe humana. Notifica via grupo WhatsApp em handoffs.",
 };
 
 const SUB_DELEGATE: Record<TeamMemberRole, string> = {
 	SUPERVISOR: "",
-	ANALYST: "Delegue para análise de pipeline, relatórios estratégicos ou recomendações de campanha.",
-	CAMPAIGNS: "Delegue para disparar campanhas aprovadas em massa com controle anti-bloqueio.",
-	ASSISTANT: "Delegue para escalar para equipe humana ou notificar em situações sensíveis.",
+	ANALYST: "Delegue para análise estratégica e relatórios.",
+	CAMPAIGNS: "Delegue para disparar campanhas aprovadas.",
+	ASSISTANT: "Delegue para escalar para equipe humana.",
 };
 
-type RoleTheme = {
-	tint: string;
-	dot: string;
-	icon: string;
-	iconBg: string;
-};
-
-const ROLE_THEMES: Record<TeamMemberRole, RoleTheme> = {
-	SUPERVISOR: {
-		tint: "bg-[radial-gradient(ellipse_at_top,rgba(163,230,53,0.15),rgba(163,230,53,0.04)_60%,transparent)]",
-		dot: "bg-lime-400",
-		icon: "text-lime-300",
-		iconBg: "bg-lime-500/15 ring-1 ring-lime-400/30",
-	},
-	ANALYST: {
-		tint: "bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.18),rgba(34,211,238,0.04)_60%,transparent)]",
-		dot: "bg-cyan-400",
-		icon: "text-cyan-300",
-		iconBg: "bg-cyan-500/15 ring-1 ring-cyan-400/30",
-	},
-	CAMPAIGNS: {
-		tint: "bg-[radial-gradient(ellipse_at_top,rgba(251,146,60,0.18),rgba(251,146,60,0.04)_60%,transparent)]",
-		dot: "bg-orange-400",
-		icon: "text-orange-300",
-		iconBg: "bg-orange-500/15 ring-1 ring-orange-400/30",
-	},
-	ASSISTANT: {
-		tint: "bg-[radial-gradient(ellipse_at_top,rgba(167,139,250,0.18),rgba(167,139,250,0.04)_60%,transparent)]",
-		dot: "bg-violet-400",
-		icon: "text-violet-300",
-		iconBg: "bg-violet-500/15 ring-1 ring-violet-400/30",
-	},
-};
-
-const ROLE_ICON: Record<TeamMemberRole, typeof SparklesIcon> = {
+const ROLE_ICON: Record<TeamMemberRole, LucideIcon> = {
 	SUPERVISOR: SparklesIcon,
 	ANALYST: BrainIcon,
 	CAMPAIGNS: RocketIcon,
 	ASSISTANT: UsersRoundIcon,
 };
 
-export function TeamCanvas({ team, organizationSlug }: Props) {
-	const supervisor = team.members.find((m) => m.role === "SUPERVISOR");
-	const subAgents = team.members.filter((m) => m.role !== "SUPERVISOR");
-	const subAgentsByRole = new Map(subAgents.map((m) => [m.role, m]));
+const ROLE_THEMES: Record<TeamMemberRole, {
+	tint: string;
+	icon: string;
+	iconBg: string;
+	dot: string;
+}> = {
+	SUPERVISOR: {
+		tint: "bg-[radial-gradient(ellipse_at_top,rgba(163,230,53,0.18),rgba(163,230,53,0.04)_60%,transparent)]",
+		icon: "text-lime-300",
+		iconBg: "bg-lime-500/15 ring-1 ring-lime-400/30",
+		dot: "bg-lime-400",
+	},
+	ANALYST: {
+		tint: "bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.18),rgba(34,211,238,0.04)_60%,transparent)]",
+		icon: "text-cyan-300",
+		iconBg: "bg-cyan-500/15 ring-1 ring-cyan-400/30",
+		dot: "bg-cyan-400",
+	},
+	CAMPAIGNS: {
+		tint: "bg-[radial-gradient(ellipse_at_top,rgba(251,146,60,0.18),rgba(251,146,60,0.04)_60%,transparent)]",
+		icon: "text-orange-300",
+		iconBg: "bg-orange-500/15 ring-1 ring-orange-400/30",
+		dot: "bg-orange-400",
+	},
+	ASSISTANT: {
+		tint: "bg-[radial-gradient(ellipse_at_top,rgba(167,139,250,0.18),rgba(167,139,250,0.04)_60%,transparent)]",
+		icon: "text-violet-300",
+		iconBg: "bg-violet-500/15 ring-1 ring-violet-400/30",
+		dot: "bg-violet-400",
+	},
+};
 
-	return (
-		<div className="relative isolate flex min-h-[560px] flex-1 flex-col items-center overflow-hidden rounded-xl">
-			<div className="relative z-20 flex w-full flex-col items-center px-4 pt-8 pb-8 lg:px-8">
-				{/* Supervisor */}
-				<div className="flex justify-center">
-					{supervisor ? (
-						<SupervisorCard
-							member={supervisor}
-							organizationSlug={organizationSlug}
-							teamId={team.id}
-						/>
-					) : (
-						<EmptySupervisor />
-					)}
-				</div>
-
-				{/* Cards container — width fixo pra SVG alinhar com cards */}
-				<div className="relative w-full max-w-[900px]">
-					{/* SVG ocupa só o gap entre supervisor e cards row */}
-					<div className="relative h-32 w-full">
-						<ConnectionLines />
-					</div>
-
-					{/* Sub-agents row — V3: 3 papéis fixos (Analista, Campanhas, Assistente) */}
-					<div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-						{SUB_ROLES.map((role) => {
-							const member = subAgentsByRole.get(role);
-							if (member) {
-								return (
-									<MemberCard
-										key={role}
-										member={member}
-										role={role}
-										organizationSlug={organizationSlug}
-										teamId={team.id}
-									/>
-								);
-							}
-							return <EmptyMemberCard key={role} role={role} />;
-						})}
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function ConnectionLines() {
-	/*
-	 * SVG cobre o gap (h-32 = 128px) entre supervisor e cards row, alinhado
-	 * com o cards container (max-w-900). ViewBox 1000x100, preserveAspectRatio
-	 * none estica em ambos eixos.
-	 *
-	 * Endpoints x dos cards (3 colunas iguais em max-w-900):
-	 *   - Card 1 (Analista): centro 1/6 do container = 167
-	 *   - Card 2 (Campanhas): centro 3/6 = 500
-	 *   - Card 3 (Assistente): centro 5/6 = 833
-	 *
-	 * Saída supervisor: x=500 (centro do SVG = centro do cards container,
-	 * que coincide com centro horizontal da tela). Spread sutil 488/500/512
-	 * pros 3 paths não saírem do mesmo ponto.
-	 */
-	return (
-		<svg
-			aria-hidden
-			className="pointer-events-none absolute inset-0 z-0 size-full"
-			preserveAspectRatio="none"
-			viewBox="0 0 1000 100"
-		>
-			<g
-				stroke="currentColor"
-				strokeWidth="1.5"
-				strokeDasharray="4 5"
-				strokeLinecap="round"
-				fill="none"
-				vectorEffect="non-scaling-stroke"
-				className="text-foreground/30 dark:text-foreground/40"
-			>
-				<path d="M 488 0 C 488 50, 167 50, 167 100" />
-				<path d="M 500 0 L 500 100" />
-				<path d="M 512 0 C 512 50, 833 50, 833 100" />
-			</g>
-			<g
-				fill="currentColor"
-				className="text-foreground/40 dark:text-foreground/60"
-			>
-				<circle cx="500" cy="0" r="3" />
-				<circle cx="167" cy="100" r="3" />
-				<circle cx="500" cy="100" r="3" />
-				<circle cx="833" cy="100" r="3" />
-			</g>
-		</svg>
-	);
-}
-
-function CardShell({
-	role,
-	children,
-	href,
-	className,
-}: {
-	role: TeamMemberRole;
-	children: React.ReactNode;
-	href?: string;
-	className?: string;
-}) {
-	const theme = ROLE_THEMES[role];
-	const baseClass = cn(
-		"group relative isolate overflow-hidden rounded-2xl bg-card transition-all",
-		"shadow-[0_10px_30px_-15px_rgba(0,0,0,0.18),0_4px_12px_-6px_rgba(0,0,0,0.08)]",
-		"dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9),0_8px_24px_-12px_rgba(0,0,0,0.6)]",
-		"hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.25),0_6px_16px_-8px_rgba(0,0,0,0.12)]",
-		"dark:hover:shadow-[0_40px_70px_-30px_rgba(0,0,0,1),0_16px_32px_-16px_rgba(0,0,0,0.7)]",
-		className,
-	);
-
-	const content = (
-		<>
-			<div className={cn("pointer-events-none absolute inset-x-0 top-0 z-0 h-32", theme.tint)} />
-			<div className="relative z-10 flex flex-col">{children}</div>
-		</>
-	);
-
-	if (href) {
-		return (
-			<Link href={href} className={baseClass}>
-				{content}
-			</Link>
-		);
-	}
-	return <div className={baseClass}>{content}</div>;
-}
-
-function CardHeader({
-	role,
-	name,
-	subtitle,
-	avatarFallback,
-}: {
+type MemberNodeData = {
 	role: TeamMemberRole;
 	name: string;
-	subtitle?: string;
-	avatarFallback?: string;
-}) {
-	const theme = ROLE_THEMES[role];
-	const Icon = ROLE_ICON[role];
+	bio: string;
+	delegateInstruction: string;
+	tools: number;
+	docs: number;
+	href: string;
+	isSupervisor?: boolean;
+	empty?: boolean;
+};
 
-	return (
-		<div className="flex items-center gap-3 px-5 pt-5 pb-3">
-			<div className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", theme.iconBg)}>
-				{avatarFallback ? (
-					<span
-						className={cn("font-semibold text-xs", theme.icon)}
+function MemberNode({ data, selected }: NodeProps<Node<MemberNodeData>>) {
+	const theme = ROLE_THEMES[data.role];
+	const Icon = ROLE_ICON[data.role];
+	const isSupervisor = data.isSupervisor ?? false;
+	const isEmpty = data.empty ?? false;
+
+	const card = (
+		<div
+			className={cn(
+				"relative isolate overflow-hidden rounded-xl bg-zinc-900",
+				"shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8),0_4px_12px_-6px_rgba(0,0,0,0.4)]",
+				"transition-all",
+				isSupervisor ? "w-[300px]" : "w-[240px]",
+				selected ? "ring-2 ring-primary/70" : "ring-1 ring-white/5",
+				isEmpty && "opacity-70",
+			)}
+		>
+			<div
+				className={cn(
+					"pointer-events-none absolute inset-x-0 top-0 z-0",
+					isSupervisor ? "h-24" : "h-20",
+					theme.tint,
+				)}
+			/>
+
+			{isSupervisor ? (
+				<Handle
+					type="source"
+					position={Position.Bottom}
+					className="!size-2 !border-0 !bg-zinc-600"
+				/>
+			) : (
+				<Handle
+					type="target"
+					position={Position.Top}
+					className="!size-2 !border-0 !bg-zinc-600"
+				/>
+			)}
+
+			{/* Header */}
+			<div className="relative z-10 flex items-center gap-2.5 px-3.5 pt-3.5 pb-2.5">
+				<div
+					className={cn(
+						"flex size-8 shrink-0 items-center justify-center rounded-md",
+						theme.iconBg,
+					)}
+				>
+					<Icon className={cn("size-3.5", theme.icon)} />
+				</div>
+				<div className="min-w-0 flex-1">
+					<div
+						className="truncate font-medium text-[13px] text-white"
 						style={{ fontFamily: "var(--font-satoshi)" }}
 					>
-						{avatarFallback}
-					</span>
-				) : (
-					<Icon className={cn("size-4", theme.icon)} />
-				)}
-			</div>
-			<div className="min-w-0 flex-1">
-				<h4
-					className="truncate font-medium text-[15px] text-foreground tracking-tight"
-					style={{ fontFamily: "var(--font-satoshi)" }}
-				>
-					{name}
-				</h4>
-				{subtitle ? (
-					<p className="truncate text-[11px] text-muted-foreground uppercase tracking-wider">
-						{subtitle}
-					</p>
+						{isEmpty ? "Não configurado" : data.name}
+					</div>
+					<div className="truncate text-[10px] text-zinc-500 uppercase tracking-wider">
+						{ROLE_LABELS[data.role]}
+					</div>
+				</div>
+				{!isEmpty ? (
+					<button
+						type="button"
+						className="flex size-6 items-center justify-center rounded-md text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+					>
+						<MoreHorizontalIcon className="size-3.5" />
+					</button>
 				) : null}
 			</div>
-			<button
-				type="button"
-				onClick={(e) => e.preventDefault()}
-				className="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-foreground/5 hover:text-foreground group-hover:opacity-100"
-			>
-				<MoreHorizontalIcon className="size-4" />
-			</button>
+
+			{/* Body */}
+			{!isSupervisor && data.delegateInstruction ? (
+				<div className="relative z-10 flex flex-col gap-1 px-3.5 py-2">
+					<div className="font-medium text-[9px] text-zinc-500 uppercase tracking-[0.12em]">
+						Delegate instruction
+					</div>
+					<p className="line-clamp-2 text-[11.5px] text-zinc-300 leading-relaxed">
+						{data.delegateInstruction}
+					</p>
+				</div>
+			) : null}
+
+			<div className="relative z-10 flex flex-col gap-1 px-3.5 py-2">
+				<div className="font-medium text-[9px] text-zinc-500 uppercase tracking-[0.12em]">
+					Bio
+				</div>
+				<p className="line-clamp-2 text-[11.5px] text-zinc-300 leading-relaxed">
+					{data.bio}
+				</p>
+			</div>
+
+			{/* Footer */}
+			{!isEmpty ? (
+				<div className="relative z-10 flex items-center gap-3 border-zinc-800/60 border-t bg-black/20 px-3.5 py-2">
+					<FooterChip
+						icon={<WrenchIcon className="size-3" />}
+						value={data.tools}
+					/>
+					<FooterChip
+						icon={<BookOpenIcon className="size-3" />}
+						value={data.docs}
+					/>
+					<FooterChip
+						icon={<LinkIcon className="size-3" />}
+						value={0}
+					/>
+					<FooterChip
+						icon={<HelpCircleIcon className="size-3" />}
+						value={0}
+					/>
+				</div>
+			) : (
+				<div className="relative z-10 px-3.5 py-2 text-[10px] text-zinc-600 uppercase tracking-wider">
+					Aguardando setup
+				</div>
+			)}
 		</div>
 	);
+
+	if (data.href && !isEmpty) {
+		return <Link href={data.href}>{card}</Link>;
+	}
+	return card;
 }
 
-function CardSection({ label, children }: { label: string; children: React.ReactNode }) {
+function FooterChip({
+	icon,
+	value,
+}: { icon: React.ReactNode; value: number }) {
 	return (
-		<div className="flex flex-col gap-1.5 px-5 py-2.5">
-			<span className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.12em]">
-				{label}
-			</span>
-			<p className="line-clamp-3 text-[12.5px] text-foreground/80 leading-relaxed">
-				{children}
-			</p>
-		</div>
-	);
-}
-
-function CardFooter({ counts }: { counts: { tools: number; mcp: number; docs: number; links: number; faq: number } }) {
-	return (
-		<div className="mt-auto flex items-center gap-3.5 border-border/60 border-t bg-muted/30 px-5 py-3 dark:bg-black/20">
-			<FooterChip icon={<WrenchIcon className="size-3" />} value={counts.tools} />
-			<FooterChip icon={<span className="font-mono text-[8px]">MCP</span>} value={counts.mcp} />
-			<FooterChip icon={<BookOpenIcon className="size-3" />} value={counts.docs} />
-			<FooterChip icon={<LinkIcon className="size-3" />} value={counts.links} />
-			<FooterChip icon={<HelpCircleIcon className="size-3" />} value={counts.faq} />
-		</div>
-	);
-}
-
-function FooterChip({ icon, value }: { icon: React.ReactNode; value: number }) {
-	return (
-		<span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-			<span className="text-muted-foreground/70">{icon}</span>
-			<span className="font-medium tabular-nums text-foreground/90">{value}</span>
+		<span className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+			<span className="text-zinc-400">{icon}</span>
+			<span className="font-medium tabular-nums text-zinc-300">{value}</span>
 		</span>
 	);
 }
 
-function SupervisorCard({
-	member,
-	organizationSlug,
-	teamId,
-}: {
-	member: TeamWithMembers["members"][number];
-	organizationSlug: string;
-	teamId: string;
-}) {
-	const detailHref = `/app/${organizationSlug}/ai-studio/teams/${teamId}/agents/${member.agentId}`;
-	const initials = member.agent.name
-		.split(/\s+/)
-		.map((w) => w[0])
-		.slice(0, 2)
-		.join("")
-		.toUpperCase();
-	const tools = member.agent.enabledTools?.length ?? 0;
-	const docs = member.agent.knowledgeDocIds?.length ?? 0;
+const NODE_TYPES: NodeTypes = {
+	member: MemberNode,
+};
 
-	return (
-		<CardShell role="SUPERVISOR" href={detailHref} className="w-[360px]">
-			<CardHeader
-				role="SUPERVISOR"
-				name={member.agent.name}
-				subtitle="Supervisor do TIME"
-				avatarFallback={initials}
-			/>
-			<CardSection label="Instruction">
-				{member.bio || member.agent.description || "Atendente comercial. Coordena o TIME, fala com lead via WhatsApp e delega para especialistas."}
-			</CardSection>
-			<CardFooter
-				counts={{ tools, mcp: 0, docs, links: 0, faq: 0 }}
-			/>
-		</CardShell>
+const SUB_ROLES: TeamMemberRole[] = ["ANALYST", "CAMPAIGNS", "ASSISTANT"];
+
+function buildNodes(
+	team: TeamWithMembers,
+	organizationSlug: string,
+): Node<MemberNodeData>[] {
+	const supervisor = team.members.find((m) => m.role === "SUPERVISOR");
+	const subAgentsByRole = new Map(
+		team.members.filter((m) => m.role !== "SUPERVISOR").map((m) => [m.role, m]),
 	);
+
+	const nodes: Node<MemberNodeData>[] = [];
+
+	// Supervisor centralizado no topo
+	nodes.push({
+		id: "supervisor",
+		type: "member",
+		position: { x: 380, y: 0 },
+		data: supervisor
+			? {
+					role: "SUPERVISOR",
+					name: supervisor.agent.name,
+					bio:
+						supervisor.bio ||
+						supervisor.agent.description ||
+						"Atendente comercial. Coordena o TIME e fala com lead via WhatsApp.",
+					delegateInstruction: "",
+					tools: supervisor.agent.enabledTools?.length ?? 0,
+					docs: supervisor.agent.knowledgeDocIds?.length ?? 0,
+					href: `/app/${organizationSlug}/ai-studio/teams/${team.id}/agents/${supervisor.agentId}`,
+					isSupervisor: true,
+				}
+			: {
+					role: "SUPERVISOR",
+					name: "Supervisor não configurado",
+					bio: "Defina o Atendente líder do TIME.",
+					delegateInstruction: "",
+					tools: 0,
+					docs: 0,
+					href: "",
+					isSupervisor: true,
+					empty: true,
+				},
+	});
+
+	// Sub-agents alinhados embaixo
+	const subY = 320;
+	const xPositions = [60, 460, 860];
+	SUB_ROLES.forEach((role, idx) => {
+		const member = subAgentsByRole.get(role);
+		nodes.push({
+			id: `sub-${role}`,
+			type: "member",
+			position: { x: xPositions[idx], y: subY },
+			data: member
+				? {
+						role,
+						name: member.agent.name,
+						bio: member.bio || member.agent.description || SUB_BIOS[role],
+						delegateInstruction:
+							member.delegateInstruction || SUB_DELEGATE[role],
+						tools: member.agent.enabledTools?.length ?? 0,
+						docs: member.agent.knowledgeDocIds?.length ?? 0,
+						href: `/app/${organizationSlug}/ai-studio/teams/${team.id}/agents/${member.agentId}`,
+					}
+				: {
+						role,
+						name: "Não configurado",
+						bio: SUB_BIOS[role],
+						delegateInstruction: SUB_DELEGATE[role],
+						tools: 0,
+						docs: 0,
+						href: "",
+						empty: true,
+					},
+		});
+	});
+
+	return nodes;
 }
 
-function MemberCard({
-	member,
-	role,
-	organizationSlug,
-	teamId,
-}: {
-	member: TeamWithMembers["members"][number];
-	role: TeamMemberRole;
-	organizationSlug: string;
-	teamId: string;
-}) {
-	const detailHref = `/app/${organizationSlug}/ai-studio/teams/${teamId}/agents/${member.agentId}`;
-	const tools = member.agent.enabledTools?.length ?? 0;
-	const docs = member.agent.knowledgeDocIds?.length ?? 0;
+const buildEdges = (): Edge[] =>
+	SUB_ROLES.map((role) => ({
+		id: `e-supervisor-${role}`,
+		source: "supervisor",
+		target: `sub-${role}`,
+		type: "smoothstep",
+		animated: false,
+		style: {
+			stroke: "color-mix(in srgb, currentColor 35%, transparent)",
+			strokeWidth: 1.2,
+			strokeDasharray: "4 5",
+		},
+	}));
+
+export function TeamCanvas({ team, organizationSlug }: Props) {
+	const initialNodes = buildNodes(team, organizationSlug);
+	const initialEdges = buildEdges();
+	const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
+	const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
 	return (
-		<CardShell role={role} href={detailHref}>
-			<CardHeader role={role} name={member.agent.name} subtitle={ROLE_LABELS[role]} />
-			<CardSection label="Delegate instruction">
-				{member.delegateInstruction || SUB_DELEGATE[role]}
-			</CardSection>
-			<CardSection label="Bio">
-				{member.bio || member.agent.description || SUB_BIOS[role]}
-			</CardSection>
-			<CardFooter counts={{ tools, mcp: 0, docs, links: 0, faq: 0 }} />
-		</CardShell>
-	);
-}
-
-function EmptySupervisor() {
-	const theme = ROLE_THEMES.SUPERVISOR;
-	return (
-		<div className="relative isolate flex w-[360px] flex-col items-center gap-3 overflow-hidden rounded-2xl bg-card px-6 py-8 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.18)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)]">
-			<div className={cn("pointer-events-none absolute inset-x-0 top-0 z-0 h-32", theme.tint)} />
-			<div className={cn("relative z-10 flex size-12 items-center justify-center rounded-xl", theme.iconBg)}>
-				<SparklesIcon className={cn("size-5", theme.icon)} />
-			</div>
-			<div className="relative z-10 flex flex-col items-center gap-1 text-center">
-				<h4
-					className="font-medium text-sm text-foreground"
-					style={{ fontFamily: "var(--font-satoshi)" }}
+		<ReactFlowProvider>
+			<div className="size-full min-h-[560px] text-foreground">
+				<ReactFlow
+					nodes={nodes}
+					edges={edges}
+					nodeTypes={NODE_TYPES}
+					onNodesChange={onNodesChange}
+					onEdgesChange={onEdgesChange}
+					fitView
+					fitViewOptions={{ padding: 0.18, maxZoom: 1.05 }}
+					minZoom={0.3}
+					maxZoom={1.5}
+					proOptions={{ hideAttribution: true }}
+					nodesConnectable={false}
+					nodesDraggable
+					panOnDrag
+					zoomOnScroll
+					zoomOnPinch
+					zoomOnDoubleClick={false}
+					className="!bg-transparent"
 				>
-					Supervisor não configurado
-				</h4>
-				<p className="text-xs text-muted-foreground">
-					Defina o Atendente líder do TIME.
-				</p>
+					<Background
+						variant={BackgroundVariant.Dots}
+						gap={24}
+						size={1}
+						color="color-mix(in srgb, currentColor 14%, transparent)"
+					/>
+				</ReactFlow>
 			</div>
-		</div>
+		</ReactFlowProvider>
 	);
 }
-
-function EmptyMemberCard({ role }: { role: TeamMemberRole }) {
-	const theme = ROLE_THEMES[role];
-	const Icon = ROLE_ICON[role];
-
-	return (
-		<div className="relative isolate flex flex-col gap-3 overflow-hidden rounded-2xl bg-card px-5 py-5 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_20px_40px_-20px_rgba(0,0,0,0.8)]">
-			<div className={cn("pointer-events-none absolute inset-x-0 top-0 z-0 h-24 opacity-50", theme.tint)} />
-			<div className="relative z-10 flex items-center gap-2.5">
-				<div className={cn("flex size-9 items-center justify-center rounded-lg opacity-60", theme.iconBg)}>
-					<Icon className={cn("size-4", theme.icon)} />
-				</div>
-				<div className="flex flex-col">
-					<span className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.12em]">
-						{ROLE_LABELS[role]}
-					</span>
-					<span
-						className="font-medium text-[13px] text-foreground/70"
-						style={{ fontFamily: "var(--font-satoshi)" }}
-					>
-						Não configurado
-					</span>
-				</div>
-			</div>
-			<p className="relative z-10 line-clamp-3 text-xs text-muted-foreground leading-relaxed">
-				{SUB_BIOS[role]}
-			</p>
-			<div className="relative z-10 mt-auto flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
-				<BotIcon className="size-3" />
-				Aguardando setup
-			</div>
-		</div>
-	);
-}
-

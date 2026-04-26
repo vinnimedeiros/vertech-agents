@@ -45,9 +45,9 @@ export default async function TeamBuilderPage({
 
 	return (
 		<StudioCanvas>
-			<div className="flex flex-col gap-3 p-3 lg:gap-4 lg:p-4">
+			<div className="flex h-full min-h-0 flex-col gap-3 p-3">
 				{/* Header floating */}
-				<header className={cn(floatingPanel, "px-4 py-2.5")}>
+				<header className={cn(floatingPanel, "shrink-0 px-4 py-2")}>
 					<TeamHeader
 						team={{
 							id: teamRow.id,
@@ -60,8 +60,10 @@ export default async function TeamBuilderPage({
 					/>
 				</header>
 
-				{/* TIME canvas content (sem painel — flui sobre dot grid) */}
-				<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
+				{/* TIME canvas — React Flow ocupa altura restante */}
+				<div className={cn(floatingPanel, "min-h-0 flex-1")}>
+					<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
+				</div>
 			</div>
 		</StudioCanvas>
 	);

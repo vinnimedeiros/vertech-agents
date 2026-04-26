@@ -36,7 +36,7 @@ export default async function TeamBuilderPage({
 	const inspectorHref = `/app/${organizationSlug}/ai-studio/teams/${teamId}/inspector`;
 
 	return (
-		<div className="flex flex-1 flex-col p-4 lg:p-6">
+		<div className="flex h-full flex-col p-3">
 			<section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border/40 bg-card/95 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.18),0_4px_12px_-6px_rgba(0,0,0,0.08)] backdrop-blur dark:bg-card/80 dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
 				<div className="border-border/40 border-b px-5 py-3.5">
 					<TeamHeader

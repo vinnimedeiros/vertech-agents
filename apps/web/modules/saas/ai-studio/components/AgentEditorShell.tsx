@@ -50,7 +50,7 @@ export function AgentEditorShell({
 	const [logsOpen, setLogsOpen] = useState(true);
 
 	return (
-		<div className="flex h-[calc(100vh-var(--shell-header-height))] flex-col gap-3 p-4 lg:gap-4 lg:p-6">
+		<div className="flex h-full min-h-0 flex-col gap-3 p-3">
 			{/* Top floating bar — header grudado num panel próprio */}
 			<header
 				className={cn(

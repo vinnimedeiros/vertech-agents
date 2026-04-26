@@ -12,7 +12,7 @@ export default function AiStudioLayout({ children }: PropsWithChildren) {
 	return (
 		<div
 			className={cn(
-				"relative isolate flex min-h-[calc(100vh-var(--shell-header-height))] flex-col",
+				"relative isolate flex h-full min-h-0 flex-col",
 				"bg-muted/30 dark:bg-zinc-950",
 			)}
 		>

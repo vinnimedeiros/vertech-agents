@@ -272,9 +272,9 @@ function CollapsiblePanel({
 					</span>
 				</span>
 				{open ? (
-					<ChevronDownIcon className="size-3.5 text-muted-foreground" />
-				) : (
 					<ChevronUpIcon className="size-3.5 text-muted-foreground" />
+				) : (
+					<ChevronDownIcon className="size-3.5 text-muted-foreground" />
 				)}
 			</button>
 			<div

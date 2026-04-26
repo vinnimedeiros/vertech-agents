@@ -1,11 +1,12 @@
 import { cn } from "@ui/lib";
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 type Props = {
 	icon: LucideIcon;
 	title: string;
 	description?: string;
-	action?: React.ReactNode;
+	action?: ReactNode;
 	variant?: "info" | "muted";
 	className?: string;
 };

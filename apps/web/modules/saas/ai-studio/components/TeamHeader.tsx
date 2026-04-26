@@ -58,9 +58,17 @@ export function TeamHeader({ team, organizationSlug, inspectorHref }: Props) {
 						{team.name}
 					</span>
 					{brandName ? (
-						<span className="text-[12px] text-muted-foreground">
-							— {brandName}
-						</span>
+						<>
+							<span
+								aria-hidden="true"
+								className="mx-1 text-muted-foreground/40"
+							>
+								·
+							</span>
+							<span className="text-[12px] text-muted-foreground">
+								{brandName}
+							</span>
+						</>
 					) : null}
 				</nav>
 

@@ -8,14 +8,23 @@ import {
 	db,
 	desc,
 	eq,
+	ilike,
 	inArray,
 	lead,
 	leadActivity,
 	message,
 	notInArray,
+	or,
 	pipeline,
 	pipelineStage,
+	whatsappInstance,
 } from "@repo/database";
+import {
+	sendDocument as sendWhatsAppDocument,
+	sendImage as sendWhatsAppImage,
+	sendVideo as sendWhatsAppVideo,
+	sendVoiceNote as sendWhatsAppVoiceNote,
+} from "@repo/whatsapp";
 import { z } from "zod";
 import { getLogger } from "../../logger";
 
@@ -814,6 +823,499 @@ export const enviarPropostaPdf = createTool({
 });
 
 // ============================================================
+// Wave 1 A.3-A.6 — Tools P0 do Atendente (mídia, resolver, busca, NOTE)
+// ============================================================
+
+// Helper: resolve conversa WhatsApp ativa do contato (uniqueIndex
+// conversation_contact_channel_uniq garante 1 por par contato+canal).
+async function findWhatsAppConversation(
+	organizationId: string,
+	contactId: string,
+): Promise<{
+	id: string;
+	channelInstanceId: string | null;
+	phone: string | null;
+} | null> {
+	const [row] = await db
+		.select({
+			id: conversation.id,
+			channelInstanceId: conversation.channelInstanceId,
+			phone: contact.phone,
+		})
+		.from(conversation)
+		.innerJoin(contact, eq(conversation.contactId, contact.id))
+		.where(
+			and(
+				eq(conversation.organizationId, organizationId),
+				eq(conversation.contactId, contactId),
+				eq(conversation.channel, "WHATSAPP"),
+			),
+		)
+		.limit(1);
+	return row ?? null;
+}
+
+// Helper: resolve instance WhatsApp ativa pra conversa (fallback pra
+// primeira CONNECTED/CONNECTING da org se a vinculada estiver morta).
+async function resolveActiveWhatsAppInstance(
+	organizationId: string,
+	currentInstanceId: string | null,
+): Promise<string | null> {
+	if (currentInstanceId) {
+		const [row] = await db
+			.select({ status: whatsappInstance.status })
+			.from(whatsappInstance)
+			.where(eq(whatsappInstance.id, currentInstanceId))
+			.limit(1);
+		if (
+			row &&
+			(row.status === "CONNECTED" ||
+				row.status === "CONNECTING" ||
+				row.status === "DISCONNECTED")
+		) {
+			return currentInstanceId;
+		}
+	}
+	const [active] = await db
+		.select({ id: whatsappInstance.id })
+		.from(whatsappInstance)
+		.where(
+			and(
+				eq(whatsappInstance.organizationId, organizationId),
+				inArray(whatsappInstance.status, [
+					"CONNECTED",
+					"CONNECTING",
+					"DISCONNECTED",
+				]),
+			),
+		)
+		.limit(1);
+	return active?.id ?? null;
+}
+
+// ============================================================
+// 12. enviarMidia — IMAGE/AUDIO/VIDEO/DOCUMENT pelo WhatsApp
+// ============================================================
+export const enviarMidia = createTool({
+	id: "enviarMidia",
+	description:
+		"Envia mídia (imagem, áudio, vídeo ou documento) pro lead via WhatsApp. A mídia já deve estar hospedada e ter URL pública acessível. Use quando o lead pedir foto de produto, comprovante, ficha técnica em PDF, áudio explicativo etc. Atendente NÃO gera a mídia, só envia URL existente. Para enviar proposta PDF gerada, use enviarPropostaPdf.",
+	inputSchema: z.object({
+		leadId: z.string(),
+		tipo: z.enum(["IMAGE", "AUDIO", "VIDEO", "DOCUMENT"]),
+		mediaUrl: z.string().url(),
+		caption: z
+			.string()
+			.optional()
+			.describe("Texto que acompanha a mídia (não aplica em AUDIO)"),
+		mediaFileName: z
+			.string()
+			.optional()
+			.describe("Nome do arquivo (obrigatório em DOCUMENT)"),
+		mediaMimeType: z
+			.string()
+			.optional()
+			.describe("MIME type (obrigatório em DOCUMENT)"),
+	}),
+	outputSchema: z.object({
+		ok: z.boolean(),
+		messageId: z.string().nullable(),
+	}),
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
+		const organizationId = requireOrgId(requestContext as ContextLike);
+		const sandbox = isSandboxRun(requestContext as ContextLike);
+
+		const leadRow = await db.query.lead.findFirst({
+			where: eq(lead.id, input.leadId),
+			columns: { id: true, organizationId: true, contactId: true },
+		});
+		if (!leadRow) throw new Error(`lead ${input.leadId} não encontrado`);
+		if (leadRow.organizationId !== organizationId) {
+			throw new Error("LEAD_NAO_PERTENCE_ORG");
+		}
+
+		const conv = await findWhatsAppConversation(
+			organizationId,
+			leadRow.contactId,
+		);
+		if (!conv) {
+			throw new Error("CONTATO_SEM_CONVERSA_WHATSAPP");
+		}
+		if (!conv.phone) {
+			throw new Error("CONTATO_SEM_TELEFONE");
+		}
+
+		if (input.tipo === "DOCUMENT") {
+			if (!input.mediaFileName || !input.mediaMimeType) {
+				throw new Error(
+					"DOCUMENT exige mediaFileName e mediaMimeType preenchidos",
+				);
+			}
+		}
+
+		const now = new Date();
+		const [msg] = await db
+			.insert(message)
+			.values({
+				conversationId: conv.id,
+				senderType: "AGENT",
+				senderId: getAgentId(requestContext as ContextLike) ?? null,
+				direction: "OUTBOUND",
+				type: input.tipo,
+				status: "PENDING",
+				mediaUrl: input.mediaUrl,
+				mediaMimeType: input.mediaMimeType ?? null,
+				mediaFileName: input.mediaFileName ?? null,
+				caption: input.caption ?? null,
+				createdAt: now,
+			})
+			.returning({ id: message.id });
+
+		const instanceId = await resolveActiveWhatsAppInstance(
+			organizationId,
+			conv.channelInstanceId,
+		);
+		if (!instanceId) {
+			await db
+				.update(message)
+				.set({ status: "FAILED" })
+				.where(eq(message.id, msg.id));
+			throw new Error("SEM_INSTANCIA_WHATSAPP_ATIVA");
+		}
+
+		// Sandbox: registra message, não dispara real (evita queimar número).
+		if (sandbox) {
+			await db
+				.update(message)
+				.set({ status: "SENT" })
+				.where(eq(message.id, msg.id));
+			log.info(
+				{ leadId: input.leadId, tipo: input.tipo, messageId: msg.id, sandbox: true },
+				"enviarMidia ok (sandbox skip whatsapp)",
+			);
+			return { ok: true, messageId: msg.id };
+		}
+
+		try {
+			let result: any;
+			switch (input.tipo) {
+				case "IMAGE":
+					result = await sendWhatsAppImage(
+						instanceId,
+						conv.phone,
+						input.mediaUrl,
+						input.caption ?? undefined,
+					);
+					break;
+				case "VIDEO":
+					result = await sendWhatsAppVideo(
+						instanceId,
+						conv.phone,
+						input.mediaUrl,
+						input.caption ?? undefined,
+					);
+					break;
+				case "AUDIO":
+					result = await sendWhatsAppVoiceNote(
+						instanceId,
+						conv.phone,
+						input.mediaUrl,
+					);
+					break;
+				case "DOCUMENT":
+					result = await sendWhatsAppDocument(
+						instanceId,
+						conv.phone,
+						input.mediaUrl,
+						input.mediaFileName ?? "arquivo",
+						input.mediaMimeType ?? "application/octet-stream",
+					);
+					break;
+			}
+
+			await db
+				.update(message)
+				.set({ status: "SENT", externalId: result?.key?.id ?? null })
+				.where(eq(message.id, msg.id));
+
+			log.info(
+				{ leadId: input.leadId, tipo: input.tipo, messageId: msg.id },
+				"enviarMidia ok",
+			);
+			return { ok: true, messageId: msg.id };
+		} catch (err) {
+			await db
+				.update(message)
+				.set({ status: "FAILED" })
+				.where(eq(message.id, msg.id));
+			const msgErr = err instanceof Error ? err.message : String(err);
+			log.error(
+				{ err, msgErr, leadId: input.leadId, tipo: input.tipo },
+				"enviarMidia falhou no envio WhatsApp",
+			);
+			return { ok: false, messageId: msg.id };
+		}
+	},
+});
+
+// ============================================================
+// 13. marcarConversaResolvida — encerra conversa WhatsApp do lead
+// ============================================================
+export const marcarConversaResolvida = createTool({
+	id: "marcarConversaResolvida",
+	description:
+		"Marca a conversa do lead como RESOLVIDA. Use quando o atendimento foi concluído (lead virou cliente, decidiu não comprar, ou pediu para encerrar). Move a conversa para fora da caixa ativa. Aceita motivo opcional.",
+	inputSchema: z.object({
+		leadId: z.string(),
+		motivo: z
+			.string()
+			.optional()
+			.describe("Motivo do encerramento (registrado em activity NOTE)"),
+	}),
+	outputSchema: z.object({ ok: z.boolean() }),
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
+		const organizationId = requireOrgId(requestContext as ContextLike);
+		const agentId = getAgentId(requestContext as ContextLike);
+
+		const leadRow = await db.query.lead.findFirst({
+			where: eq(lead.id, input.leadId),
+			columns: { id: true, organizationId: true, contactId: true },
+		});
+		if (!leadRow) throw new Error(`lead ${input.leadId} não encontrado`);
+		if (leadRow.organizationId !== organizationId) {
+			throw new Error("LEAD_NAO_PERTENCE_ORG");
+		}
+
+		const conv = await findWhatsAppConversation(
+			organizationId,
+			leadRow.contactId,
+		);
+		if (!conv) throw new Error("CONTATO_SEM_CONVERSA");
+
+		const now = new Date();
+		await db
+			.update(conversation)
+			.set({ status: "RESOLVED", updatedAt: now })
+			.where(eq(conversation.id, conv.id));
+
+		if (input.motivo) {
+			await db.insert(leadActivity).values({
+				leadId: input.leadId,
+				type: "NOTE",
+				title: "Conversa resolvida",
+				content: input.motivo,
+				agentId,
+				isSandbox: isSandboxRun(requestContext as ContextLike),
+			});
+		}
+
+		log.info(
+			{ leadId: input.leadId, conversationId: conv.id, motivo: input.motivo },
+			"marcarConversaResolvida ok",
+		);
+		return { ok: true };
+	},
+});
+
+// ============================================================
+// 14. buscarLeadOuContato — search cross-conversation
+// ============================================================
+export const buscarLeadOuContato = createTool({
+	id: "buscarLeadOuContato",
+	description:
+		"Busca leads e contatos da organização por nome, telefone ou email. Útil quando o agente precisa identificar se uma pessoa já está cadastrada antes de criar lead novo, ou para encontrar lead específico mencionado pelo lead atual ('cliente Maria me indicou'). Retorna até 10 resultados ordenados por atualização recente.",
+	inputSchema: z.object({
+		query: z
+			.string()
+			.min(2)
+			.describe("Texto de busca (nome, telefone parcial ou email)"),
+		filtroTipo: z.enum(["LEADS", "CONTATOS", "AMBOS"]).default("AMBOS"),
+		limite: z.number().int().min(1).max(20).default(10),
+	}),
+	outputSchema: z.object({
+		resultados: z.array(
+			z.object({
+				tipo: z.enum(["LEAD", "CONTATO"]),
+				id: z.string(),
+				nome: z.string(),
+				telefone: z.string().nullable(),
+				email: z.string().nullable(),
+				leadId: z.string().nullable(),
+				stage: z.string().nullable(),
+				temperatura: z.string().nullable(),
+			}),
+		),
+		total: z.number(),
+	}),
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
+		const organizationId = requireOrgId(requestContext as ContextLike);
+		const pattern = `%${input.query}%`;
+		const limite = input.limite ?? 10;
+		const filtro = input.filtroTipo ?? "AMBOS";
+
+		type Row = {
+			tipo: "LEAD" | "CONTATO";
+			id: string;
+			nome: string;
+			telefone: string | null;
+			email: string | null;
+			leadId: string | null;
+			stage: string | null;
+			temperatura: string | null;
+		};
+
+		const resultados: Row[] = [];
+
+		if (filtro === "LEADS" || filtro === "AMBOS") {
+			const leadHits = await db
+				.select({
+					id: lead.id,
+					title: lead.title,
+					temperature: lead.temperature,
+					updatedAt: lead.updatedAt,
+					contactName: contact.name,
+					contactPhone: contact.phone,
+					contactEmail: contact.email,
+					stageName: pipelineStage.name,
+				})
+				.from(lead)
+				.innerJoin(contact, eq(lead.contactId, contact.id))
+				.innerJoin(pipelineStage, eq(lead.stageId, pipelineStage.id))
+				.where(
+					and(
+						eq(lead.organizationId, organizationId),
+						eq(lead.isSandbox, false),
+						or(
+							ilike(contact.name, pattern),
+							ilike(contact.phone, pattern),
+							ilike(contact.email, pattern),
+							ilike(lead.title, pattern),
+						),
+					),
+				)
+				.orderBy(desc(lead.updatedAt))
+				.limit(limite);
+
+			for (const r of leadHits) {
+				resultados.push({
+					tipo: "LEAD",
+					id: r.id,
+					nome: r.title ?? r.contactName,
+					telefone: r.contactPhone,
+					email: r.contactEmail,
+					leadId: r.id,
+					stage: r.stageName,
+					temperatura: r.temperature,
+				});
+			}
+		}
+
+		if (filtro === "CONTATOS" || filtro === "AMBOS") {
+			const remaining = limite - resultados.length;
+			if (remaining > 0) {
+				const contactHits = await db
+					.select({
+						id: contact.id,
+						name: contact.name,
+						phone: contact.phone,
+						email: contact.email,
+						updatedAt: contact.updatedAt,
+					})
+					.from(contact)
+					.where(
+						and(
+							eq(contact.organizationId, organizationId),
+							or(
+								ilike(contact.name, pattern),
+								ilike(contact.phone, pattern),
+								ilike(contact.email, pattern),
+							),
+						),
+					)
+					.orderBy(desc(contact.updatedAt))
+					.limit(remaining);
+
+				for (const r of contactHits) {
+					// Evita duplicar contatos já presentes via leads
+					const alreadyAsLead = resultados.some(
+						(x) =>
+							x.tipo === "LEAD" &&
+							x.telefone === r.phone &&
+							x.email === r.email,
+					);
+					if (alreadyAsLead) continue;
+					resultados.push({
+						tipo: "CONTATO",
+						id: r.id,
+						nome: r.name,
+						telefone: r.phone,
+						email: r.email,
+						leadId: null,
+						stage: null,
+						temperatura: null,
+					});
+				}
+			}
+		}
+
+		log.info(
+			{ query: input.query, filtro, total: resultados.length },
+			"buscarLeadOuContato ok",
+		);
+		return { resultados, total: resultados.length };
+	},
+});
+
+// ============================================================
+// 15. comentarLead — NOTE livre no histórico
+// ============================================================
+export const comentarLead = createTool({
+	id: "comentarLead",
+	description:
+		"Adiciona um comentário (NOTE livre) no histórico do lead. Use para registrar raciocínio, observações que não cabem em campo estruturado, ou contexto para próxima interação ('lead pediu para ligar amanhã 14h'). NÃO use para tarefas (use criarTarefa). NÃO use para mover stage (use moverLeadStage).",
+	inputSchema: z.object({
+		leadId: z.string(),
+		comentario: z.string().min(1).max(2000),
+	}),
+	outputSchema: z.object({ ok: z.boolean(), activityId: z.string() }),
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
+		const organizationId = requireOrgId(requestContext as ContextLike);
+		const agentId = getAgentId(requestContext as ContextLike);
+
+		const leadRow = await db.query.lead.findFirst({
+			where: eq(lead.id, input.leadId),
+			columns: { id: true, organizationId: true },
+		});
+		if (!leadRow) throw new Error(`lead ${input.leadId} não encontrado`);
+		if (leadRow.organizationId !== organizationId) {
+			throw new Error("LEAD_NAO_PERTENCE_ORG");
+		}
+
+		const [activity] = await db
+			.insert(leadActivity)
+			.values({
+				leadId: input.leadId,
+				type: "NOTE",
+				title: "Comentário do agente",
+				content: input.comentario,
+				agentId,
+				isSandbox: isSandboxRun(requestContext as ContextLike),
+			})
+			.returning({ id: leadActivity.id });
+
+		log.info(
+			{ leadId: input.leadId, activityId: activity.id },
+			"comentarLead ok",
+		);
+		return { ok: true, activityId: activity.id };
+	},
+});
+
+// ============================================================
 // Registry — exportado como atendenteTools
 // ============================================================
 export const atendenteTools = {
@@ -822,6 +1324,10 @@ export const atendenteTools = {
 	moverLeadStage,
 	atualizarLead,
 	definirTemperatura,
+	comentarLead,
+	buscarLeadOuContato,
+	marcarConversaResolvida,
+	enviarMidia,
 	verHistoricoLead,
 	buscarConhecimento,
 	verDisponibilidade,

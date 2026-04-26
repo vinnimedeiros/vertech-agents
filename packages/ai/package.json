@@ -8,7 +8,6 @@
 		"@mastra/pg": "^1.9.2",
 		"@mastra/rag": "^2.2.1",
 		"@repo/database": "workspace:*",
-		"@repo/whatsapp": "workspace:*",
 		"@supabase/supabase-js": "^2.103.3",
 		"ai": "^4.3.16",
 		"cheerio": "^1.2.0",

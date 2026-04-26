@@ -433,9 +433,6 @@ importers:
       '@repo/database':
         specifier: workspace:*
         version: link:../database
-      '@repo/whatsapp':
-        specifier: workspace:*
-        version: link:../whatsapp
       '@supabase/supabase-js':
         specifier: ^2.103.3
         version: 2.103.3

@@ -19,12 +19,6 @@ import {
 	pipelineStage,
 	whatsappInstance,
 } from "@repo/database";
-import {
-	sendDocument as sendWhatsAppDocument,
-	sendImage as sendWhatsAppImage,
-	sendVideo as sendWhatsAppVideo,
-	sendVoiceNote as sendWhatsAppVoiceNote,
-} from "@repo/whatsapp";
 import { z } from "zod";
 import { getLogger } from "../../logger";
 
@@ -826,6 +820,55 @@ export const enviarPropostaPdf = createTool({
 // Wave 1 A.3-A.6 — Tools P0 do Atendente (mídia, resolver, busca, NOTE)
 // ============================================================
 
+// Dynamic import quebra dependency cycle entre @repo/ai e @repo/whatsapp
+// (que depende de @repo/queue, que depende de @repo/ai). ESM dynamic
+// import não entra no graph estático do pnpm/turbopack.
+//
+// Tipos declarados inline pra preservar typecheck sem dep estática.
+// Assinaturas refletem packages/whatsapp/src/media-sender.ts.
+type WhatsAppSendResult = { key?: { id?: string } } | undefined;
+type WhatsAppSenders = {
+	sendImage: (
+		instanceId: string,
+		toPhone: string,
+		url: string,
+		caption?: string,
+	) => Promise<WhatsAppSendResult>;
+	sendVideo: (
+		instanceId: string,
+		toPhone: string,
+		url: string,
+		caption?: string,
+	) => Promise<WhatsAppSendResult>;
+	sendVoiceNote: (
+		instanceId: string,
+		toPhone: string,
+		audioUrl: string,
+	) => Promise<WhatsAppSendResult>;
+	sendDocument: (
+		instanceId: string,
+		toPhone: string,
+		url: string,
+		fileName: string,
+		mimeType: string,
+	) => Promise<WhatsAppSendResult>;
+};
+
+async function loadWhatsAppSenders(): Promise<WhatsAppSenders> {
+	// Variável escondida do TS pra evitar resolução estática de tipos.
+	// Sem isso, TS exige `@repo/whatsapp` como dep de @repo/ai (re-fecha
+	// o ciclo). Com a variável, o import vira `any` em runtime; cast
+	// pra WhatsAppSenders preserva a interface no caller.
+	const pkg = "@repo/whatsapp";
+	const wa = (await import(pkg)) as unknown as WhatsAppSenders;
+	return {
+		sendImage: wa.sendImage,
+		sendVideo: wa.sendVideo,
+		sendVoiceNote: wa.sendVoiceNote,
+		sendDocument: wa.sendDocument,
+	};
+}
+
 // Helper: resolve conversa WhatsApp ativa do contato (uniqueIndex
 // conversation_contact_channel_uniq garante 1 por par contato+canal).
 async function findWhatsAppConversation(
@@ -998,10 +1041,11 @@ export const enviarMidia = createTool({
 		}
 
 		try {
-			let result: any;
+			const senders = await loadWhatsAppSenders();
+			let result: WhatsAppSendResult;
 			switch (input.tipo) {
 				case "IMAGE":
-					result = await sendWhatsAppImage(
+					result = await senders.sendImage(
 						instanceId,
 						conv.phone,
 						input.mediaUrl,
@@ -1009,7 +1053,7 @@ export const enviarMidia = createTool({
 					);
 					break;
 				case "VIDEO":
-					result = await sendWhatsAppVideo(
+					result = await senders.sendVideo(
 						instanceId,
 						conv.phone,
 						input.mediaUrl,
@@ -1017,14 +1061,14 @@ export const enviarMidia = createTool({
 					);
 					break;
 				case "AUDIO":
-					result = await sendWhatsAppVoiceNote(
+					result = await senders.sendVoiceNote(
 						instanceId,
 						conv.phone,
 						input.mediaUrl,
 					);
 					break;
 				case "DOCUMENT":
-					result = await sendWhatsAppDocument(
+					result = await senders.sendDocument(
 						instanceId,
 						conv.phone,
 						input.mediaUrl,

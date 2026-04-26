@@ -7,11 +7,8 @@ import { notFound, redirect } from "next/navigation";
 /**
  * Construtor do TIME — Phase 11.2 (Área 2).
  *
- * Canvas visual: Supervisor (Atendente) topo + 3 sub-agents (Analista,
- * Campanhas, Assistente) fan-out conectados via curves Bezier.
- * Slots vazios mostram "Aguardando setup" até M2-03/04/05.
- *
- * Botão Inspetor (área 4) abre Mastra Studio em nova aba.
+ * Painel floating único: TeamHeader colado no topo + canvas de TIME embaixo.
+ * Tudo num cartão com sombra suave sobre canvas dot grid do layout.
  */
 export default async function TeamBuilderPage({
 	params,
@@ -39,19 +36,25 @@ export default async function TeamBuilderPage({
 	const inspectorHref = `/app/${organizationSlug}/ai-studio/teams/${teamId}/inspector`;
 
 	return (
-		<div className="flex flex-1 flex-col gap-5 px-6 py-5 lg:px-8 lg:py-6">
-			<TeamHeader
-				team={{
-					id: teamRow.id,
-					name: teamRow.name,
-					status: teamRow.status,
-					brandVoice: teamRow.brandVoice as { name?: string } | null,
-				}}
-				organizationSlug={organizationSlug}
-				inspectorHref={inspectorHref}
-			/>
+		<div className="flex flex-1 flex-col p-4 lg:p-6">
+			<section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border/40 bg-card/95 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.18),0_4px_12px_-6px_rgba(0,0,0,0.08)] backdrop-blur dark:bg-card/80 dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
+				<div className="border-border/40 border-b px-5 py-3.5">
+					<TeamHeader
+						team={{
+							id: teamRow.id,
+							name: teamRow.name,
+							status: teamRow.status,
+							brandVoice: teamRow.brandVoice as { name?: string } | null,
+						}}
+						organizationSlug={organizationSlug}
+						inspectorHref={inspectorHref}
+					/>
+				</div>
 
-			<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
+				<div className="flex-1 overflow-y-auto p-5">
+					<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
+				</div>
+			</section>
 		</div>
 	);
 }

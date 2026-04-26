@@ -35,7 +35,7 @@ type Props = {
 
 export function AgentEditorNav({ current, onChange }: Props) {
 	return (
-		<nav className="flex flex-col gap-0.5 border-border border-r bg-card/30 p-3 lg:w-56">
+		<nav className="flex flex-col gap-0.5">
 			{SECTIONS.map((s) => {
 				const isActive = s.key === current;
 				const Icon = s.icon;
@@ -44,14 +44,15 @@ export function AgentEditorNav({ current, onChange }: Props) {
 						key={s.key}
 						type="button"
 						onClick={() => onChange(s.key)}
+						style={{ fontFamily: "var(--font-satoshi)" }}
 						className={cn(
-							"flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors",
+							"flex items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] transition-colors",
 							isActive
 								? "bg-primary/10 font-medium text-foreground"
 								: "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
 						)}
 					>
-						<Icon className={cn("size-4", isActive && "text-primary")} />
+						<Icon className={cn("size-3.5", isActive && "text-primary")} />
 						{s.label}
 					</button>
 				);

@@ -88,10 +88,8 @@ export function TeamCanvas({ team, organizationSlug }: Props) {
 	const subAgentsByRole = new Map(subAgents.map((m) => [m.role, m]));
 
 	return (
-		<div className="relative isolate flex min-h-[640px] flex-1 flex-col items-center overflow-hidden rounded-2xl bg-muted/40 dark:bg-zinc-950">
-			<DotGrid />
-
-			<div className="relative z-20 flex w-full flex-col items-center px-8 pt-14 pb-14">
+		<div className="relative isolate flex min-h-[560px] flex-1 flex-col items-center overflow-hidden rounded-xl">
+			<div className="relative z-20 flex w-full flex-col items-center px-4 pt-8 pb-8 lg:px-8">
 				{/* Supervisor */}
 				<div className="flex justify-center">
 					{supervisor ? (
@@ -133,21 +131,6 @@ export function TeamCanvas({ team, organizationSlug }: Props) {
 				</div>
 			</div>
 		</div>
-	);
-}
-
-function DotGrid() {
-	return (
-		<div
-			aria-hidden
-			className="pointer-events-none absolute inset-0 z-0 opacity-60 dark:opacity-50"
-			style={{
-				backgroundImage:
-					"radial-gradient(circle at 1px 1px, color-mix(in srgb, currentColor 8%, transparent) 1px, transparent 0)",
-				backgroundSize: "24px 24px",
-				color: "var(--color-foreground)",
-			}}
-		/>
 	);
 }
 

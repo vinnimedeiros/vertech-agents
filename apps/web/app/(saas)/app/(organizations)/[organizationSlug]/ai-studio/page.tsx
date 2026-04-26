@@ -54,8 +54,8 @@ export default async function AiStudioHomePage({
 			<header className="flex items-center justify-between gap-4">
 				<div className="flex items-center gap-4">
 					<StudioTitle />
-					<span className="hidden h-4 w-px bg-zinc-800 sm:block" />
-					<p className="hidden text-[13px] text-zinc-500 sm:block">
+					<span className="hidden h-4 w-px bg-border sm:block" />
+					<p className="hidden text-[13px] text-muted-foreground sm:block">
 						TIMES de IA configurados para a {organization.name}.
 					</p>
 				</div>
@@ -64,7 +64,7 @@ export default async function AiStudioHomePage({
 					size="sm"
 					variant="outline"
 					disabled
-					className="h-8 gap-1.5 border-zinc-800 bg-zinc-900 text-[12px] text-zinc-400 hover:bg-zinc-800/60"
+					className="h-8 gap-1.5 text-[12px]"
 					title="Disponível para Master Agency"
 				>
 					<PlusIcon className="size-3.5" />

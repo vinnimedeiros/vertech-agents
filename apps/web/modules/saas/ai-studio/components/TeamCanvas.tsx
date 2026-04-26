@@ -88,7 +88,7 @@ export function TeamCanvas({ team, organizationSlug }: Props) {
 	const subAgentsByRole = new Map(subAgents.map((m) => [m.role, m]));
 
 	return (
-		<div className="relative isolate flex min-h-[640px] flex-1 flex-col items-center overflow-hidden rounded-2xl bg-zinc-950">
+		<div className="relative isolate flex min-h-[640px] flex-1 flex-col items-center overflow-hidden rounded-2xl bg-muted/40 dark:bg-zinc-950">
 			<DotGrid />
 
 			<div className="relative z-20 flex w-full flex-col items-center px-8 pt-14 pb-14">
@@ -140,11 +140,12 @@ function DotGrid() {
 	return (
 		<div
 			aria-hidden
-			className="absolute inset-0 z-0 opacity-50"
+			className="pointer-events-none absolute inset-0 z-0 opacity-60 dark:opacity-50"
 			style={{
 				backgroundImage:
-					"radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0)",
+					"radial-gradient(circle at 1px 1px, color-mix(in srgb, currentColor 8%, transparent) 1px, transparent 0)",
 				backgroundSize: "24px 24px",
+				color: "var(--color-foreground)",
 			}}
 		/>
 	);
@@ -173,18 +174,22 @@ function ConnectionLines() {
 			viewBox="0 0 1000 100"
 		>
 			<g
-				stroke="rgba(255,255,255,0.35)"
+				stroke="currentColor"
 				strokeWidth="1.5"
 				strokeDasharray="4 5"
 				strokeLinecap="round"
 				fill="none"
 				vectorEffect="non-scaling-stroke"
+				className="text-foreground/30 dark:text-foreground/40"
 			>
 				<path d="M 488 0 C 488 50, 167 50, 167 100" />
 				<path d="M 500 0 L 500 100" />
 				<path d="M 512 0 C 512 50, 833 50, 833 100" />
 			</g>
-			<g fill="rgba(255,255,255,0.6)">
+			<g
+				fill="currentColor"
+				className="text-foreground/40 dark:text-foreground/60"
+			>
 				<circle cx="500" cy="0" r="3" />
 				<circle cx="167" cy="100" r="3" />
 				<circle cx="500" cy="100" r="3" />
@@ -207,8 +212,11 @@ function CardShell({
 }) {
 	const theme = ROLE_THEMES[role];
 	const baseClass = cn(
-		"group relative isolate overflow-hidden rounded-2xl bg-zinc-900 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9),0_8px_24px_-12px_rgba(0,0,0,0.6)] transition-all",
-		"hover:-translate-y-0.5 hover:shadow-[0_40px_70px_-30px_rgba(0,0,0,1),0_16px_32px_-16px_rgba(0,0,0,0.7)]",
+		"group relative isolate overflow-hidden rounded-2xl bg-card transition-all",
+		"shadow-[0_10px_30px_-15px_rgba(0,0,0,0.18),0_4px_12px_-6px_rgba(0,0,0,0.08)]",
+		"dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9),0_8px_24px_-12px_rgba(0,0,0,0.6)]",
+		"hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.25),0_6px_16px_-8px_rgba(0,0,0,0.12)]",
+		"dark:hover:shadow-[0_40px_70px_-30px_rgba(0,0,0,1),0_16px_32px_-16px_rgba(0,0,0,0.7)]",
 		className,
 	);
 
@@ -247,17 +255,25 @@ function CardHeader({
 		<div className="flex items-center gap-3 px-5 pt-5 pb-3">
 			<div className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", theme.iconBg)}>
 				{avatarFallback ? (
-					<span className={cn("font-semibold text-xs", theme.icon)}>{avatarFallback}</span>
+					<span
+						className={cn("font-semibold text-xs", theme.icon)}
+						style={{ fontFamily: "var(--font-satoshi)" }}
+					>
+						{avatarFallback}
+					</span>
 				) : (
 					<Icon className={cn("size-4", theme.icon)} />
 				)}
 			</div>
 			<div className="min-w-0 flex-1">
-				<h4 className="truncate font-semibold text-[15px] text-white tracking-tight">
+				<h4
+					className="truncate font-medium text-[15px] text-foreground tracking-tight"
+					style={{ fontFamily: "var(--font-satoshi)" }}
+				>
 					{name}
 				</h4>
 				{subtitle ? (
-					<p className="truncate text-[11px] text-zinc-400 uppercase tracking-wider">
+					<p className="truncate text-[11px] text-muted-foreground uppercase tracking-wider">
 						{subtitle}
 					</p>
 				) : null}
@@ -265,7 +281,7 @@ function CardHeader({
 			<button
 				type="button"
 				onClick={(e) => e.preventDefault()}
-				className="flex size-7 items-center justify-center rounded-md text-zinc-500 opacity-0 transition-all hover:bg-white/5 hover:text-zinc-200 group-hover:opacity-100"
+				className="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-foreground/5 hover:text-foreground group-hover:opacity-100"
 			>
 				<MoreHorizontalIcon className="size-4" />
 			</button>
@@ -276,10 +292,10 @@ function CardHeader({
 function CardSection({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
 		<div className="flex flex-col gap-1.5 px-5 py-2.5">
-			<span className="font-medium text-[10px] text-zinc-500 uppercase tracking-[0.12em]">
+			<span className="font-medium text-[10px] text-muted-foreground uppercase tracking-[0.12em]">
 				{label}
 			</span>
-			<p className="line-clamp-3 text-[12.5px] text-zinc-300 leading-relaxed">
+			<p className="line-clamp-3 text-[12.5px] text-foreground/80 leading-relaxed">
 				{children}
 			</p>
 		</div>
@@ -288,7 +304,7 @@ function CardSection({ label, children }: { label: string; children: React.React
 
 function CardFooter({ counts }: { counts: { tools: number; mcp: number; docs: number; links: number; faq: number } }) {
 	return (
-		<div className="mt-auto flex items-center gap-3.5 border-zinc-800/60 border-t bg-black/20 px-5 py-3">
+		<div className="mt-auto flex items-center gap-3.5 border-border/60 border-t bg-muted/30 px-5 py-3 dark:bg-black/20">
 			<FooterChip icon={<WrenchIcon className="size-3" />} value={counts.tools} />
 			<FooterChip icon={<span className="font-mono text-[8px]">MCP</span>} value={counts.mcp} />
 			<FooterChip icon={<BookOpenIcon className="size-3" />} value={counts.docs} />
@@ -300,9 +316,9 @@ function CardFooter({ counts }: { counts: { tools: number; mcp: number; docs: nu
 
 function FooterChip({ icon, value }: { icon: React.ReactNode; value: number }) {
 	return (
-		<span className="flex items-center gap-1.5 text-[11px] text-zinc-500">
-			<span className="text-zinc-400">{icon}</span>
-			<span className="font-medium tabular-nums text-zinc-300">{value}</span>
+		<span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+			<span className="text-muted-foreground/70">{icon}</span>
+			<span className="font-medium tabular-nums text-foreground/90">{value}</span>
 		</span>
 	);
 }
@@ -376,14 +392,21 @@ function MemberCard({
 function EmptySupervisor() {
 	const theme = ROLE_THEMES.SUPERVISOR;
 	return (
-		<div className="relative isolate flex w-[360px] flex-col items-center gap-3 overflow-hidden rounded-2xl bg-zinc-900 px-6 py-8 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)]">
+		<div className="relative isolate flex w-[360px] flex-col items-center gap-3 overflow-hidden rounded-2xl bg-card px-6 py-8 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.18)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)]">
 			<div className={cn("pointer-events-none absolute inset-x-0 top-0 z-0 h-32", theme.tint)} />
 			<div className={cn("relative z-10 flex size-12 items-center justify-center rounded-xl", theme.iconBg)}>
 				<SparklesIcon className={cn("size-5", theme.icon)} />
 			</div>
 			<div className="relative z-10 flex flex-col items-center gap-1 text-center">
-				<h4 className="font-semibold text-sm text-white">Supervisor não configurado</h4>
-				<p className="text-xs text-zinc-400">Defina o Atendente líder do TIME.</p>
+				<h4
+					className="font-medium text-sm text-foreground"
+					style={{ fontFamily: "var(--font-satoshi)" }}
+				>
+					Supervisor não configurado
+				</h4>
+				<p className="text-xs text-muted-foreground">
+					Defina o Atendente líder do TIME.
+				</p>
 			</div>
 		</div>
 	);
@@ -394,23 +417,28 @@ function EmptyMemberCard({ role }: { role: TeamMemberRole }) {
 	const Icon = ROLE_ICON[role];
 
 	return (
-		<div className="relative isolate flex flex-col gap-3 overflow-hidden rounded-2xl bg-zinc-900 px-5 py-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_20px_40px_-20px_rgba(0,0,0,0.8)]">
+		<div className="relative isolate flex flex-col gap-3 overflow-hidden rounded-2xl bg-card px-5 py-5 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04),0_20px_40px_-20px_rgba(0,0,0,0.8)]">
 			<div className={cn("pointer-events-none absolute inset-x-0 top-0 z-0 h-24 opacity-50", theme.tint)} />
 			<div className="relative z-10 flex items-center gap-2.5">
 				<div className={cn("flex size-9 items-center justify-center rounded-lg opacity-60", theme.iconBg)}>
 					<Icon className={cn("size-4", theme.icon)} />
 				</div>
 				<div className="flex flex-col">
-					<span className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.12em]">
+					<span className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.12em]">
 						{ROLE_LABELS[role]}
 					</span>
-					<span className="font-medium text-[13px] text-zinc-400">Não configurado</span>
+					<span
+						className="font-medium text-[13px] text-foreground/70"
+						style={{ fontFamily: "var(--font-satoshi)" }}
+					>
+						Não configurado
+					</span>
 				</div>
 			</div>
-			<p className="relative z-10 line-clamp-3 text-xs text-zinc-500 leading-relaxed">
+			<p className="relative z-10 line-clamp-3 text-xs text-muted-foreground leading-relaxed">
 				{SUB_BIOS[role]}
 			</p>
-			<div className="relative z-10 mt-auto flex items-center gap-1.5 text-[10px] text-zinc-600 uppercase tracking-wider">
+			<div className="relative z-10 mt-auto flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
 				<BotIcon className="size-3" />
 				Aguardando setup
 			</div>

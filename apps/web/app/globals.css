@@ -42,36 +42,55 @@ input[cmdk-input] {
 }
 
 /* Scrollbar global — fina, sem fundo, padrão SaaS premium.
- * Aplicado em html/body e em tudo overflow:auto/scroll por default.
- * Firefox usa scrollbar-width thin + scrollbar-color custom.
- * WebKit (Chrome/Safari/Edge) usa pseudo-elementos.
+ * Forçado com !important porque Tailwind v4 preflight + Radix ScrollArea
+ * sobrescrevem em vários níveis. Aplicado em html/body/* pra cobrir tudo.
+ * Firefox: scrollbar-width thin + scrollbar-color custom.
+ * WebKit (Chrome/Safari/Edge): pseudo-elementos.
  */
-* {
-	scrollbar-width: thin;
-	scrollbar-color: rgba(120, 120, 130, 0.3) transparent;
+html,
+body,
+*,
+*::before,
+*::after {
+	scrollbar-width: thin !important;
+	scrollbar-color: rgba(120, 120, 130, 0.35) transparent !important;
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
 *::-webkit-scrollbar {
-	width: 6px;
-	height: 6px;
+	width: 6px !important;
+	height: 6px !important;
+	background: transparent !important;
 }
 
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
 *::-webkit-scrollbar-track {
-	background: transparent;
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
 }
 
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb {
-	background: rgba(120, 120, 130, 0.25);
-	border-radius: 9999px;
-	transition: background 0.2s;
+	background: rgba(120, 120, 130, 0.3) !important;
+	border-radius: 9999px !important;
+	border: none !important;
+	transition: background 0.2s !important;
 }
 
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
 *::-webkit-scrollbar-thumb:hover {
-	background: rgba(150, 150, 160, 0.45);
+	background: rgba(160, 160, 170, 0.5) !important;
 }
 
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
 *::-webkit-scrollbar-corner {
-	background: transparent;
+	background: transparent !important;
 }
 
 /* Scrollbar horizontal visível no Kanban (estilo fino mas sempre presente) */

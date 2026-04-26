@@ -60,15 +60,15 @@ function FilterPill({
 			className={cn(
 				"inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] transition-colors",
 				active
-					? "bg-zinc-800/80 text-zinc-100"
-					: "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300",
+					? "bg-muted text-foreground"
+					: "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
 			)}
 		>
 			{label}
 			<span
 				className={cn(
 					"font-mono text-[10px] tabular-nums",
-					active ? "text-zinc-400" : "text-zinc-600",
+					active ? "text-muted-foreground" : "text-muted-foreground/60",
 				)}
 			>
 				{count}

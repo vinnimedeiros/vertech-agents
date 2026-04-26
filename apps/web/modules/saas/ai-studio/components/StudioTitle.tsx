@@ -20,13 +20,13 @@ export function StudioTitle({ className, size = "md" }: Props) {
 		<div className={cn("flex items-center gap-2", className)}>
 			<span
 				className={cn(
-					"inline-flex items-center justify-center rounded-md bg-white/5 ring-1 ring-white/10",
+					"inline-flex items-center justify-center rounded-md bg-foreground/5 ring-1 ring-foreground/10",
 					isMd ? "size-6" : "size-5",
 				)}
 			>
 				<SparklesIcon
 					className={cn(
-						"text-zinc-400",
+						"text-muted-foreground",
 						isMd ? "size-3.5" : "size-3",
 					)}
 				/>
@@ -44,7 +44,11 @@ export function StudioTitle({ className, size = "md" }: Props) {
 					AI
 				</span>
 				<span
-					className="bg-gradient-to-b from-zinc-200 via-zinc-300 to-zinc-500 bg-clip-text font-normal italic text-transparent"
+					className={cn(
+						"bg-clip-text font-normal italic text-transparent",
+						"bg-gradient-to-b from-zinc-700 via-zinc-600 to-zinc-400",
+						"dark:from-zinc-200 dark:via-zinc-300 dark:to-zinc-500",
+					)}
 					style={{ fontFamily: "var(--font-baskerville)" }}
 				>
 					Studio

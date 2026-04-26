@@ -20,18 +20,23 @@ const ROLE_DOT_ORDER: TeamMemberRole[] = [
 ];
 
 const ROLE_DOT_COLOR: Record<TeamMemberRole, string> = {
-	SUPERVISOR: "bg-lime-400",
-	ANALYST: "bg-cyan-400",
-	CAMPAIGNS: "bg-orange-400",
-	ASSISTANT: "bg-violet-400",
+	SUPERVISOR: "bg-lime-500 dark:bg-lime-400",
+	ANALYST: "bg-cyan-500 dark:bg-cyan-400",
+	CAMPAIGNS: "bg-orange-500 dark:bg-orange-400",
+	ASSISTANT: "bg-violet-500 dark:bg-violet-400",
 };
 
 const STATUS_TINT: Record<TeamWithMembers["status"], string> = {
-	DRAFT: "bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.10),rgba(99,102,241,0.02)_60%,transparent)]",
-	ACTIVE: "bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.12),rgba(34,197,94,0.02)_60%,transparent)]",
-	SANDBOX: "bg-[radial-gradient(ellipse_at_top,rgba(234,179,8,0.10),rgba(234,179,8,0.02)_60%,transparent)]",
-	PAUSED: "bg-[radial-gradient(ellipse_at_top,rgba(113,113,122,0.08),transparent_60%)]",
-	ARCHIVED: "bg-[radial-gradient(ellipse_at_top,rgba(82,82,91,0.06),transparent_60%)]",
+	DRAFT:
+		"bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.10),rgba(99,102,241,0.02)_60%,transparent)] dark:bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.10),rgba(99,102,241,0.02)_60%,transparent)]",
+	ACTIVE:
+		"bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.10),rgba(34,197,94,0.02)_60%,transparent)] dark:bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.12),rgba(34,197,94,0.02)_60%,transparent)]",
+	SANDBOX:
+		"bg-[radial-gradient(ellipse_at_top,rgba(234,179,8,0.10),rgba(234,179,8,0.02)_60%,transparent)] dark:bg-[radial-gradient(ellipse_at_top,rgba(234,179,8,0.10),rgba(234,179,8,0.02)_60%,transparent)]",
+	PAUSED:
+		"bg-[radial-gradient(ellipse_at_top,rgba(113,113,122,0.06),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(113,113,122,0.08),transparent_60%)]",
+	ARCHIVED:
+		"bg-[radial-gradient(ellipse_at_top,rgba(82,82,91,0.05),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(82,82,91,0.06),transparent_60%)]",
 };
 
 export function TeamCard({ team, organizationSlug }: Props) {
@@ -44,9 +49,11 @@ export function TeamCard({ team, organizationSlug }: Props) {
 		<Link
 			href={detailHref}
 			className={cn(
-				"group relative isolate flex flex-col overflow-hidden rounded-xl bg-zinc-900 transition-all",
-				"shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8),0_4px_12px_-6px_rgba(0,0,0,0.4)]",
-				"hover:-translate-y-0.5 hover:shadow-[0_28px_50px_-20px_rgba(0,0,0,1),0_8px_18px_-8px_rgba(0,0,0,0.5)]",
+				"group relative isolate flex flex-col overflow-hidden rounded-xl bg-card transition-all",
+				"shadow-[0_8px_24px_-12px_rgba(0,0,0,0.12),0_2px_6px_-3px_rgba(0,0,0,0.08)]",
+				"dark:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8),0_4px_12px_-6px_rgba(0,0,0,0.4)]",
+				"hover:-translate-y-0.5 hover:shadow-[0_14px_32px_-14px_rgba(0,0,0,0.18),0_4px_12px_-6px_rgba(0,0,0,0.12)]",
+				"dark:hover:shadow-[0_28px_50px_-20px_rgba(0,0,0,1),0_8px_18px_-8px_rgba(0,0,0,0.5)]",
 			)}
 		>
 			{/* Status tint glow no header */}
@@ -68,7 +75,7 @@ export function TeamCard({ team, organizationSlug }: Props) {
 									"size-1.5 rounded-full transition-opacity",
 									memberRoles.has(role)
 										? ROLE_DOT_COLOR[role]
-										: "bg-zinc-700/50",
+										: "bg-muted-foreground/30",
 								)}
 								title={role}
 							/>
@@ -78,18 +85,20 @@ export function TeamCard({ team, organizationSlug }: Props) {
 
 				<div className="flex flex-col gap-0.5">
 					<h3
-						className="font-medium text-[15px] text-zinc-100 leading-tight tracking-tight"
+						className="font-medium text-[15px] text-foreground leading-tight tracking-tight"
 						style={{ fontFamily: "var(--font-satoshi)" }}
 					>
 						{team.name}
 					</h3>
-					<p className="text-[12px] text-zinc-500">
-						{brandName ? `${brandName} · ${team.members.length}/4 papéis` : `${team.members.length}/4 papéis configurados`}
+					<p className="text-[12px] text-muted-foreground">
+						{brandName
+							? `${brandName} · ${team.members.length}/4 papéis`
+							: `${team.members.length}/4 papéis configurados`}
 					</p>
 				</div>
 			</div>
 
-			<div className="relative z-10 mt-auto flex items-center gap-4 border-zinc-800/60 border-t bg-black/20 px-4 py-2.5">
+			<div className="relative z-10 mt-auto flex items-center gap-4 border-border/60 border-t bg-muted/30 px-4 py-2.5 dark:bg-black/20">
 				<MetricChip
 					icon={<MessageSquareIcon className="size-3" />}
 					value={String(metrics.leadsAttendedToday ?? 0)}
@@ -124,10 +133,10 @@ function MetricChip({
 	label: string;
 }) {
 	return (
-		<span className="flex items-center gap-1.5 text-[11px] text-zinc-500">
-			<span className="text-zinc-600">{icon}</span>
-			<span className="font-medium tabular-nums text-zinc-300">{value}</span>
-			<span className="text-zinc-600">{label}</span>
+		<span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+			<span className="text-muted-foreground/70">{icon}</span>
+			<span className="font-medium tabular-nums text-foreground/90">{value}</span>
+			<span className="text-muted-foreground/70">{label}</span>
 		</span>
 	);
 }

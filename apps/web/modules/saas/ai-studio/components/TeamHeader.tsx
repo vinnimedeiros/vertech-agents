@@ -34,30 +34,32 @@ export function TeamHeader({ team, organizationSlug, inspectorHref }: Props) {
 				<Link
 					href={`/app/${organizationSlug}/ai-studio`}
 					className={cn(
-						"flex size-7 shrink-0 items-center justify-center rounded-md text-zinc-500",
-						"transition-colors hover:bg-zinc-900 hover:text-zinc-200",
+						"flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground",
+						"transition-colors hover:bg-muted hover:text-foreground",
 					)}
 				>
 					<ArrowLeftIcon className="size-3.5" />
 				</Link>
 
-				<nav className="flex items-baseline gap-1.5 text-[12px] text-zinc-500">
+				<nav className="flex items-baseline gap-1.5 text-[12px] text-muted-foreground">
 					<Link
 						href={`/app/${organizationSlug}/ai-studio`}
-						className="transition-colors hover:text-zinc-300"
+						className="transition-colors hover:text-foreground"
 						style={{ fontFamily: "var(--font-satoshi)" }}
 					>
 						AI Studio
 					</Link>
-					<span className="text-zinc-700">/</span>
+					<span className="text-muted-foreground/50">/</span>
 					<span
-						className="font-medium text-[15px] text-zinc-100 leading-none tracking-tight"
+						className="font-medium text-[15px] text-foreground leading-none tracking-tight"
 						style={{ fontFamily: "var(--font-satoshi)" }}
 					>
 						{team.name}
 					</span>
 					{brandName ? (
-						<span className="text-[12px] text-zinc-500">— {brandName}</span>
+						<span className="text-[12px] text-muted-foreground">
+							— {brandName}
+						</span>
 					) : null}
 				</nav>
 
@@ -68,7 +70,7 @@ export function TeamHeader({ team, organizationSlug, inspectorHref }: Props) {
 				<Button
 					variant="outline"
 					size="sm"
-					className="h-8 gap-1.5 border-zinc-800 bg-zinc-900 text-[12px] text-zinc-300 hover:bg-zinc-800/60"
+					className="h-8 gap-1.5 text-[12px]"
 				>
 					<PencilIcon className="size-3.5" />
 					Editar
@@ -77,18 +79,14 @@ export function TeamHeader({ team, organizationSlug, inspectorHref }: Props) {
 					variant="outline"
 					size="sm"
 					asChild
-					className="h-8 gap-1.5 border-zinc-800 bg-zinc-900 text-[12px] text-zinc-300 hover:bg-zinc-800/60"
+					className="h-8 gap-1.5 text-[12px]"
 				>
 					<a href={inspectorHref} target="_blank" rel="noopener noreferrer">
 						<ExternalLinkIcon className="size-3.5" />
 						Inspetor
 					</a>
 				</Button>
-				<Button
-					size="sm"
-					disabled
-					className="h-8 bg-zinc-100 text-[12px] text-zinc-900 hover:bg-zinc-200"
-				>
+				<Button size="sm" disabled className="h-8 text-[12px]">
 					Salvar
 				</Button>
 			</div>

@@ -127,6 +127,12 @@ export const contact = pgTable(
 			.references(() => organization.id, { onDelete: "cascade" }),
 		name: text("name").notNull(),
 		phone: text("phone"),
+		// JID WhatsApp completo (ex: "5511999999999@s.whatsapp.net" ou
+		// "220182085685470@lid"). Preservado no inbound do Baileys e usado
+		// em sendText/sendMedia pra rotear no formato correto. Coexiste
+		// com `phone` (dígitos puros) que continua útil pra busca/dedup
+		// quando WhatsApp manda em modo legacy.
+		whatsappJid: text("whatsappJid"),
 		email: text("email"),
 		company: text("company"),
 		document: text("document"),
@@ -151,6 +157,7 @@ export const contact = pgTable(
 	(table) => [
 		index("contact_organization_idx").on(table.organizationId),
 		index("contact_phone_idx").on(table.phone),
+		index("contact_whatsapp_jid_idx").on(table.whatsappJid),
 		index("contact_email_idx").on(table.email),
 		// Upsert por telefone dentro da org (só quando há phone — múltiplos
 		// contatos sem phone continuam permitidos)

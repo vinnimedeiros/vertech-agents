@@ -113,7 +113,7 @@ export function AgentEditorShell({
 				</Button>
 			</header>
 
-			{/* Main area: nav + workflow + properties slide-in + bottom panels overlay */}
+			{/* Main area: nav + workflow (canvas infinito) + properties slide-in */}
 			<div className="relative flex min-h-0 flex-1 gap-3 overflow-hidden">
 				{/* Left nav (slim) */}
 				<aside className={cn(PANEL_CLASSES, "w-44 shrink-0 p-2")}>
@@ -157,53 +157,6 @@ export function AgentEditorShell({
 							</span>
 						</div>
 					</div>
-
-					{/* Bottom panels overlay — absolute em metades do workflow */}
-					<CollapsiblePanel
-						open={chatOpen}
-						onToggle={() => setChatOpen(!chatOpen)}
-						title="Chat colaborador"
-						icon={MessageSquareIcon}
-						side="left"
-					>
-						<div className="flex h-full flex-col">
-							<div className="flex-1 overflow-y-auto p-3">
-								<p className="text-[11.5px] text-muted-foreground italic">
-									Phase 11.3.2 — chat conversando com o Arquiteto pra editar
-									este agente.
-								</p>
-							</div>
-							<div className="flex items-center gap-2 border-border/40 border-t px-3 py-2">
-								<input
-									type="text"
-									placeholder="Editar agente conversando..."
-									disabled
-									className="flex-1 bg-transparent text-[12px] outline-none placeholder:text-muted-foreground/60"
-								/>
-								<button
-									type="button"
-									disabled
-									className="flex size-7 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground"
-								>
-									<SendHorizontalIcon className="size-3.5" />
-								</button>
-							</div>
-						</div>
-					</CollapsiblePanel>
-					<CollapsiblePanel
-						open={logsOpen}
-						onToggle={() => setLogsOpen(!logsOpen)}
-						title="Logs ao vivo (sandbox)"
-						icon={TerminalSquareIcon}
-						side="right"
-					>
-						<div className="h-full overflow-y-auto p-3 font-mono text-[11px]">
-							<p className="text-muted-foreground italic">
-								Phase 11.3.3 — execução em tempo real (tool calls, scores,
-								tokens).
-							</p>
-						</div>
-					</CollapsiblePanel>
 				</div>
 
 				{/* Properties slide-in absolute — sobre workflow, não empurra */}
@@ -224,6 +177,52 @@ export function AgentEditorShell({
 					</div>
 				</aside>
 			</div>
+
+			{/* Bottom: chat + logs colapsados, expandem independentemente */}
+			<div className="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-end">
+				<CollapsiblePanel
+					open={chatOpen}
+					onToggle={() => setChatOpen(!chatOpen)}
+					title="Chat colaborador"
+					icon={MessageSquareIcon}
+				>
+					<div className="flex h-40 flex-col">
+						<div className="flex-1 overflow-y-auto p-3">
+							<p className="text-[11.5px] text-muted-foreground italic">
+								Phase 11.3.2 — chat conversando com o Arquiteto pra editar
+								este agente.
+							</p>
+						</div>
+						<div className="flex items-center gap-2 border-border/40 border-t px-3 py-2">
+							<input
+								type="text"
+								placeholder="Editar agente conversando..."
+								disabled
+								className="flex-1 bg-transparent text-[12px] outline-none placeholder:text-muted-foreground/60"
+							/>
+							<button
+								type="button"
+								disabled
+								className="flex size-7 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground"
+							>
+								<SendHorizontalIcon className="size-3.5" />
+							</button>
+						</div>
+					</div>
+				</CollapsiblePanel>
+				<CollapsiblePanel
+					open={logsOpen}
+					onToggle={() => setLogsOpen(!logsOpen)}
+					title="Logs ao vivo (sandbox)"
+					icon={TerminalSquareIcon}
+				>
+					<div className="h-40 overflow-y-auto p-3 font-mono text-[11px]">
+						<p className="text-muted-foreground italic">
+							Phase 11.3.3 — execução em tempo real (tool calls, scores, tokens).
+						</p>
+					</div>
+				</CollapsiblePanel>
+			</div>
 		</div>
 	);
 }
@@ -234,21 +233,18 @@ function CollapsiblePanel({
 	title,
 	icon: Icon,
 	children,
-	side,
 }: {
 	open: boolean;
 	onToggle: () => void;
 	title: string;
 	icon: typeof MessageSquareIcon;
 	children: React.ReactNode;
-	side: "left" | "right";
 }) {
 	return (
 		<section
 			className={cn(
 				PANEL_CLASSES,
-				"absolute bottom-3 z-20 flex w-[calc(50%-1.25rem)] flex-col-reverse transition-[height] duration-300 ease-out",
-				side === "left" ? "left-3" : "right-3",
+				"flex flex-1 flex-col transition-[height] duration-300 ease-out",
 				open ? "h-52" : "h-9",
 			)}
 		>
@@ -274,7 +270,7 @@ function CollapsiblePanel({
 			</button>
 			<div
 				className={cn(
-					"flex-1 overflow-hidden border-border/40 border-b transition-opacity duration-200",
+					"flex-1 overflow-hidden border-border/40 border-t transition-opacity duration-200",
 					open ? "opacity-100 delay-100" : "pointer-events-none opacity-0",
 				)}
 			>

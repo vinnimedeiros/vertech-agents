@@ -1,5 +1,6 @@
 import { agent, db, eq, team } from "@repo/database";
 import { AgentEditorShell } from "@saas/ai-studio/components/AgentEditorShell";
+import { StudioCanvas } from "@saas/ai-studio/components/StudioCanvas";
 import { getActiveOrganization } from "@saas/auth/lib/server";
 import { notFound, redirect } from "next/navigation";
 
@@ -44,22 +45,24 @@ export default async function AgentEditorPage({
 	}
 
 	return (
-		<AgentEditorShell
-			agent={{
-				id: agentRow.id,
-				name: agentRow.name,
-				role: agentRow.role,
-				description: agentRow.description,
-				model: agentRow.model,
-				temperature: agentRow.temperature,
-				maxSteps: agentRow.maxSteps,
-				enabledTools: agentRow.enabledTools,
-				knowledgeDocIds: agentRow.knowledgeDocIds,
-				gender: agentRow.gender,
-			}}
-			teamName={teamRow.name}
-			organizationSlug={organizationSlug}
-			teamId={teamId}
-		/>
+		<StudioCanvas>
+			<AgentEditorShell
+				agent={{
+					id: agentRow.id,
+					name: agentRow.name,
+					role: agentRow.role,
+					description: agentRow.description,
+					model: agentRow.model,
+					temperature: agentRow.temperature,
+					maxSteps: agentRow.maxSteps,
+					enabledTools: agentRow.enabledTools,
+					knowledgeDocIds: agentRow.knowledgeDocIds,
+					gender: agentRow.gender,
+				}}
+				teamName={teamRow.name}
+				organizationSlug={organizationSlug}
+				teamId={teamId}
+			/>
+		</StudioCanvas>
 	);
 }

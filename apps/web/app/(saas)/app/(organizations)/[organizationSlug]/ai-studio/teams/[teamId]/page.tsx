@@ -1,14 +1,17 @@
 import { db, eq, team } from "@repo/database";
+import { StudioCanvas } from "@saas/ai-studio/components/StudioCanvas";
 import { TeamCanvas } from "@saas/ai-studio/components/TeamCanvas";
 import { TeamHeader } from "@saas/ai-studio/components/TeamHeader";
 import { getActiveOrganization } from "@saas/auth/lib/server";
+import { cn } from "@ui/lib";
 import { notFound, redirect } from "next/navigation";
 
 /**
  * Construtor do TIME — Phase 11.2 (Área 2).
  *
- * Painel floating único: TeamHeader colado no topo + canvas de TIME embaixo.
- * Tudo num cartão com sombra suave sobre canvas dot grid do layout.
+ * Canvas full-bleed (StudioCanvas com dot grid). Header floating no topo
+ * + content flow embaixo. Sem painel duplicado — main do AppShell já cedeu
+ * espaço via FULL_BLEED_ROUTES.
  */
 export default async function TeamBuilderPage({
 	params,
@@ -34,11 +37,17 @@ export default async function TeamBuilderPage({
 	}
 
 	const inspectorHref = `/app/${organizationSlug}/ai-studio/teams/${teamId}/inspector`;
+	const floatingPanel = cn(
+		"rounded-2xl border border-border/40 bg-card/95 backdrop-blur",
+		"shadow-[0_10px_40px_-20px_rgba(0,0,0,0.18),0_4px_12px_-6px_rgba(0,0,0,0.08)]",
+		"dark:bg-card/80 dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]",
+	);
 
 	return (
-		<div className="flex h-full flex-col p-3">
-			<section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border/40 bg-card/95 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.18),0_4px_12px_-6px_rgba(0,0,0,0.08)] backdrop-blur dark:bg-card/80 dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
-				<div className="border-border/40 border-b px-5 py-3.5">
+		<StudioCanvas>
+			<div className="flex flex-col gap-3 p-3 lg:gap-4 lg:p-4">
+				{/* Header floating */}
+				<header className={cn(floatingPanel, "px-4 py-2.5")}>
 					<TeamHeader
 						team={{
 							id: teamRow.id,
@@ -49,12 +58,11 @@ export default async function TeamBuilderPage({
 						organizationSlug={organizationSlug}
 						inspectorHref={inspectorHref}
 					/>
-				</div>
+				</header>
 
-				<div className="flex-1 overflow-y-auto p-5">
-					<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
-				</div>
-			</section>
-		</div>
+				{/* TIME canvas content (sem painel — flui sobre dot grid) */}
+				<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
+			</div>
+		</StudioCanvas>
 	);
 }

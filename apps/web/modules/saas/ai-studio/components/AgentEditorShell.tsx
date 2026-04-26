@@ -102,7 +102,7 @@ export function AgentEditorShell({
 			{/* Main area: 3 colunas floating */}
 			<div className="flex min-h-0 flex-1 gap-3 lg:gap-4">
 				{/* Left nav */}
-				<aside className={cn(PANEL_CLASSES, "w-56 shrink-0 p-2")}>
+				<aside className={cn(PANEL_CLASSES, "w-44 shrink-0 p-2")}>
 					<AgentEditorNav current={section} onChange={setSection} />
 				</aside>
 

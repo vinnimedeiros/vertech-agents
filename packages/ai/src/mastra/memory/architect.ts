@@ -9,7 +9,7 @@ import { getMastraStorage } from "../storage";
  * - `storage`: PostgresStore singleton (persiste messages + threads)
  * - `vector`: PgVector pra semanticRecall cross-thread
  * - `embedder`: text-embedding-3-small (1536d)
- * - `lastMessages: 20` + semanticRecall HNSW dotproduct
+ * - `lastMessages: 20` + semanticRecall HNSW cosine
  *
  * Working memory foi removida — o extractor LLM secundário cuida de
  * estruturar o estado, não o Arquiteto principal.
@@ -33,7 +33,7 @@ export function getArchitectAgentMemory(): Memory {
 					scope: "resource",
 					indexConfig: {
 						type: "hnsw",
-						metric: "dotproduct",
+						metric: "cosine",
 						hnsw: {
 							m: 16,
 							efConstruction: 64,

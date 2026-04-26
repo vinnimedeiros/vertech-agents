@@ -2,9 +2,12 @@ import { Agent } from "@mastra/core/agent";
 import { agent as agentTable, db, eq } from "@repo/database";
 import { getAtendenteModeInstructions } from "../instructions/atendente-modes";
 import { buildInstructions } from "../instructions/builder";
+import { getLogger } from "../logger";
 import { getCommercialAgentMemory } from "../memory/config";
 import { commercialTools } from "../tools/commercial";
 import { getTeamMembers } from "./team-members";
+
+const log = getLogger("agents/commercial");
 
 /**
  * Atendente — Supervisor do TIME comercial Vertech V3.
@@ -73,16 +76,11 @@ export function getCommercialAgent(): Agent {
 				// expõe TODAS atendenteTools. Caso contrário, filtra por configuração.
 				if (isSandbox || record.enabledTools.length === 0) {
 					const all = commercialTools as Record<string, unknown>;
-					console.log(
-						`[Atendente tools] sandbox=${isSandbox} → ${Object.keys(all).length} tools:`,
-						Object.keys(all).join(", "),
-					);
+					log.debug({ sandbox: isSandbox, count: Object.keys(all).length, tools: Object.keys(all) }, "Atendente tools resolvidas");
 					return all as never;
 				}
 				const filtered = filterTools(record.enabledTools);
-				console.log(
-					`[Atendente tools] enabledTools filter → ${Object.keys(filtered).length} tools`,
-				);
+				log.debug({ count: Object.keys(filtered).length, mode: "enabledTools filter" }, "Atendente tools resolvidas");
 				return filtered;
 			},
 

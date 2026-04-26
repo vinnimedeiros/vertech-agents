@@ -12,7 +12,7 @@ import { leadProfileSchema } from "./working-memory-schema";
  * - `vector`: PgVector pra semanticRecall cross-thread (RAG-2 memória do lead)
  * - `embedder`: text-embedding-3-small (1536d, baixo custo)
  * - `lastMessages: 30` — conversas WhatsApp tendem a ser longas
- * - `semanticRecall` HNSW dotproduct, top-K 5, escopo `resource` (lead)
+ * - `semanticRecall` HNSW cosine, top-K 5, escopo `resource` (lead)
  * - `workingMemory` com schema Zod 8 campos (`leadProfileSchema`):
  *   nome / vertical / dor / momento / ticket / decisor / urgência / objeção
  * - `observationalMemory` (Fev/2026): comprime conversas longas
@@ -43,7 +43,7 @@ export function getCommercialAgentMemory(): Memory {
 					scope: "resource",
 					indexConfig: {
 						type: "hnsw",
-						metric: "dotproduct",
+						metric: "cosine",
 						hnsw: {
 							m: 16,
 							efConstruction: 64,

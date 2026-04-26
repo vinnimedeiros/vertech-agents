@@ -1,5 +1,8 @@
+import { getLogger } from "../logger";
 import type { ArchitectWorkingMemory } from "../tools/architect/helpers";
 import { getArchitectAgentMemory } from "./architect";
+
+const log = getLogger("memory/architect");
 
 /**
  * Lê o working memory atual do Arquiteto pra uma sessão (story 09.5 fix).
@@ -27,10 +30,7 @@ export async function getArchitectWorkingMemory(params: {
 	try {
 		return JSON.parse(wmJson) as ArchitectWorkingMemory;
 	} catch (err) {
-		console.warn(
-			"[architect-memory] JSON.parse failed on working memory:",
-			err,
-		);
+		log.warn({ err, sessionId: params.sessionId }, "JSON.parse failed on working memory");
 		return null;
 	}
 }

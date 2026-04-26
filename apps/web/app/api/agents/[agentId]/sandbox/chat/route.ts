@@ -78,7 +78,6 @@ export async function POST(
 			resource: `sandbox-lead-${session.user.id}`,
 		},
 		requestContext: ctx,
-		maxSteps: 5,
 	});
 
 	const encoder = new TextEncoder();

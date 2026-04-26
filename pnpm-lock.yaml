@@ -454,6 +454,9 @@ importers:
       pdf-parse:
         specifier: ^2.4.5
         version: 2.4.5
+      pino:
+        specifier: ^9.14.0
+        version: 9.14.0
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5

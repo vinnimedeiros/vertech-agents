@@ -16,6 +16,9 @@ import {
 	pipelineStage,
 } from "@repo/database";
 import { z } from "zod";
+import { getLogger } from "../../logger";
+
+const log = getLogger("tools/atendente");
 
 /**
  * Tools core do Atendente — Roadmap V3 M2-01.
@@ -107,11 +110,11 @@ export const criarLead = createTool({
 				})
 				.returning();
 
-			console.log(`[criarLead OK] leadId=${leadRow.id} nome=${nome}`);
+			log.info({ leadId: leadRow.id, nome }, "criarLead ok");
 			return { leadId: leadRow.id, ok: true };
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : String(err);
-			console.error(`[criarLead ERRO] ${msg}`, err);
+			log.error({ err, msg }, "criarLead falhou");
 			throw new Error(`Falha ao criar lead: ${msg}`);
 		}
 	},
@@ -281,10 +284,7 @@ export const buscarConhecimento = createTool({
 		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		// TODO M2-02: wire `searchKnowledgeBase` (Phase 08-alpha pgvector)
-		console.warn(
-			"[buscarConhecimento STUB] M2-01 — wire pendente RAG-1 pgvector. Query:",
-			input.query,
-		);
+		log.warn({ query: input.query }, "buscarConhecimento STUB — wire pendente RAG-1");
 		return { trechos: [], stub: true };
 	},
 });
@@ -442,9 +442,7 @@ export const pedirHumano = createTool({
 			agentId: getAgentId(requestContext as ContextLike),
 			isSandbox: isSandboxRun(requestContext as ContextLike),
 		});
-		console.warn(
-			"[pedirHumano STUB] M2-01 — Assistente (M2-05) fará notificação real no grupo WhatsApp.",
-		);
+		log.warn({ leadId: input.leadId, urgencia: input.urgencia }, "pedirHumano STUB — Assistente (M2-05) fará notificação");
 		return { ok: true, notificacaoEnviada: false };
 	},
 });
@@ -479,9 +477,7 @@ export const enviarPropostaPdf = createTool({
 			agentId: getAgentId(requestContext as ContextLike),
 			isSandbox: isSandboxRun(requestContext as ContextLike),
 		});
-		console.warn(
-			"[enviarPropostaPdf STUB] M2-01 — service de PDF gen + envio WA pendente.",
-		);
+		log.warn({ leadId: input.leadId, plano: input.plano, valor: input.valor }, "enviarPropostaPdf STUB — PDF gen + envio WA pendente");
 		return { ok: true, pdfUrl: null };
 	},
 });

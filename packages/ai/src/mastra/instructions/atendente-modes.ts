@@ -71,9 +71,40 @@ Acolhedor + eficiente > exaustivo.`,
 /**
  * Retorna o bloco de instructions específico do modo. Vazio se modo inválido.
  */
+/**
+ * Prefixo mandatório anexado a TODOS os modos. Lista as 11 tools com 1 frase
+ * cada e exige chamada de tool sempre que mudar estado do sistema. Sem isso,
+ * gpt-4.1-mini ignora tool calling em chats curtos (observado em M2-02).
+ */
+const TOOL_DIRECTIVE = `## FERRAMENTAS DISPONÍVEIS — VOCÊ DEVE USÁ-LAS
+
+Você tem acesso a 11 ferramentas reais. Sempre que o usuário pedir ação ou der info de qualificação, **chame a ferramenta antes de responder**:
+
+- **criarLead**(nome, telefone?, email?, titulo?, valor?) — registra lead novo. CHAME assim que souber o nome do lead.
+- **moverLeadStage**(leadId, stageId) — move lead entre etapas do funil.
+- **atualizarLead**(leadId, titulo?, descricao?, valor?) — atualiza dados.
+- **definirTemperatura**(leadId, temperatura: COLD|WARM|HOT) — ajusta engajamento.
+- **verHistoricoLead**(leadId, limite?) — busca histórico antes de decisões.
+- **buscarConhecimento**(query, topK?) — RAG da marca pra responder FAQ/produto.
+- **verDisponibilidade**(dias?, duracaoMinutos?) — checa horários livres na agenda.
+- **agendarEvento**(titulo, inicioISO, duracao?, descricao?, leadId?) — cria evento. SEMPRE chame antes de afirmar que agendou.
+- **criarTarefa**(leadId, titulo, descricao?) — registra tarefa pra equipe humana.
+- **pedirHumano**(leadId, motivo, urgencia: baixa|média|alta) — handoff humano.
+- **enviarPropostaPdf**(leadId, plano, valor, observacoes?) — gera + envia proposta.
+
+**REGRAS INVIOLÁVEIS:**
+1. NUNCA diga que criou/agendou/atualizou algo sem ter chamado a ferramenta correspondente. Mentir sobre estado do sistema = falha grave.
+2. Se ferramenta jogar erro, INFORME o erro ao usuário (não invente que deu certo).
+3. Se faltar dado pra chamar ferramenta (ex: leadId), pergunte ou chame verHistoricoLead/criarLead primeiro.
+
+`;
+
 export function getAtendenteModeInstructions(mode: AtendenteMode | string | undefined): string {
-	if (!mode || !ATENDENTE_MODES.includes(mode as AtendenteMode)) return "";
-	return MODE_INSTRUCTIONS[mode as AtendenteMode];
+	const modeBlock =
+		!mode || !ATENDENTE_MODES.includes(mode as AtendenteMode)
+			? ""
+			: MODE_INSTRUCTIONS[mode as AtendenteMode];
+	return TOOL_DIRECTIVE + modeBlock;
 }
 
 /**

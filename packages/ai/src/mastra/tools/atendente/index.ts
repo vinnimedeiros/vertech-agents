@@ -72,45 +72,52 @@ export const criarLead = createTool({
 		ok: z.boolean(),
 	}),
 	execute: async ({ context, runtimeContext }: { context: any; runtimeContext: any }) => {
-		const organizationId = requireOrgId(runtimeContext as ContextLike);
-		const { nome, telefone, email, titulo, valor } = context;
+		try {
+			const organizationId = requireOrgId(runtimeContext as ContextLike);
+			const { nome, telefone, email, titulo, valor } = context;
 
-		const pipelineRow = await db.query.pipeline.findFirst({
-			where: eq(pipeline.organizationId, organizationId),
-		});
-		if (!pipelineRow) throw new Error("Org sem pipeline configurado");
+			const pipelineRow = await db.query.pipeline.findFirst({
+				where: eq(pipeline.organizationId, organizationId),
+			});
+			if (!pipelineRow) throw new Error("Org sem pipeline configurado");
 
-		const stageRow = await db.query.pipelineStage.findFirst({
-			where: eq(pipelineStage.pipelineId, pipelineRow.id),
-			orderBy: (s, { asc }) => asc(s.position),
-		});
-		if (!stageRow) throw new Error("Pipeline sem stages");
+			const stageRow = await db.query.pipelineStage.findFirst({
+				where: eq(pipelineStage.pipelineId, pipelineRow.id),
+				orderBy: (s, { asc }) => asc(s.position),
+			});
+			if (!stageRow) throw new Error("Pipeline sem stages");
 
-		const [contactRow] = await db
-			.insert(contact)
-			.values({
-				organizationId,
-				name: nome,
-				phone: telefone,
-				email,
-				source: "agent",
-			})
-			.returning();
+			const [contactRow] = await db
+				.insert(contact)
+				.values({
+					organizationId,
+					name: nome,
+					phone: telefone,
+					email,
+					source: "agent",
+				})
+				.returning();
 
-		const [leadRow] = await db
-			.insert(lead)
-			.values({
-				organizationId,
-				contactId: contactRow.id,
-				pipelineId: pipelineRow.id,
-				stageId: stageRow.id,
-				title: titulo ?? nome,
-				value: valor ? String(valor) : null,
-				isSandbox: isSandboxRun(runtimeContext as ContextLike),
-			})
-			.returning();
+			const [leadRow] = await db
+				.insert(lead)
+				.values({
+					organizationId,
+					contactId: contactRow.id,
+					pipelineId: pipelineRow.id,
+					stageId: stageRow.id,
+					title: titulo ?? nome,
+					value: valor ? String(valor) : null,
+					isSandbox: isSandboxRun(runtimeContext as ContextLike),
+				})
+				.returning();
 
-		return { leadId: leadRow.id, ok: true };
+			console.log(`[criarLead OK] leadId=${leadRow.id} nome=${nome}`);
+			return { leadId: leadRow.id, ok: true };
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			console.error(`[criarLead ERRO] ${msg}`, err);
+			throw new Error(`Falha ao criar lead: ${msg}`);
+		}
 	},
 });
 

@@ -72,9 +72,18 @@ export function getCommercialAgent(): Agent {
 				// M2-02: em sandbox OU quando enabledTools vazio (agente legacy),
 				// expõe TODAS atendenteTools. Caso contrário, filtra por configuração.
 				if (isSandbox || record.enabledTools.length === 0) {
-					return commercialTools as never;
+					const all = commercialTools as Record<string, unknown>;
+					console.log(
+						`[Atendente tools] sandbox=${isSandbox} → ${Object.keys(all).length} tools:`,
+						Object.keys(all).join(", "),
+					);
+					return all as never;
 				}
-				return filterTools(record.enabledTools);
+				const filtered = filterTools(record.enabledTools);
+				console.log(
+					`[Atendente tools] enabledTools filter → ${Object.keys(filtered).length} tools`,
+				);
+				return filtered;
 			},
 
 			memory: getCommercialAgentMemory(),

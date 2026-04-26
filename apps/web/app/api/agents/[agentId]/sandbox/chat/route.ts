@@ -68,12 +68,17 @@ export async function POST(
 	const lastUser = messages.filter((m) => m.role === "user").at(-1);
 	const userMessage = lastUser?.content ?? "";
 
+	console.log(
+		`[sandbox/chat] agentId=${agentId} mode=${mode} userMessage="${userMessage.slice(0, 80)}"`,
+	);
+
 	const stream = await agent.stream(userMessage, {
 		memory: {
 			thread: `sandbox-${agentId}-${session.user.id}`,
 			resource: `sandbox-lead-${session.user.id}`,
 		},
 		requestContext: ctx,
+		maxSteps: 5,
 	});
 
 	const encoder = new TextEncoder();

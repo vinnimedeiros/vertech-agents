@@ -1,4 +1,4 @@
-import { RequestContext, getMastra, runWithAtendenteCtx } from "@repo/ai";
+import { RequestContext, getMastra } from "@repo/ai";
 import {
 	agent as agentTable,
 	db,
@@ -72,23 +72,14 @@ export async function POST(
 		`[sandbox/chat] agentId=${agentId} mode=${mode} userMessage="${userMessage.slice(0, 80)}"`,
 	);
 
-	const stream = await runWithAtendenteCtx(
-		{
-			agentId,
-			organizationId: agentRow.organizationId,
-			isSandbox: true,
-			atendenteMode: mode,
+	const stream = await agent.stream(userMessage, {
+		memory: {
+			thread: `sandbox-${agentId}-${session.user.id}`,
+			resource: `sandbox-lead-${session.user.id}`,
 		},
-		() =>
-			agent.stream(userMessage, {
-				memory: {
-					thread: `sandbox-${agentId}-${session.user.id}`,
-					resource: `sandbox-lead-${session.user.id}`,
-				},
-				requestContext: ctx,
-				maxSteps: 5,
-			}),
-	);
+		requestContext: ctx,
+		maxSteps: 5,
+	});
 
 	const encoder = new TextEncoder();
 	const out = new ReadableStream<Uint8Array>({

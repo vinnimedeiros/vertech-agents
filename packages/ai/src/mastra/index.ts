@@ -7,11 +7,6 @@
  */
 
 export { RequestContext } from "@mastra/core/request-context";
-export {
-	getAtendenteCtx,
-	runWithAtendenteCtx,
-	type AtendenteCtx,
-} from "./runtime/context-store";
 export { getArchitectAgent } from "./agents/architect";
 export { getCommercialAgent } from "./agents/commercial";
 export {

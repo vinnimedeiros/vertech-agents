@@ -31,40 +31,21 @@ import { z } from "zod";
  * Refs: docs/PROJECT-ROADMAP-V3.md (M2-01), Visão V3 (TIME 4 agentes).
  */
 
-import { getAtendenteCtx } from "../../runtime/context-store";
-
 type ContextLike = { get: (key: string) => unknown } | undefined;
 
-/**
- * Lê contexto via AsyncLocalStorage (Node async_hooks) com fallback pra
- * requestContext do Mastra. ALS resolve bug Mastra v1.28 que não propaga
- * requestContext pra tool execute resolvida via callback dinâmico.
- */
-function readCtx<T>(
-	ctx: ContextLike,
-	key: keyof NonNullable<ReturnType<typeof getAtendenteCtx>>,
-): T | undefined {
-	const fromAls = getAtendenteCtx()?.[key];
-	if (fromAls !== undefined) return fromAls as T;
-	return ctx?.get?.(key) as T | undefined;
-}
-
 function requireOrgId(ctx: ContextLike): string {
-	const orgId = readCtx<string>(ctx, "organizationId");
+	const orgId = ctx?.get?.("organizationId") as string | undefined;
 	if (!orgId)
 		throw new Error("requestContext.organizationId é obrigatório");
 	return orgId;
 }
 
 function getAgentId(ctx: ContextLike): string | undefined {
-	return readCtx<string>(ctx, "agentId");
+	return ctx?.get?.("agentId") as string | undefined;
 }
 
-/**
- * M2-02 Sandbox: flag `isSandbox` propaga via ALS ou requestContext.
- */
 function isSandboxRun(ctx: ContextLike): boolean {
-	return Boolean(readCtx<boolean>(ctx, "isSandbox"));
+	return Boolean(ctx?.get?.("isSandbox"));
 }
 
 // ============================================================

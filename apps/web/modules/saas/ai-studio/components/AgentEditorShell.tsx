@@ -113,15 +113,15 @@ export function AgentEditorShell({
 				</Button>
 			</header>
 
-			{/* Main area: nav + workflow + properties slide-in */}
-			<div className="relative flex min-h-0 flex-1 gap-3">
+			{/* Main area: nav + workflow (canvas infinito) + properties slide-in */}
+			<div className="relative flex min-h-0 flex-1 gap-3 overflow-hidden">
 				{/* Left nav (slim) */}
 				<aside className={cn(PANEL_CLASSES, "w-44 shrink-0 p-2")}>
 					<AgentEditorNav current={section} onChange={handleSectionChange} />
 				</aside>
 
-				{/* Workflow canvas */}
-				<section className={cn(PANEL_CLASSES, "relative min-w-0 flex-1")}>
+				{/* Workflow canvas — SEM painel, direto sobre canvas dots */}
+				<div className="relative min-w-0 flex-1">
 					<AgentWorkflow
 						agent={{
 							id: agent.id,
@@ -134,7 +134,7 @@ export function AgentEditorShell({
 					/>
 
 					{/* Persona badge floating top-left */}
-					<div className="absolute top-3 left-3 z-10 flex items-center gap-2 rounded-lg border border-border/40 bg-background/80 px-2.5 py-1.5 backdrop-blur">
+					<div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2 rounded-lg border border-border/40 bg-background/85 px-2.5 py-1.5 backdrop-blur">
 						<Avatar className="size-6 rounded-md">
 							<AvatarFallback className="rounded-md bg-primary/10 text-[10px] text-primary">
 								{agent.name
@@ -157,26 +157,28 @@ export function AgentEditorShell({
 							</span>
 						</div>
 					</div>
-				</section>
+				</div>
 
-				{/* Properties slide-in floating right */}
-				{propertiesOpen ? (
-					<aside
-						className={cn(
-							PANEL_CLASSES,
-							"w-[340px] shrink-0 animate-in slide-in-from-right-2 fade-in",
-						)}
-					>
+				{/* Properties slide-in absolute — sobre workflow, não empurra */}
+				<aside
+					aria-hidden={!propertiesOpen}
+					className={cn(
+						"pointer-events-auto absolute top-0 right-0 bottom-0 w-[340px]",
+						"transition-transform duration-300 ease-out",
+						propertiesOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]",
+					)}
+				>
+					<div className={cn(PANEL_CLASSES, "h-full")}>
 						<PropertiesPanel
 							section={section}
 							agent={agent}
 							onClose={() => setPropertiesOpen(false)}
 						/>
-					</aside>
-				) : null}
+					</div>
+				</aside>
 			</div>
 
-			{/* Bottom: chat + logs collapsible */}
+			{/* Bottom: chat + logs colapsados, expandem empurrando workflow */}
 			<div className="grid shrink-0 grid-cols-1 gap-3 lg:grid-cols-2">
 				<CollapsiblePanel
 					open={chatOpen}
@@ -187,8 +189,8 @@ export function AgentEditorShell({
 					<div className="flex h-40 flex-col">
 						<div className="flex-1 overflow-y-auto p-3">
 							<p className="text-[11.5px] text-muted-foreground italic">
-								Phase 11.3.2 — chat conversando com o Arquiteto pra editar este
-								agente.
+								Phase 11.3.2 — chat conversando com o Arquiteto pra editar
+								este agente.
 							</p>
 						</div>
 						<div className="flex items-center gap-2 border-border/40 border-t px-3 py-2">

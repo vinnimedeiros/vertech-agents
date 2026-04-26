@@ -1,8 +1,6 @@
 "use client";
 
 import {
-	Background,
-	BackgroundVariant,
 	type Edge,
 	Handle,
 	type Node,
@@ -371,14 +369,7 @@ export function TeamCanvas({ team, organizationSlug }: Props) {
 					zoomOnPinch
 					zoomOnDoubleClick={false}
 					className="!bg-transparent"
-				>
-					<Background
-						variant={BackgroundVariant.Dots}
-						gap={24}
-						size={1}
-						color="color-mix(in srgb, currentColor 14%, transparent)"
-					/>
-				</ReactFlow>
+				/>
 			</div>
 		</ReactFlowProvider>
 	);

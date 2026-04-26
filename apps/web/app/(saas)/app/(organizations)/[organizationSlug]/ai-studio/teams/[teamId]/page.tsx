@@ -60,8 +60,8 @@ export default async function TeamBuilderPage({
 					/>
 				</header>
 
-				{/* TIME canvas — React Flow ocupa altura restante */}
-				<div className={cn(floatingPanel, "min-h-0 flex-1")}>
+				{/* TIME canvas — React Flow direto sobre canvas dots, SEM panel */}
+				<div className="min-h-0 flex-1 overflow-hidden">
 					<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
 				</div>
 			</div>

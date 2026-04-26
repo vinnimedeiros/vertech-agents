@@ -57,6 +57,21 @@ export async function handleIncomingMessage(
 		return;
 	}
 
+	if (remoteJid.endsWith("@lid")) {
+		// WhatsApp Anonymous mode 2024+ entrega remoteJid no formato
+		// "220182085685470@lid". Baileys 6.17 não expõe lidMapping pra
+		// resolver LID → phone real, então o split("@")[0] gravava o LID
+		// como phone do contato e criava contato/conversa fantasmas. Pior:
+		// respostas enviadas pra esses contatos tentam rotear pelo LID,
+		// que o WhatsApp aceita mas não entrega (mensagem trava em ✓).
+		// Descartamos esses inbounds até update da dep ou mapping custom.
+		console.warn(
+			"[handleIncomingMessage] inbound @lid descartado (Baileys sem lidMapping)",
+			{ remoteJid, instanceId, msgId: msg.key.id },
+		);
+		return;
+	}
+
 	const [inst] = await db
 		.select({ organizationId: whatsappInstance.organizationId })
 		.from(whatsappInstance)

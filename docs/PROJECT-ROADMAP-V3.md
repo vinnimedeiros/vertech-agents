@@ -98,13 +98,53 @@ related:
 > [!warning] Critério mensurável obrigatório
 > Cada nova adição valida coordenação ANTES de comprometer próxima. Métrica: ">70% sucesso de coordenação em sandbox playground". Se cair pra 50%, recua pra config anterior.
 
-| Phase | Agente novo | Objetivo | DoD |
-|-------|-------------|----------|-----|
-| **M2-01: Atendente solo c/ 3 modos** | Atendente | 3 modos contextuais (SDR/closer/pós-venda) + 12 tools core (Mastra schema completo) + handoff humano básico via tool | Funcional em sandbox playground. Score qualificação >70%. |
-| **M2-02: Sandbox Playground (R3)** | — | Chat playground + tabs Pipeline+Agenda + flag is_sandbox + suite testes integração CI | User testa conversando, vê pipeline avançando + agendamento aparecendo em tabs. Reset programático. |
-| **M2-03: + Analista (validação)** | + Analista | Lê pipeline + RAG-3 (Jina Reranker v3) + propõe ações em painel. NÃO conversa com lead. | Coordenação Atendente↔Analista >70% sucesso medido em Studio. Caso falhe, recua. |
-| **M2-04: + Campanhas (validação)** | + Campanhas | Workflow Mastra com suspend/resume + queue BullMQ + delay 30s±10s + opt-out + circuit breaker | Coordenação 3 agentes >70%. Campanha enfileira → envia → suspende esperando lead → retoma webhook. |
-| **M2-05: + Assistente (validação final TIME)** | + Assistente | Opera só em grupo WhatsApp interno cliente+equipe. Recebe `pedirHumano(motivo, urgência)` do Atendente. | TIME 4 agentes coordenados >70% sucesso. Pronto pra prod (M7). |
+| Phase | Agente novo | Objetivo | DoD | Status |
+|-------|-------------|----------|-----|--------|
+| **M2-01: Atendente solo c/ 3 modos** | Atendente | 3 modos contextuais (SDR/closer/pós-venda) + 12 tools core (Mastra schema completo) + handoff humano básico via tool | Funcional em sandbox playground. Score qualificação >70%. | ✅ Concluído |
+| **M2-02: Sandbox Playground (R3)** | — | Chat playground + tabs Pipeline+Agenda + flag is_sandbox + suite testes integração CI | User testa conversando, vê pipeline avançando + agendamento aparecendo em tabs. Reset programático. | ✅ Concluído |
+| **M2-03: + Analista (validação)** | + Analista | Lê pipeline + RAG-3 (Jina Reranker v3) + propõe ações em painel. NÃO conversa com lead. | Coordenação Atendente↔Analista >70% sucesso medido em Studio. Caso falhe, recua. | 🔒 **CONGELADO até Comercial 100%** |
+| **M2-04: + Campanhas (validação)** | + Campanhas | Workflow Mastra com suspend/resume + queue BullMQ + delay 30s±10s + opt-out + circuit breaker | Coordenação 3 agentes >70%. Campanha enfileira → envia → suspende esperando lead → retoma webhook. | 🔒 **CONGELADO até Comercial 100%** |
+| **M2-05: + Assistente (validação final TIME)** | + Assistente | Opera só em grupo WhatsApp interno cliente+equipe. Recebe `pedirHumano(motivo, urgência)` do Atendente. | TIME 4 agentes coordenados >70% sucesso. Pronto pra prod (M7). | 🔒 **CONGELADO até Comercial 100%** |
+
+---
+
+## Comercial 100% — pivot pré-agentes (2026-04-26)
+
+> [!warning] Decisão fundadora — Vinni (CEO) 2026-04-26
+> Phase 11 (resto) + M2-03/04/05 **CONGELADOS**. Foco total em deixar setor comercial 100% funcional ANTES de retomar agentes. Agente Analista (M2-03) opera sobre o pipeline; sem dashboard de verdade + métricas reais + tools P0 + integrações funcionando, Analista nasce cego.
+>
+> **Epic completo:** `docs/stories/comercial-100/EPIC.md` (COMERCIAL-100, 42 stories, ~175-220h, 5-7 semanas)
+
+### 9 blocos paralelizáveis (4 waves)
+
+| Bloco | Tema | Estimativa | Wave |
+|---|---|---|---|
+| **A** | Tools P0 (6 tools + bug fix + refactor genérico) | 15-20h | 1 |
+| **G** | Code health audit + quick wins | 8h + N | 1 |
+| **I.1** | Padrão floating canônico (componentes base) | 4h | 1 |
+| **D** | Agenda completa + Google Calendar OAuth | 25-30h | 2 |
+| **E** | Integrações refeitas (cards floating) | 15-20h | 2 |
+| **H** | Dashboard v2 (refazer 100%) | 35-45h | 2 |
+| **I.2** | Chat estrutura visual floating | 12h | 2 |
+| **B** | Tab Follow-up (supervisão) | 20-25h | 3 |
+| **C** | Tab Campanhas (controle) | 30-35h | 3 |
+| **I.3-I.4** | Listas auxiliares floating | 10h | 3 |
+| **F** | Propostas placeholder | 1h | 4 |
+| **I.5** | Auditoria visual final | 4h | 4 |
+
+### DoD pivot Comercial 100%
+
+- 6 tools P0 funcionais + bug `criarLead` corrigido + tool genérica `atualizarLead({patch})`
+- Tab Follow-up com supervisão completa
+- Tab Campanhas com fluxo aprovação humana + dispatch
+- Agenda CRUD backend + Google Calendar OAuth bidirecional
+- Integrações UI refeita (cards floating WA + Google)
+- Propostas placeholder
+- Audit aplicado (P0 quick wins)
+- Dashboard v2 com cards topo + métricas profundas + filtro período + gráficos padrão ouro
+- Chat + listas em padrão floating consistente
+- Vinni aprovou cada bloco no quality gate humano
+- M2-03/04/05 retomáveis
 
 ---
 

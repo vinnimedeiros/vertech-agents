@@ -23,7 +23,7 @@ export function TeamFilters({ counts, currentStatus, basePath }: Props) {
 	const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
 	return (
-		<nav className="flex flex-wrap items-center gap-2 border-border/50 border-b pb-4">
+		<nav className="flex flex-wrap items-center gap-1.5">
 			<FilterPill
 				href={basePath}
 				label="Todos"
@@ -58,17 +58,17 @@ function FilterPill({
 		<Link
 			href={href}
 			className={cn(
-				"flex items-center gap-2 rounded-md border px-3 py-1.5 font-medium text-xs transition-colors",
+				"inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] transition-colors",
 				active
-					? "border-primary/50 bg-primary/10 text-foreground"
-					: "border-border bg-card text-muted-foreground hover:border-border/80 hover:bg-muted/50 hover:text-foreground",
+					? "bg-zinc-800/80 text-zinc-100"
+					: "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300",
 			)}
 		>
 			{label}
 			<span
 				className={cn(
-					"rounded-full bg-muted/50 px-1.5 py-0.5 font-mono text-[10px]",
-					active && "bg-primary/20 text-primary",
+					"font-mono text-[10px] tabular-nums",
+					active ? "text-zinc-400" : "text-zinc-600",
 				)}
 			>
 				{count}

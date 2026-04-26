@@ -15,8 +15,8 @@ export function TeamGrid({ teams, organizationSlug, isEmpty }: Props) {
 
 	if (teams.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border border-dashed bg-muted/10 py-16 text-center">
-				<p className="text-muted-foreground text-sm">
+			<div className="flex items-center justify-center rounded-xl bg-zinc-950/50 py-12 text-center">
+				<p className="text-[13px] text-zinc-500">
 					Nenhum TIME corresponde ao filtro.
 				</p>
 			</div>
@@ -24,7 +24,7 @@ export function TeamGrid({ teams, organizationSlug, isEmpty }: Props) {
 	}
 
 	return (
-		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+		<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 			{teams.map((team) => (
 				<TeamCard
 					key={team.id}
@@ -38,17 +38,20 @@ export function TeamGrid({ teams, organizationSlug, isEmpty }: Props) {
 
 function EmptyState() {
 	return (
-		<div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border border-dashed bg-muted/10 py-20 text-center">
-			<div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-				<SparklesIcon className="size-8" />
+		<div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-zinc-950/50 px-6 py-16 text-center">
+			<div className="flex size-12 items-center justify-center rounded-xl bg-white/5 ring-1 ring-white/10">
+				<SparklesIcon className="size-5 text-zinc-400" />
 			</div>
 			<div className="flex flex-col gap-1">
-				<h2 className="font-semibold text-foreground text-lg">
+				<h2
+					className="font-medium text-[15px] text-zinc-200"
+					style={{ fontFamily: "var(--font-satoshi)" }}
+				>
 					Nenhum TIME configurado
 				</h2>
-				<p className="max-w-md text-muted-foreground text-sm">
+				<p className="max-w-sm text-[12.5px] text-zinc-500 leading-relaxed">
 					A Master Agency Vertech configurará o primeiro TIME para esta
-					organização. Aguarde o setup ou entre em contato com a equipe.
+					organização.
 				</p>
 			</div>
 		</div>

@@ -17,22 +17,18 @@ import { useState } from "react";
 import { studioToasts } from "../lib/studio-toasts";
 import { AgentEditorNav, type Section } from "./AgentEditorNav";
 import { AgentWorkflow } from "./AgentWorkflow";
-
-type Agent = {
-	id: string;
-	name: string;
-	role: string | null;
-	description: string | null;
-	model: string;
-	temperature: number;
-	maxSteps: number;
-	enabledTools: string[] | null;
-	knowledgeDocIds: string[] | null;
-	gender: string | null;
-};
+import {
+	DeployView,
+	type EditorAgent,
+	MemoryView,
+	ModelForm,
+	ModesView,
+	PersonaForm,
+	ToolsPlaceholder,
+} from "./PropertiesForms";
 
 type Props = {
-	agent: Agent;
+	agent: EditorAgent;
 	teamName: string;
 	organizationSlug: string;
 	teamId: string;
@@ -295,7 +291,7 @@ function PropertiesPanel({
 	onClose,
 }: {
 	section: Section;
-	agent: Agent;
+	agent: EditorAgent;
 	onClose: () => void;
 }) {
 	const labels: Record<Section, string> = {
@@ -331,33 +327,24 @@ function PropertiesPanel({
 	);
 }
 
-function SectionForm({ section, agent }: { section: Section; agent: Agent }) {
-	if (section === "model") {
-		return (
-			<div className="flex flex-col gap-3 text-[12px]">
-				<KV label="Modelo" value={agent.model} />
-				<KV label="Temperatura" value={agent.temperature.toFixed(2)} />
-				<KV label="Max steps" value={String(agent.maxSteps)} />
-				<p className="mt-2 text-[11px] text-muted-foreground italic">
-					Editor de modelo chega na próxima iteração.
-				</p>
-			</div>
-		);
+function SectionForm({
+	section,
+	agent,
+}: { section: Section; agent: EditorAgent }) {
+	switch (section) {
+		case "persona":
+			return <PersonaForm agent={agent} />;
+		case "model":
+			return <ModelForm agent={agent} />;
+		case "memory":
+			return <MemoryView />;
+		case "modes":
+			return <ModesView agent={agent} />;
+		case "tools":
+			return <ToolsPlaceholder />;
+		case "deploy":
+			return <DeployView agent={agent} />;
+		default:
+			return null;
 	}
-	return (
-		<div className="rounded-lg bg-muted/30 p-4 text-center">
-			<p className="text-[11.5px] text-muted-foreground">
-				Editor desta seção chega na próxima iteração.
-			</p>
-		</div>
-	);
-}
-
-function KV({ label, value }: { label: string; value: string }) {
-	return (
-		<div className="flex justify-between gap-2">
-			<span className="text-muted-foreground">{label}</span>
-			<span className="font-mono text-foreground/90">{value}</span>
-		</div>
-	);
 }

@@ -244,7 +244,7 @@ function CollapsiblePanel({
 		<section
 			className={cn(
 				PANEL_CLASSES,
-				"flex flex-col-reverse transition-[height] duration-300 ease-out",
+				"flex flex-col transition-[height] duration-300 ease-out",
 				open ? "h-52" : "h-9",
 			)}
 		>
@@ -270,7 +270,7 @@ function CollapsiblePanel({
 			</button>
 			<div
 				className={cn(
-					"flex-1 overflow-hidden border-border/40 border-b transition-opacity duration-200",
+					"flex-1 overflow-hidden border-border/40 border-t transition-opacity duration-200",
 					open ? "opacity-100 delay-100" : "pointer-events-none opacity-0",
 				)}
 			>

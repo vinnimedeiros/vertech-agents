@@ -241,11 +241,17 @@ function CollapsiblePanel({
 	children: React.ReactNode;
 }) {
 	return (
-		<section className={cn(PANEL_CLASSES, "flex flex-col")}>
+		<section
+			className={cn(
+				PANEL_CLASSES,
+				"flex flex-col transition-[height] duration-300 ease-out",
+				open ? "h-52" : "h-9",
+			)}
+		>
 			<button
 				type="button"
 				onClick={onToggle}
-				className="flex shrink-0 items-center justify-between gap-2 px-4 py-2 text-left"
+				className="flex h-9 shrink-0 items-center justify-between gap-2 px-4 py-2 text-left"
 			>
 				<span className="flex items-center gap-2">
 					<Icon className="size-3.5 text-muted-foreground" />
@@ -262,9 +268,14 @@ function CollapsiblePanel({
 					<ChevronUpIcon className="size-3.5 text-muted-foreground" />
 				)}
 			</button>
-			{open ? (
-				<div className="border-border/40 border-t">{children}</div>
-			) : null}
+			<div
+				className={cn(
+					"flex-1 overflow-hidden border-border/40 border-t transition-opacity duration-200",
+					open ? "opacity-100 delay-100" : "pointer-events-none opacity-0",
+				)}
+			>
+				{children}
+			</div>
 		</section>
 	);
 }

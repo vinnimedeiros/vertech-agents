@@ -89,7 +89,7 @@ export const criarLead = createTool({
 		const requestContext = ctx?.requestContext;
 		try {
 			const organizationId = requireOrgId(requestContext as ContextLike);
-			const { nome, telefone, email, titulo, valor } = context;
+			const { nome, telefone, email, titulo, valor } = input;
 
 			const pipelineRow = await db.query.pipeline.findFirst({
 				where: eq(pipeline.organizationId, organizationId),

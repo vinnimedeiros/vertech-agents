@@ -113,115 +113,121 @@ export function AgentEditorShell({
 				</Button>
 			</header>
 
-			{/* Main area: nav + workflow (canvas infinito) + properties slide-in */}
-			<div className="relative flex min-h-0 flex-1 gap-3 overflow-hidden">
-				{/* Left nav (slim) */}
-				<aside className={cn(PANEL_CLASSES, "w-44 shrink-0 p-2")}>
-					<AgentEditorNav current={section} onChange={handleSectionChange} />
-				</aside>
-
-				{/* Workflow canvas — SEM painel, direto sobre canvas dots */}
-				<div className="relative min-w-0 flex-1">
-					<AgentWorkflow
-						agent={{
-							id: agent.id,
-							name: agent.name,
-							model: agent.model,
-							enabledTools: agent.enabledTools,
-							knowledgeDocIds: agent.knowledgeDocIds,
-						}}
-						onNodeSelect={handleNodeSelect}
-					/>
-
-					{/* Persona badge floating top-left */}
-					<div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2 rounded-lg border border-border/40 bg-background/85 px-2.5 py-1.5 backdrop-blur">
-						<Avatar className="size-6 rounded-md">
-							<AvatarFallback className="rounded-md bg-primary/10 text-[10px] text-primary">
-								{agent.name
-									.split(/\s+/)
-									.map((w) => w[0])
-									.slice(0, 2)
-									.join("")
-									.toUpperCase()}
-							</AvatarFallback>
-						</Avatar>
-						<div className="flex flex-col leading-none">
-							<span
-								className="font-medium text-[12px] text-foreground"
-								style={{ fontFamily: "var(--font-satoshi)" }}
-							>
-								{agent.name}
-							</span>
-							<span className="text-[10px] text-muted-foreground">
-								{agent.role ?? "Agente"}
-							</span>
+			{/* Main area: 2 colunas. Esquerda nav+chat. Direita workflow+logs */}
+			<div className="flex min-h-0 flex-1 gap-3 overflow-hidden">
+				{/* Coluna esquerda: nav (em cima) + chat (embaixo) */}
+				<div className="flex w-64 shrink-0 flex-col gap-3">
+					<aside className={cn(PANEL_CLASSES, "min-h-0 flex-1 p-2")}>
+						<AgentEditorNav current={section} onChange={handleSectionChange} />
+					</aside>
+					<CollapsiblePanel
+						open={chatOpen}
+						onToggle={() => setChatOpen(!chatOpen)}
+						title="Chat colaborador"
+						icon={MessageSquareIcon}
+					>
+						<div className="flex h-full flex-col">
+							<div className="flex-1 overflow-y-auto p-3">
+								<p className="text-[11.5px] text-muted-foreground italic">
+									Phase 11.3.2 — chat conversando com o Arquiteto pra editar
+									este agente.
+								</p>
+							</div>
+							<div className="flex items-center gap-2 border-border/40 border-t px-3 py-2">
+								<input
+									type="text"
+									placeholder="Editar agente conversando..."
+									disabled
+									className="flex-1 bg-transparent text-[12px] outline-none placeholder:text-muted-foreground/60"
+								/>
+								<button
+									type="button"
+									disabled
+									className="flex size-7 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground"
+								>
+									<SendHorizontalIcon className="size-3.5" />
+								</button>
+							</div>
 						</div>
-					</div>
+					</CollapsiblePanel>
 				</div>
 
-				{/* Properties slide-in absolute — sobre workflow, não empurra */}
-				<aside
-					aria-hidden={!propertiesOpen}
-					className={cn(
-						"pointer-events-auto absolute top-0 right-0 bottom-0 w-[340px]",
-						"transition-transform duration-300 ease-out",
-						propertiesOpen ? "translate-x-0" : "translate-x-[calc(100%+1rem)]",
-					)}
-				>
-					<div className={cn(PANEL_CLASSES, "h-full")}>
-						<PropertiesPanel
-							section={section}
-							agent={agent}
-							onClose={() => setPropertiesOpen(false)}
+				{/* Coluna direita: workflow+properties (em cima) + logs (embaixo) */}
+				<div className="flex min-w-0 flex-1 flex-col gap-3">
+					{/* Workflow + properties slide-in (sobreposto) */}
+					<div className="relative min-h-0 flex-1 overflow-hidden">
+						<AgentWorkflow
+							agent={{
+								id: agent.id,
+								name: agent.name,
+								model: agent.model,
+								enabledTools: agent.enabledTools,
+								knowledgeDocIds: agent.knowledgeDocIds,
+							}}
+							onNodeSelect={handleNodeSelect}
 						/>
-					</div>
-				</aside>
-			</div>
 
-			{/* Bottom: chat + logs colapsados, expandem independentemente */}
-			<div className="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-end">
-				<CollapsiblePanel
-					open={chatOpen}
-					onToggle={() => setChatOpen(!chatOpen)}
-					title="Chat colaborador"
-					icon={MessageSquareIcon}
-				>
-					<div className="flex h-40 flex-col">
-						<div className="flex-1 overflow-y-auto p-3">
-							<p className="text-[11.5px] text-muted-foreground italic">
-								Phase 11.3.2 — chat conversando com o Arquiteto pra editar
-								este agente.
+						{/* Persona badge floating top-left */}
+						<div className="pointer-events-none absolute top-3 left-3 z-10 flex items-center gap-2 rounded-lg border border-border/40 bg-background/85 px-2.5 py-1.5 backdrop-blur">
+							<Avatar className="size-6 rounded-md">
+								<AvatarFallback className="rounded-md bg-primary/10 text-[10px] text-primary">
+									{agent.name
+										.split(/\s+/)
+										.map((w) => w[0])
+										.slice(0, 2)
+										.join("")
+										.toUpperCase()}
+								</AvatarFallback>
+							</Avatar>
+							<div className="flex flex-col leading-none">
+								<span
+									className="font-medium text-[12px] text-foreground"
+									style={{ fontFamily: "var(--font-satoshi)" }}
+								>
+									{agent.name}
+								</span>
+								<span className="text-[10px] text-muted-foreground">
+									{agent.role ?? "Agente"}
+								</span>
+							</div>
+						</div>
+
+						{/* Properties slide-in absolute */}
+						<aside
+							aria-hidden={!propertiesOpen}
+							className={cn(
+								"pointer-events-auto absolute top-0 right-0 bottom-0 z-20 w-[340px]",
+								"transition-transform duration-300 ease-out",
+								propertiesOpen
+									? "translate-x-0"
+									: "translate-x-[calc(100%+1rem)]",
+							)}
+						>
+							<div className={cn(PANEL_CLASSES, "h-full")}>
+								<PropertiesPanel
+									section={section}
+									agent={agent}
+									onClose={() => setPropertiesOpen(false)}
+								/>
+							</div>
+						</aside>
+					</div>
+
+					{/* Logs colado embaixo da coluna direita */}
+					<CollapsiblePanel
+						open={logsOpen}
+						onToggle={() => setLogsOpen(!logsOpen)}
+						title="Logs ao vivo (sandbox)"
+						icon={TerminalSquareIcon}
+					>
+						<div className="h-full overflow-y-auto p-3 font-mono text-[11px]">
+							<p className="text-muted-foreground italic">
+								Phase 11.3.3 — execução em tempo real (tool calls, scores,
+								tokens).
 							</p>
 						</div>
-						<div className="flex items-center gap-2 border-border/40 border-t px-3 py-2">
-							<input
-								type="text"
-								placeholder="Editar agente conversando..."
-								disabled
-								className="flex-1 bg-transparent text-[12px] outline-none placeholder:text-muted-foreground/60"
-							/>
-							<button
-								type="button"
-								disabled
-								className="flex size-7 items-center justify-center rounded-md bg-foreground/5 text-muted-foreground"
-							>
-								<SendHorizontalIcon className="size-3.5" />
-							</button>
-						</div>
-					</div>
-				</CollapsiblePanel>
-				<CollapsiblePanel
-					open={logsOpen}
-					onToggle={() => setLogsOpen(!logsOpen)}
-					title="Logs ao vivo (sandbox)"
-					icon={TerminalSquareIcon}
-				>
-					<div className="h-40 overflow-y-auto p-3 font-mono text-[11px]">
-						<p className="text-muted-foreground italic">
-							Phase 11.3.3 — execução em tempo real (tool calls, scores, tokens).
-						</p>
-					</div>
-				</CollapsiblePanel>
+					</CollapsiblePanel>
+				</div>
 			</div>
 		</div>
 	);
@@ -244,7 +250,7 @@ function CollapsiblePanel({
 		<section
 			className={cn(
 				PANEL_CLASSES,
-				"flex flex-1 flex-col transition-[height] duration-300 ease-out",
+				"flex shrink-0 flex-col transition-[height] duration-300 ease-out",
 				open ? "h-52" : "h-9",
 			)}
 		>

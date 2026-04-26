@@ -85,7 +85,8 @@ export const criarLead = createTool({
 		leadId: z.string(),
 		ok: z.boolean(),
 	}),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		try {
 			const organizationId = requireOrgId(requestContext as ContextLike);
 			const { nome, telefone, email, titulo, valor } = context;
@@ -147,20 +148,21 @@ export const moverLeadStage = createTool({
 		stageId: z.string().describe("ID do stage destino (ver verHistoricoLead pra opções)"),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		const agentId = getAgentId(requestContext as ContextLike);
 
 		await db
 			.update(lead)
-			.set({ stageId: context.stageId })
-			.where(eq(lead.id, context.leadId));
+			.set({ stageId: input.stageId })
+			.where(eq(lead.id, input.leadId));
 
 		await db.insert(leadActivity).values({
-			leadId: context.leadId,
+			leadId: input.leadId,
 			type: "STAGE_CHANGE",
 			title: "Stage alterado pelo Atendente",
-			content: `Movido pro stage ${context.stageId}`,
+			content: `Movido pro stage ${input.stageId}`,
 			agentId,
 			isSandbox: isSandboxRun(requestContext as ContextLike),
 		});
@@ -183,15 +185,16 @@ export const atualizarLead = createTool({
 		valor: z.number().optional(),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		const updates: Record<string, unknown> = {};
-		if (context.titulo !== undefined) updates.title = context.titulo;
-		if (context.descricao !== undefined) updates.description = context.descricao;
-		if (context.valor !== undefined) updates.value = String(context.valor);
+		if (input.titulo !== undefined) updates.title = input.titulo;
+		if (input.descricao !== undefined) updates.description = input.descricao;
+		if (input.valor !== undefined) updates.value = String(input.valor);
 
 		if (Object.keys(updates).length === 0) return { ok: true };
-		await db.update(lead).set(updates).where(eq(lead.id, context.leadId));
+		await db.update(lead).set(updates).where(eq(lead.id, input.leadId));
 		return { ok: true };
 	},
 });
@@ -208,12 +211,13 @@ export const definirTemperatura = createTool({
 		temperatura: z.enum(["COLD", "WARM", "HOT"]),
 	}),
 	outputSchema: z.object({ ok: z.boolean() }),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		await db
 			.update(lead)
-			.set({ temperature: context.temperatura })
-			.where(eq(lead.id, context.leadId));
+			.set({ temperature: input.temperatura })
+			.where(eq(lead.id, input.leadId));
 		return { ok: true };
 	},
 });
@@ -233,18 +237,19 @@ export const verHistoricoLead = createTool({
 		atividades: z.array(z.object({ type: z.string(), title: z.string(), createdAt: z.string() })),
 		mensagensCount: z.number(),
 	}),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
-		const limite = context.limite ?? 20;
+		const limite = input.limite ?? 20;
 
 		const atividades = await db.query.leadActivity.findMany({
-			where: eq(leadActivity.leadId, context.leadId),
+			where: eq(leadActivity.leadId, input.leadId),
 			orderBy: desc(leadActivity.createdAt),
 			limit: limite,
 		});
 
 		const leadRow = await db.query.lead.findFirst({
-			where: eq(lead.id, context.leadId),
+			where: eq(lead.id, input.leadId),
 			with: { contact: true },
 		});
 
@@ -291,12 +296,13 @@ export const buscarConhecimento = createTool({
 		trechos: z.array(z.object({ texto: z.string(), score: z.number() })),
 		stub: z.boolean(),
 	}),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		// TODO M2-02: wire `searchKnowledgeBase` (Phase 08-alpha pgvector)
 		console.warn(
 			"[buscarConhecimento STUB] M2-01 — wire pendente RAG-1 pgvector. Query:",
-			context.query,
+			input.query,
 		);
 		return { trechos: [], stub: true };
 	},
@@ -318,7 +324,8 @@ export const verDisponibilidade = createTool({
 			z.object({ inicio: z.string(), titulo: z.string() }),
 		),
 	}),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const calRow = await db.query.calendar.findFirst({
 			where: eq(calendar.organizationId, organizationId),
@@ -326,7 +333,7 @@ export const verDisponibilidade = createTool({
 		if (!calRow) return { eventosOcupados: [] };
 
 		const inicio = new Date();
-		const fim = new Date(Date.now() + context.dias * 24 * 60 * 60 * 1000);
+		const fim = new Date(Date.now() + input.dias * 24 * 60 * 60 * 1000);
 
 		const eventos = await db.query.calendarEvent.findMany({
 			where: and(
@@ -359,7 +366,8 @@ export const agendarEvento = createTool({
 		leadId: z.string().optional().describe("Vincular evento a lead"),
 	}),
 	outputSchema: z.object({ eventoId: z.string(), ok: z.boolean() }),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		const organizationId = requireOrgId(requestContext as ContextLike);
 		const calRow = await db.query.calendar.findFirst({
 			where: eq(calendar.organizationId, organizationId),
@@ -372,20 +380,20 @@ export const agendarEvento = createTool({
 			.values({
 				organizationId,
 				calendarId: calRow.id,
-				title: context.titulo,
-				description: context.descricao,
-				startAt: new Date(context.inicioISO),
-				duration: context.duracao,
+				title: input.titulo,
+				description: input.descricao,
+				startAt: new Date(input.inicioISO),
+				duration: input.duracao,
 				isSandbox: sandbox,
 			})
 			.returning();
 
-		if (context.leadId) {
+		if (input.leadId) {
 			await db.insert(leadActivity).values({
-				leadId: context.leadId,
+				leadId: input.leadId,
 				type: "MEETING",
-				title: `Agendado: ${context.titulo}`,
-				content: `Início: ${context.inicioISO}, duração: ${context.duracao}`,
+				title: `Agendado: ${input.titulo}`,
+				content: `Início: ${input.inicioISO}, duração: ${input.duracao}`,
 				metadata: { eventoId: evento.id },
 				agentId: getAgentId(requestContext as ContextLike),
 				isSandbox: sandbox,
@@ -409,15 +417,16 @@ export const criarTarefa = createTool({
 		descricao: z.string().optional(),
 	}),
 	outputSchema: z.object({ tarefaId: z.string(), ok: z.boolean() }),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		const [activity] = await db
 			.insert(leadActivity)
 			.values({
-				leadId: context.leadId,
+				leadId: input.leadId,
 				type: "TASK",
-				title: context.titulo,
-				content: context.descricao,
+				title: input.titulo,
+				content: input.descricao,
 				agentId: getAgentId(requestContext as ContextLike),
 				isSandbox: isSandboxRun(requestContext as ContextLike),
 			})
@@ -439,15 +448,16 @@ export const pedirHumano = createTool({
 		urgencia: z.enum(["baixa", "média", "alta"]).default("média"),
 	}),
 	outputSchema: z.object({ ok: z.boolean(), notificacaoEnviada: z.boolean() }),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		// Registra atividade — notificação real fica pro Assistente (M2-05)
 		await db.insert(leadActivity).values({
-			leadId: context.leadId,
+			leadId: input.leadId,
 			type: "SYSTEM",
-			title: `🚨 Handoff humano solicitado (${context.urgencia})`,
-			content: context.motivo,
-			metadata: { handoff: true, urgencia: context.urgencia },
+			title: `🚨 Handoff humano solicitado (${input.urgencia})`,
+			content: input.motivo,
+			metadata: { handoff: true, urgencia: input.urgencia },
 			agentId: getAgentId(requestContext as ContextLike),
 			isSandbox: isSandboxRun(requestContext as ContextLike),
 		});
@@ -472,17 +482,18 @@ export const enviarPropostaPdf = createTool({
 		observacoes: z.string().optional(),
 	}),
 	outputSchema: z.object({ ok: z.boolean(), pdfUrl: z.string().nullable() }),
-	execute: async ({ context, requestContext }: { context: any; requestContext: any }) => {
+	execute: async (input: any, ctx: any) => {
+		const requestContext = ctx?.requestContext;
 		requireOrgId(requestContext as ContextLike);
 		await db.insert(leadActivity).values({
-			leadId: context.leadId,
+			leadId: input.leadId,
 			type: "NOTE",
-			title: `Proposta solicitada: ${context.plano} R$${context.valor}/mês`,
-			content: context.observacoes,
+			title: `Proposta solicitada: ${input.plano} R$${input.valor}/mês`,
+			content: input.observacoes,
 			metadata: {
 				stub: true,
-				plano: context.plano,
-				valor: context.valor,
+				plano: input.plano,
+				valor: input.valor,
 			},
 			agentId: getAgentId(requestContext as ContextLike),
 			isSandbox: isSandboxRun(requestContext as ContextLike),

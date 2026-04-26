@@ -3,7 +3,8 @@
 import { Avatar, AvatarFallback } from "@ui/components/avatar";
 import { Button } from "@ui/components/button";
 import { cn } from "@ui/lib";
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { AgentEditorNav, type Section } from "./AgentEditorNav";
 
@@ -34,26 +35,49 @@ export function AgentEditorShell({ agent, teamName, organizationSlug, teamId }: 
 
 	return (
 		<div className="flex flex-1 flex-col">
-			{/* Top bar */}
-			<header className="flex items-center justify-between gap-4 border-border border-b bg-card/30 px-6 py-3">
-				<div className="flex items-center gap-3">
-					<a
+			{/* Top bar — padrão premium AI Studio */}
+			<header className="flex items-center justify-between gap-4 border-zinc-900 border-b bg-zinc-950 px-6 py-3">
+				<div className="flex min-w-0 items-center gap-3">
+					<Link
 						href={`/app/${organizationSlug}/ai-studio/teams/${teamId}`}
-						className="text-muted-foreground text-xs hover:text-foreground"
+						className={cn(
+							"flex size-7 shrink-0 items-center justify-center rounded-md text-zinc-500",
+							"transition-colors hover:bg-zinc-900 hover:text-zinc-200",
+						)}
 					>
-						AI Studio
-					</a>
-					<span className="text-muted-foreground/50 text-xs">›</span>
-					<a
-						href={`/app/${organizationSlug}/ai-studio/teams/${teamId}`}
-						className="text-muted-foreground text-xs hover:text-foreground"
-					>
-						{teamName}
-					</a>
-					<span className="text-muted-foreground/50 text-xs">›</span>
-					<span className="font-medium text-foreground text-sm">{agent.name}</span>
+						<ArrowLeftIcon className="size-3.5" />
+					</Link>
+
+					<nav className="flex items-baseline gap-1.5 text-[12px] text-zinc-500">
+						<Link
+							href={`/app/${organizationSlug}/ai-studio`}
+							className="transition-colors hover:text-zinc-300"
+							style={{ fontFamily: "var(--font-satoshi)" }}
+						>
+							AI Studio
+						</Link>
+						<span className="text-zinc-700">/</span>
+						<Link
+							href={`/app/${organizationSlug}/ai-studio/teams/${teamId}`}
+							className="transition-colors hover:text-zinc-300"
+							style={{ fontFamily: "var(--font-satoshi)" }}
+						>
+							{teamName}
+						</Link>
+						<span className="text-zinc-700">/</span>
+						<span
+							className="font-medium text-[15px] text-zinc-100 leading-none tracking-tight"
+							style={{ fontFamily: "var(--font-satoshi)" }}
+						>
+							{agent.name}
+						</span>
+					</nav>
 				</div>
-				<Button size="sm" disabled>
+				<Button
+					size="sm"
+					disabled
+					className="h-8 bg-zinc-100 text-[12px] text-zinc-900 hover:bg-zinc-200"
+				>
 					Salvar
 				</Button>
 			</header>

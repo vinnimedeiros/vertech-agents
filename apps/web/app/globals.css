@@ -41,6 +41,39 @@ input[cmdk-input] {
 	@apply border-none focus-visible:ring-0;
 }
 
+/* Scrollbar global — fina, sem fundo, padrão SaaS premium.
+ * Aplicado em html/body e em tudo overflow:auto/scroll por default.
+ * Firefox usa scrollbar-width thin + scrollbar-color custom.
+ * WebKit (Chrome/Safari/Edge) usa pseudo-elementos.
+ */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(120, 120, 130, 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+	background: rgba(120, 120, 130, 0.25);
+	border-radius: 9999px;
+	transition: background 0.2s;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+	background: rgba(150, 150, 160, 0.45);
+}
+
+*::-webkit-scrollbar-corner {
+	background: transparent;
+}
+
 /* Scrollbar horizontal visível no Kanban (estilo fino mas sempre presente) */
 .kanban-scroll {
 	scrollbar-width: thin;

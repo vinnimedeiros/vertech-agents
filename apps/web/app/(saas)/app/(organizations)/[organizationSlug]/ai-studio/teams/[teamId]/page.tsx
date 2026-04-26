@@ -1,17 +1,20 @@
 import { db, eq, team } from "@repo/database";
 import { getActiveOrganization } from "@saas/auth/lib/server";
+import { TeamCanvas } from "@saas/ai-studio/components/TeamCanvas";
+import { TeamStatusBadge } from "@saas/ai-studio/components/TeamStatusBadge";
 import { Button } from "@ui/components/button";
-import { ArrowLeftIcon, ConstructionIcon, ExternalLinkIcon } from "lucide-react";
+import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { TeamStatusBadge } from "@saas/ai-studio/components/TeamStatusBadge";
-import { ROLE_LABELS } from "@saas/ai-studio/lib/types";
 
 /**
  * Construtor do TIME — Phase 11.2 (Área 2).
  *
- * Placeholder em Phase 11.0/11.1: mostra info do TIME + link pra agentes
- * via UI legacy `/agents/{id}`. Canvas React Flow chega em Phase 11.2.
+ * Canvas visual: Supervisor (Atendente) topo + 3 sub-agents (Analista,
+ * Campanhas, Assistente) fan-out conectados via SVG dashed lines.
+ * Slots vazios mostram "Aguardando setup" até M2-03/04/05.
+ *
+ * Botão Inspetor (área 4) abre Mastra Studio em nova aba.
  */
 export default async function TeamBuilderPage({
 	params,
@@ -35,6 +38,8 @@ export default async function TeamBuilderPage({
 	if (!teamRow || teamRow.organizationId !== organization.id) {
 		notFound();
 	}
+
+	const inspectorHref = `/app/${organizationSlug}/ai-studio/teams/${teamId}/inspector`;
 
 	return (
 		<div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
@@ -62,9 +67,11 @@ export default async function TeamBuilderPage({
 				</div>
 
 				<div className="flex items-center gap-2">
-					<Button variant="outline" size="sm" disabled>
-						<ExternalLinkIcon className="size-3.5" />
-						Inspetor
+					<Button variant="outline" size="sm" asChild>
+						<a href={inspectorHref} target="_blank" rel="noopener noreferrer">
+							<ExternalLinkIcon className="size-3.5" />
+							Inspetor
+						</a>
 					</Button>
 					<Button size="sm" disabled>
 						Salvar
@@ -72,49 +79,18 @@ export default async function TeamBuilderPage({
 				</div>
 			</header>
 
-			<div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border border-dashed bg-muted/10 px-6 py-16 text-center">
-				<div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400">
-					<ConstructionIcon className="size-7" />
-				</div>
-				<div className="flex flex-col gap-1">
-					<h2 className="font-semibold text-foreground text-lg">
-						Construtor visual em desenvolvimento
-					</h2>
-					<p className="max-w-md text-muted-foreground text-sm">
-						Canvas com Líder + sub-agentes (Analista, Campanhas, Assistente)
-						chega na Phase 11.2. Por enquanto, edite os agentes individualmente
-						pelo modo legado.
-					</p>
-				</div>
-			</div>
+			<TeamCanvas team={teamRow} organizationSlug={organizationSlug} />
 
-			<div className="flex flex-col gap-3">
-				<h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-					Membros do TIME ({teamRow.members.length})
-				</h3>
-				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-					{teamRow.members.map((m) => (
-						<Link
-							key={m.id}
-							href={`/app/${organizationSlug}/agents/${m.agentId}`}
-							className="flex flex-col gap-1.5 rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/50"
-						>
-							<span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-								{ROLE_LABELS[m.role]}
-							</span>
-							<span className="font-semibold text-foreground text-sm">
-								{m.agent.name}
-							</span>
-							<span className="line-clamp-2 text-muted-foreground text-xs">
-								{m.bio || m.agent.description || "Sem bio"}
-							</span>
-							<span className="mt-2 text-[10px] text-muted-foreground/60 uppercase tracking-wider">
-								Editar (modo legado) →
-							</span>
-						</Link>
-					))}
-				</div>
-			</div>
+			<aside className="flex flex-col gap-2 rounded-lg border border-border/50 bg-muted/10 p-4 text-xs">
+				<p className="font-medium text-foreground">
+					Phase 11.2 — Construtor do TIME
+				</p>
+				<p className="text-muted-foreground">
+					Canvas visual entregue como MVP. Próximas iterações: drag-and-drop
+					entre cards, edição inline da Brand Voice, validações de Deploy.
+					Click no Atendente abre Editor (Phase 11.3).
+				</p>
+			</aside>
 		</div>
 	);
 }

@@ -1,0 +1,26 @@
+- generic [ref=e15]:
+  - generic [ref=e16]:
+    - img "mercado agentes" [ref=e18]
+    - heading "Bem-vindo de volta!" [level=1] [ref=e19]
+    - paragraph [ref=e20]: Entre com seu e-mail para acessar o painel administrativo
+  - generic [ref=e22]:
+    - generic [ref=e23]:
+      - img [ref=e25]
+      - generic [ref=e28]: E-mail
+    - generic [ref=e30]:
+      - generic [ref=e31]: "2"
+      - generic [ref=e32]: Código
+  - generic [ref=e35]:
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - img [ref=e38]
+        - text: Endereço de e-mail
+      - textbox "seu@email.com" [ref=e42]
+    - button "Complete a verificação de segurança" [disabled] [ref=e43]:
+      - generic [ref=e44]: Complete a verificação de segurança
+      - img [ref=e45]
+  - generic [ref=e49]:
+    - text: Ainda não tem uma conta?
+    - link "Criar conta grátis" [ref=e50] [cursor=pointer]:
+      - /url: /signup
+  - paragraph [ref=e52]: © 2026 Desenvolvido por Mercado Agentes

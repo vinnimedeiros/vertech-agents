@@ -26,4 +26,10 @@ export type HealthCheckResult = {
 	alerts: HealthAlert[];
 	/** ISO timestamp de quando o check foi executado. */
 	timestamp: string;
+	/**
+	 * Opcional: componentes filhos agregados sob este check composto.
+	 * Usado por endpoints que cobrem N entidades do mesmo tipo (ex: N queues,
+	 * N LLM providers). O `status` do pai e a agregacao dos filhos.
+	 */
+	subchecks?: HealthCheckResult[];
 };

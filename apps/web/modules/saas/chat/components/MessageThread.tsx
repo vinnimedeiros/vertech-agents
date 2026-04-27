@@ -81,10 +81,8 @@ export function MessageThread({ conversationId, messages, unreadCount }: Props) 
 		return (
 			<div
 				className={cn(
-					"flex flex-1 flex-col items-center justify-center gap-1 py-10 text-center",
+					"flex min-h-0 flex-1 flex-col items-center justify-center gap-1 py-10 text-center",
 					"text-xs text-foreground/55",
-					"bg-background bg-[url('/images/testlightwpp.png')] bg-cover bg-center",
-					"dark:bg-[url('/images/testewwpdark.png')]",
 				)}
 			>
 				<span className="font-medium text-foreground/70">
@@ -96,7 +94,7 @@ export function MessageThread({ conversationId, messages, unreadCount }: Props) 
 	}
 
 	return (
-		<div className="flex-1 overflow-y-auto bg-background bg-[url('/images/testlightwpp.png')] bg-cover bg-center px-4 py-4 dark:bg-[url('/images/testewwpdark.png')]">
+		<div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
 			<div className="flex flex-col gap-4">
 				{groups.map((g, idx) => (
 					<div
@@ -104,7 +102,7 @@ export function MessageThread({ conversationId, messages, unreadCount }: Props) 
 						className="flex flex-col gap-2"
 					>
 						<div className="flex justify-center py-1">
-							<span className="rounded-full bg-foreground/5 px-3 py-0.5 text-[11px] text-foreground/55">
+							<span className="rounded-full bg-background/70 px-3 py-0.5 text-[11px] text-foreground/55 backdrop-blur">
 								{g.label}
 							</span>
 						</div>

@@ -6,9 +6,12 @@ async function getSock(instanceId: string) {
 	return inst.getSock();
 }
 
-function jidOf(phone: string): string {
-	// Normaliza: aceita "5511999999999" ou "+55 11 99999-9999"
-	const digits = phone.replace(/\D/g, "");
+function jidOf(phoneOrJid: string): string {
+	// Se já é JID completo (contém @), usar direto. Preserva @lid
+	// (Anonymous mode) ou @s.whatsapp.net entregues pelo Baileys.
+	if (phoneOrJid.includes("@")) return phoneOrJid;
+	// Senão, normaliza phone bruto: "5511999999999" ou "+55 11 99999-9999"
+	const digits = phoneOrJid.replace(/\D/g, "");
 	return `${digits}@s.whatsapp.net`;
 }
 

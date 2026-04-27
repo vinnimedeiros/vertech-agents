@@ -78,6 +78,9 @@ export function useViewState(basePath: string, baseState: ViewState | null) {
 		p.delete(PARAM.valueMax);
 		p.delete(PARAM.onlyStagnant);
 		p.delete(PARAM.includeClosed);
+		p.delete(PARAM.periodPreset);
+		p.delete(PARAM.periodFrom);
+		p.delete(PARAM.periodTo);
 		p.delete(PARAM.sortBy);
 		if (!baseState || baseState.viewMode === "kanban") p.delete(PARAM.view);
 		navigate(p);

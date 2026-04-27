@@ -1,0 +1,2 @@
+ALTER TABLE "conversation" ADD COLUMN IF NOT EXISTS "lastMessageDirection" "MessageDirection";--> statement-breakpoint
+ALTER TABLE "conversation" ADD COLUMN IF NOT EXISTS "lastMessageStatus" "MessageStatus";

@@ -106,6 +106,90 @@
       "when": 1776594915097,
       "tag": "0014_broken_wind_dancer",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1776644060036,
+      "tag": "0015_adorable_marvel_boy",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1776800725049,
+      "tag": "0016_cuddly_george_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1776998476076,
+      "tag": "0017_melted_sharon_ventura",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1777157878799,
+      "tag": "0018_faulty_pandemic",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1777174133309,
+      "tag": "0019_wandering_ozymandias",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1777198171045,
+      "tag": "0020_nappy_stranger",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1777199549409,
+      "tag": "0021_white_groot",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1777234566519,
+      "tag": "0022_confused_mephisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1777236077507,
+      "tag": "0023_aromatic_ma_gnuci",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1777248382679,
+      "tag": "0024_abnormal_goblin_queen",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1777253289065,
+      "tag": "0025_illegal_liz_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1777255343348,
+      "tag": "0026_ancient_charles_xavier",
+      "breakpoints": true
     }
   ]
 }

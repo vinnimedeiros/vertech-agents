@@ -1,13 +1,30 @@
 /**
- * Registry de tools do Agente Comercial.
+ * Registry de tools do Atendente — re-exporta `atendenteTools` da Roadmap V3 M2-01.
  *
- * Stub em Phase 07A — registry vazio. Populado na Phase 08 com 7 tools:
- * searchKnowledgeBase, moveLeadStage, updateLeadData, createLeadActivity,
- * scheduleMeeting, sendWhatsAppMedia, handoffToHuman.
+ * Substitui o stub vazio anterior (07A). Atendente dinâmico (agents/commercial.ts)
+ * filtra essa constante pelas `enabledTools` configuradas no banco por agente.
  *
- * Agente dinamico (agents/commercial.ts) le esta constante e filtra pelas
- * `enabledTools` configuradas no banco por agente.
+ * Tools disponíveis (11): criarLead, moverLeadStage, atualizarLead, definirTemperatura,
+ * verHistoricoLead, buscarConhecimento, verDisponibilidade, agendarEvento, criarTarefa,
+ * pedirHumano, enviarPropostaPdf.
+ *
+ * 8 são reais (lead/agenda/atividade), 3 são stubs Mastra-compliant aguardando wire
+ * em phases futuras (buscarConhecimento M2-02, pedirHumano M2-05, enviarPropostaPdf M7).
  */
-export const commercialTools = {} as const;
-
-export type CommercialToolKey = keyof typeof commercialTools;
+export {
+	agendarEvento,
+	atendenteTools,
+	atendenteTools as commercialTools,
+	atualizarLead,
+	buscarConhecimento,
+	criarLead,
+	criarTarefa,
+	definirTemperatura,
+	enviarPropostaPdf,
+	moverLeadStage,
+	pedirHumano,
+	verDisponibilidade,
+	verHistoricoLead,
+	type AtendenteToolKey,
+	type AtendenteToolKey as CommercialToolKey,
+} from "./atendente";

@@ -1,25 +1,10 @@
-import { ComingSoon } from "@saas/shared/components/ComingSoon";
-import { PageHeader } from "@saas/shared/components/PageHeader";
-import { BotIcon } from "lucide-react";
+import { IdentityTab } from "@saas/agents/components/IdentityTab";
 
-export default async function AgentDetailPage({
+export default async function AgentIdentityPage({
 	params,
 }: {
-	params: Promise<{ agentId: string }>;
+	params: Promise<{ organizationSlug: string }>;
 }) {
-	const { agentId } = await params;
-
-	return (
-		<>
-			<PageHeader
-				title="Detalhes do agente"
-				subtitle={`ID: ${agentId}`}
-			/>
-			<ComingSoon
-				icon={BotIcon}
-				title="Tela de detalhe em breve"
-				description="Aqui você vai ver métricas, conversas, configuração, base de conhecimento e histórico de versões do agente."
-			/>
-		</>
-	);
+	const { organizationSlug } = await params;
+	return <IdentityTab organizationSlug={organizationSlug} />;
 }

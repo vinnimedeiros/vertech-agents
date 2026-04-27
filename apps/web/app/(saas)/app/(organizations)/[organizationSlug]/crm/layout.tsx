@@ -1,11 +1,20 @@
-import { CrmTopbar } from "@saas/crm/components/CrmTopbar";
+import { CommercialTabs } from "@saas/shared/components/CommercialTabs";
+import { FloatingCanvas } from "@saas/shared/floating";
 import type { PropsWithChildren } from "react";
 
-export default function CrmLayout({ children }: PropsWithChildren) {
+export default async function CrmLayout({
+	children,
+	params,
+}: PropsWithChildren<{ params: Promise<{ organizationSlug: string }> }>) {
+	const { organizationSlug } = await params;
+
 	return (
-		<div className="flex h-full min-h-0 flex-col gap-6">
-			<CrmTopbar />
-			{children}
-		</div>
+		<FloatingCanvas className="relative flex h-full min-h-0 w-full flex-1 overflow-hidden">
+			<div className="flex min-h-0 w-full flex-1 flex-col gap-3 p-3">
+				<CommercialTabs organizationSlug={organizationSlug} />
+
+				<div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
+			</div>
+		</FloatingCanvas>
 	);
 }

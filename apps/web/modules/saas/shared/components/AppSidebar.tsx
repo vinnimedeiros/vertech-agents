@@ -2,24 +2,23 @@
 
 import { useSession } from "@saas/auth/hooks/use-session";
 import { useActiveOrganization } from "@saas/organizations/hooks/use-active-organization";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { Logo } from "@shared/components/Logo";
 import { cn } from "@ui/lib";
 import {
 	BriefcaseBusinessIcon,
-	CalendarIcon,
 	HomeIcon,
-	type LucideIcon,
 	SettingsIcon,
-	SparklesIcon,
 	UserCogIcon,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 type NavItem = {
 	label: string;
 	href: string;
-	icon: LucideIcon;
+	icon: ComponentType<{ className?: string }>;
 	isActive: boolean;
 };
 
@@ -48,16 +47,12 @@ export function AppSidebar() {
 						isActive: pathname.startsWith(`${base}/crm`),
 					},
 					{
-						label: "Agenda",
-						href: `${base}/crm/agenda`,
-						icon: CalendarIcon,
-						isActive: pathname.startsWith(`${base}/crm/agenda`),
-					},
-					{
-						label: "Agentes",
-						href: `${base}/agents`,
-						icon: SparklesIcon,
-						isActive: pathname.startsWith(`${base}/agents`),
+						label: "AI Studio",
+						href: `${base}/ai-studio`,
+						icon: AiStudioIcon,
+						isActive:
+							pathname.startsWith(`${base}/ai-studio`) ||
+							pathname.startsWith(`${base}/agents`),
 					},
 					{
 						label: "Ajustes",

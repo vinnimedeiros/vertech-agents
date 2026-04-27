@@ -1,0 +1,334 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic:
+      - generic [ref=e3]:
+        - generic [ref=e4]:
+          - img "logo" [ref=e6]
+          - button "" [ref=e7] [cursor=pointer]:
+            - generic [ref=e8]: 
+        - generic [ref=e9]:
+          - generic [ref=e10]: Meu plano
+          - generic [ref=e11] [cursor=pointer]:
+            - generic [ref=e12]: 
+            - text: White Label Plus
+        - generic [ref=e14] [cursor=pointer]:
+          - generic [ref=e15]: 
+          - generic [ref=e16]: Dashboard
+        - generic [ref=e18]:
+          - generic [ref=e19]: ATENDIMENTO
+          - generic [ref=e20] [cursor=pointer]:
+            - generic [ref=e21]: 
+            - generic [ref=e22]: Central de Atendimento
+        - generic [ref=e23]:
+          - generic [ref=e24]: AGENTES
+          - generic [ref=e25] [cursor=pointer]:
+            - generic [ref=e26]: 
+            - generic [ref=e27]: Meus Agentes
+          - generic [ref=e28] [cursor=pointer]:
+            - generic [ref=e29]: 
+            - generic [ref=e30]: Criar Agente
+          - generic [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]: 
+            - generic [ref=e33]: Agentes 2.0
+            - generic [ref=e34]: NOVO
+        - generic [ref=e35]:
+          - generic [ref=e36]: APPS & INTEGRAÇÕES
+          - generic [ref=e37] [cursor=pointer]:
+            - generic [ref=e38]: 
+            - generic [ref=e39]: Canais
+          - generic [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: 
+            - generic [ref=e42]: Integrações
+        - generic [ref=e43]:
+          - generic [ref=e44]: APRENDIZADO
+          - generic [ref=e45] [cursor=pointer]:
+            - generic [ref=e46]: 
+            - generic [ref=e47]: Vídeos Tutoriais
+        - generic [ref=e48]:
+          - generic [ref=e49]: GESTÃO COMERCIAL
+          - generic [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: 
+            - generic [ref=e52]: Agenda
+          - generic [ref=e53] [cursor=pointer]:
+            - generic [ref=e54]: 
+            - generic [ref=e55]: Base de Clientes
+          - generic [ref=e56] [cursor=pointer]:
+            - generic [ref=e57]: 
+            - generic [ref=e58]: Pipeline CRM
+        - generic [ref=e59]:
+          - generic [ref=e60]: MINHA ORGANIZAÇÃO
+          - generic [ref=e61] [cursor=pointer]:
+            - generic [ref=e62]: 
+            - generic [ref=e63]: Organização
+          - generic [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]: 
+            - generic [ref=e66]: Subcontas
+          - generic [ref=e67] [cursor=pointer]:
+            - generic [ref=e68]: 
+            - generic [ref=e69]: Implementações
+          - generic [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: 
+            - generic [ref=e72]: Usuários
+          - generic [ref=e73] [cursor=pointer]:
+            - generic [ref=e74]: 
+            - generic [ref=e75]: Métricas
+        - generic [ref=e76]:
+          - generic [ref=e77]: FINANCEIRO
+          - generic [ref=e78] [cursor=pointer]:
+            - generic [ref=e79]: 
+            - generic [ref=e80]: Meu Plano
+          - generic [ref=e81] [cursor=pointer]:
+            - generic [ref=e82]: 
+            - generic [ref=e83]: Faturamento
+          - generic [ref=e84] [cursor=pointer]:
+            - generic [ref=e85]: 
+            - generic [ref=e86]: Minhas Assinaturas
+        - generic [ref=e87]:
+          - generic [ref=e88]: SUPORTE
+          - generic [ref=e89] [cursor=pointer]:
+            - generic [ref=e90]: 
+            - generic [ref=e91]: Suporte Clientes
+          - generic [ref=e92] [cursor=pointer]:
+            - generic [ref=e93]: 
+            - generic [ref=e94]: Suporte Plataforma
+        - generic [ref=e95]:
+          - generic [ref=e96]: TREINAMENTOS
+          - generic [ref=e97] [cursor=pointer]:
+            - generic [ref=e98]: 
+            - generic [ref=e99]: Meus Treinamentos
+          - generic [ref=e100] [cursor=pointer]:
+            - generic [ref=e101]: 
+            - generic [ref=e102]: Gerenciar Treinamentos
+        - generic [ref=e103]:
+          - generic [ref=e104]: CONFIGURAÇÕES
+          - generic [ref=e105] [cursor=pointer]:
+            - generic [ref=e106]: 
+            - generic [ref=e107]: Minha Empresa
+          - generic [ref=e108] [cursor=pointer]:
+            - generic [ref=e109]: 
+            - generic [ref=e110]: Configurações Globais
+      - generic [ref=e111]:
+        - button [ref=e112] [cursor=pointer]:
+          - img [ref=e113]
+        - listitem [ref=e116]:
+          - generic [ref=e117] [cursor=pointer]:
+            - img "profile" [ref=e118]
+            - generic [ref=e119]:
+              - generic [ref=e120]: Vinicius Silva Medeiros
+              - paragraph [ref=e121]: Admin
+    - generic [ref=e189]:
+      - generic [ref=e190]:
+        - img [ref=e192]
+        - generic [ref=e194]:
+          - strong [ref=e195]: Agentes 2.0 — Versão BETA
+          - text: Estamos aprimorando esta experiência. Seu feedback é essencial!
+        - button "Ler Recomendações" [ref=e196] [cursor=pointer]:
+          - img [ref=e197]
+          - text: Ler Recomendações
+      - generic [ref=e199]:
+        - generic [ref=e200]:
+          - generic [ref=e201]:
+            - img [ref=e202]
+            - generic [ref=e203]: Componentes
+          - button [ref=e204] [cursor=pointer]:
+            - img [ref=e205]
+        - generic [ref=e212]:
+          - button "Ações" [ref=e213] [cursor=pointer]
+          - button "Condições" [ref=e214] [cursor=pointer]
+          - button "Capacidades" [ref=e215] [cursor=pointer]
+        - generic [ref=e216]:
+          - paragraph [ref=e217]:
+            - text: Executar tarefas
+            - button "O que é isso?" [ref=e218] [cursor=pointer]:
+              - img [ref=e219]
+          - generic [ref=e222]:
+            - generic [ref=e223]:
+              - img [ref=e225]
+              - generic [ref=e227]:
+                - generic [ref=e228]: Mensagem com IA
+                - generic [ref=e229]: Resposta gerada por IA
+            - generic [ref=e230]:
+              - img [ref=e232]
+              - generic [ref=e234]:
+                - generic [ref=e235]: Mensagem
+                - generic [ref=e236]: Resposta pré definida
+            - generic [ref=e237]:
+              - img [ref=e239]
+              - generic [ref=e242]:
+                - generic [ref=e243]: API
+                - generic [ref=e244]: Chamar API externa
+            - generic [ref=e245]:
+              - img [ref=e247]
+              - generic [ref=e252]:
+                - generic [ref=e253]: Coletar Dado
+                - generic [ref=e254]: Coletar e salvar no CRM
+            - generic [ref=e255]:
+              - img [ref=e257]
+              - generic [ref=e260]:
+                - generic [ref=e261]: WhatsApp
+                - generic [ref=e262]: Enviar WhatsApp
+            - generic [ref=e263]:
+              - img [ref=e265]
+              - generic [ref=e268]:
+                - generic [ref=e269]: Email
+                - generic [ref=e270]: Enviar Email
+            - generic [ref=e271]:
+              - img [ref=e273]
+              - generic [ref=e277]:
+                - generic [ref=e278]: Enviar mídia
+                - generic [ref=e279]: Enviar mídia da galeria
+      - generic [ref=e280]:
+        - generic [ref=e281]:
+          - generic [ref=e282]:
+            - button [ref=e283] [cursor=pointer]:
+              - img [ref=e284]
+            - textbox "Nome do agente" [ref=e288]: Novo Agente
+          - generic [ref=e290]:
+            - button [disabled] [ref=e291]:
+              - img [ref=e292]
+            - button [disabled] [ref=e295]:
+              - img [ref=e296]
+          - generic [ref=e299]:
+            - button [ref=e300] [cursor=pointer]:
+              - img [ref=e301]
+            - button [ref=e304] [cursor=pointer]:
+              - img [ref=e305]
+            - button [ref=e308] [cursor=pointer]:
+              - img [ref=e309]
+        - application [ref=e312]:
+          - generic [ref=e314]:
+            - generic:
+              - generic:
+                - group [ref=e315]:
+                  - generic [ref=e317]:
+                    - img [ref=e319]
+                    - generic [ref=e321]:
+                      - generic [ref=e322]: Início
+                      - generic [ref=e323]: Novo Agente
+                - group [ref=e325]:
+                  - generic [ref=e328]:
+                    - img [ref=e330]
+                    - generic [ref=e332]: Fim
+          - img
+          - generic "Control Panel" [ref=e333]:
+            - button "Zoom In" [ref=e334] [cursor=pointer]:
+              - img [ref=e335]
+            - button "Zoom Out" [ref=e337] [cursor=pointer]:
+              - img [ref=e338]
+            - button "Fit View" [ref=e340] [cursor=pointer]:
+              - img [ref=e341]
+          - img "Mini Map" [ref=e344]
+          - generic [ref=e347]:
+            - button [ref=e348] [cursor=pointer]:
+              - img [ref=e349]
+            - button [disabled] [ref=e353]:
+              - img [ref=e354]
+            - button [ref=e356] [cursor=pointer]:
+              - img [ref=e357]
+          - generic [ref=e361]: Arraste componentes • Clique para configurar • Botão direito para excluir
+  - dialog [active] [ref=e393]:
+    - generic [ref=e395]:
+      - generic [ref=e396]:
+        - img [ref=e398]
+        - generic [ref=e403]:
+          - heading "Assistente de Criação" [level=2] [ref=e404]
+          - paragraph [ref=e405]: Conte-nos sobre seu negócio para criar o agente ideal
+        - button "Fechar assistente" [ref=e406] [cursor=pointer]:
+          - img [ref=e407]
+      - navigation "Progresso do assistente" [ref=e410]:
+        - generic [ref=e411]:
+          - img [ref=e413]
+          - generic [ref=e416]: Idealização
+        - generic [ref=e418]:
+          - img [ref=e420]
+          - generic [ref=e423]: Planejamento
+        - generic [ref=e425]:
+          - img [ref=e427]
+          - generic [ref=e430]: Conhecimento
+        - generic [ref=e432]:
+          - img [ref=e434]
+          - generic [ref=e438]: Criação
+      - generic [ref=e441]:
+        - heading "Conte-nos sobre seu negócio" [level=3] [ref=e442]
+        - paragraph [ref=e443]: Selecione o tipo e responda as perguntas. A IA vai analisar e preparar tudo para você.
+        - radiogroup "Tipo de negócio" [ref=e444]:
+          - radio "Clínica" [ref=e445] [cursor=pointer]:
+            - img [ref=e447]
+            - generic [ref=e451]: Clínica
+          - radio "Restaurante" [ref=e452] [cursor=pointer]:
+            - img [ref=e454]
+            - generic [ref=e456]: Restaurante
+          - radio "Salão de Beleza" [ref=e457] [cursor=pointer]:
+            - img [ref=e459]
+            - generic [ref=e464]: Salão de Beleza
+          - radio "Automotivo" [ref=e465] [cursor=pointer]:
+            - img [ref=e467]
+            - generic [ref=e471]: Automotivo
+          - radio "Imobiliária" [checked] [ref=e472] [cursor=pointer]:
+            - img [ref=e474]
+            - generic [ref=e478]: Imobiliária
+          - radio "E-commerce" [ref=e479] [cursor=pointer]:
+            - img [ref=e481]
+            - generic [ref=e486]: E-commerce
+          - radio "Educação" [ref=e487] [cursor=pointer]:
+            - img [ref=e489]
+            - generic [ref=e492]: Educação
+          - radio "Outro" [ref=e493] [cursor=pointer]:
+            - img [ref=e495]
+            - generic [ref=e499]: Outro
+        - generic [ref=e508]:
+          - paragraph [ref=e509]: Como o assistente deve se apresentar?
+          - radiogroup "Gênero do assistente" [ref=e510]:
+            - radio "Feminino" [checked] [ref=e511] [cursor=pointer]:
+              - img [ref=e512]
+              - generic [ref=e514]: Feminino
+            - radio "Masculino" [ref=e515] [cursor=pointer]:
+              - img [ref=e516]
+              - generic [ref=e519]: Masculino
+        - generic [ref=e588]:
+          - heading "Análise do seu negócio" [level=4] [ref=e589]
+          - generic [ref=e590]:
+            - heading "Imobiliária São Paulo Premium" [level=4] [ref=e591]
+            - paragraph [ref=e592]: Imobiliária premium focada em SP nobre (Zona Sul/Oeste) e Litoral Norte, com 8 corretores e ticket R$ 400k-1,5M. Amanda é a consultora digital (nunca se apresenta como robô) que atende 24/7, qualifica leads rigorosamente coletando interesse/orçamento/prazo, agenda visitas automaticamente no horário comercial (seg-sáb 9h-19h) e encaminha apenas leads qualificados aos corretores, eliminando conflitos de agenda e perda de leads por demora.
+          - generic [ref=e593]:
+            - generic [ref=e595]:
+              - heading "Serviços identificados" [level=4] [ref=e596]
+              - list [ref=e597]:
+                - listitem [ref=e598]: Venda de apartamentos de 1 a 3 dormitórios
+                - listitem [ref=e599]: Venda de casas em condomínio fechado
+                - listitem [ref=e600]: Venda de salas comerciais
+                - listitem [ref=e601]: Venda de terrenos residenciais
+                - listitem [ref=e602]: Consultoria imobiliária para investimento
+                - listitem [ref=e603]: Agendamento de visitas aos imóveis
+                - listitem [ref=e604]: Acompanhamento personalizado com corretores especializados
+                - listitem [ref=e640]: Consultoria em financiamento imobiliário via parceiros bancários
+            - generic [ref=e606]:
+              - heading "Objetivos do agente" [level=4] [ref=e607]
+              - list [ref=e608]:
+                - listitem [ref=e609]: Responder todos os leads em menos de 2 minutos, 24 horas por dia, 7 dias por semana
+                - listitem [ref=e610]: Qualificar rigorosamente coletando tipo de imóvel, região, orçamento, prazo e motivação de compra
+                - listitem [ref=e611]: Agendar visitas propondo horários disponíveis automaticamente e evitando conflitos
+                - listitem [ref=e612]: Filtrar e encaminhar apenas leads qualificados com fit real para os corretores
+                - listitem [ref=e613]: Reduzir drasticamente perda de leads para concorrência por demora no atendimento
+                - listitem [ref=e614]: Eliminar conflitos de agenda e otimizar tempo dos 8 corretores
+                - listitem [ref=e641]: Manter engajamento com lembretes pré-visita e follow-up pós-visita
+          - generic [ref=e615]:
+            - generic [ref=e617]:
+              - heading "Nome sugerido" [level=4] [ref=e618]
+              - paragraph [ref=e619]: Amanda
+            - generic [ref=e621]:
+              - heading "Função" [level=4] [ref=e622]
+              - paragraph [ref=e623]: Consultora Digital de Imóveis
+            - generic [ref=e625]:
+              - heading "Tom de voz" [level=4] [ref=e626]
+              - paragraph [ref=e627]: friendly
+          - generic [ref=e628]:
+            - button "Refinar" [ref=e629] [cursor=pointer]:
+              - img [ref=e630]
+              - text: Refinar
+            - button "Aprovar e continuar" [ref=e633] [cursor=pointer]
+      - generic [ref=e500]:
+        - button "Criar manualmente" [ref=e502] [cursor=pointer]
+        - button "Avançar para o próximo passo" [disabled] [ref=e504]:
+          - text: Próximo
+          - img [ref=e505]

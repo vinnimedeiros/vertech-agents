@@ -63,6 +63,8 @@ export type ConversationListItem = {
 	status: ChatStatus;
 	lastMessageAt: Date | null;
 	lastMessagePreview: string | null;
+	lastMessageDirection: MessageDirection | null;
+	lastMessageStatus: MessageStatus | null;
 	unreadCount: number;
 	assignedUserId: string | null;
 	isAIEnabled: boolean;
@@ -71,6 +73,8 @@ export type ConversationListItem = {
 		id: string;
 		name: string;
 		phone: string | null;
+		lid: string | null;
+		whatsappJid: string | null;
 		email: string | null;
 		company: string | null;
 		photoUrl: string | null;
@@ -145,6 +149,8 @@ export const listConversationsForOrg = cache(
 				status: conversation.status,
 				lastMessageAt: conversation.lastMessageAt,
 				lastMessagePreview: conversation.lastMessagePreview,
+				lastMessageDirection: conversation.lastMessageDirection,
+				lastMessageStatus: conversation.lastMessageStatus,
 				unreadCount: conversation.unreadCount,
 				assignedUserId: conversation.assignedUserId,
 				isAIEnabled: conversation.isAIEnabled,
@@ -153,6 +159,8 @@ export const listConversationsForOrg = cache(
 					id: contact.id,
 					name: contact.name,
 					phone: contact.phone,
+					lid: contact.lid,
+					whatsappJid: contact.whatsappJid,
 					email: contact.email,
 					company: contact.company,
 					photoUrl: contact.photoUrl,
@@ -184,6 +192,8 @@ export const getConversationDetail = cache(
 				status: conversation.status,
 				lastMessageAt: conversation.lastMessageAt,
 				lastMessagePreview: conversation.lastMessagePreview,
+				lastMessageDirection: conversation.lastMessageDirection,
+				lastMessageStatus: conversation.lastMessageStatus,
 				unreadCount: conversation.unreadCount,
 				assignedUserId: conversation.assignedUserId,
 				assignedAgentId: conversation.assignedAgentId,
@@ -193,6 +203,8 @@ export const getConversationDetail = cache(
 					id: contact.id,
 					name: contact.name,
 					phone: contact.phone,
+					lid: contact.lid,
+					whatsappJid: contact.whatsappJid,
 					email: contact.email,
 					company: contact.company,
 					photoUrl: contact.photoUrl,

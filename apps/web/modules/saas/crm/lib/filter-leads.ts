@@ -61,6 +61,48 @@ export function isStagnant(
 	return daysInStageFor(lead, lead.createdAt) > stage.maxDays;
 }
 
+export function resolvePeriodRange(
+	filters: ViewFiltersState,
+): { from: Date; to: Date } | null {
+	const preset = filters.periodPreset ?? "all";
+	if (preset === "all") return null;
+
+	const now = new Date();
+	const todayMidnight = new Date(
+		now.getFullYear(),
+		now.getMonth(),
+		now.getDate(),
+	);
+
+	if (preset === "custom") {
+		if (!filters.periodFrom || !filters.periodTo) return null;
+		const from = new Date(filters.periodFrom);
+		const to = new Date(filters.periodTo);
+		if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return null;
+		const toEnd = new Date(to);
+		toEnd.setHours(23, 59, 59, 999);
+		return { from, to: toEnd };
+	}
+
+	if (preset === "today") {
+		const to = new Date(todayMidnight);
+		to.setDate(to.getDate() + 1);
+		return { from: todayMidnight, to };
+	}
+	if (preset === "7d") {
+		const from = new Date(todayMidnight);
+		from.setDate(from.getDate() - 7);
+		return { from, to: now };
+	}
+	if (preset === "month") {
+		const from = new Date(now.getFullYear(), now.getMonth(), 1);
+		return { from, to: now };
+	}
+	const from = new Date(todayMidnight);
+	from.setDate(from.getDate() - 30);
+	return { from, to: now };
+}
+
 export function filterLeads<T extends FilterableLead>(
 	leads: T[],
 	filters: ViewFiltersState,
@@ -68,9 +110,10 @@ export function filterLeads<T extends FilterableLead>(
 ): T[] {
 	let result = leads;
 
-	if (!filters.includeClosed) {
-		result = result.filter((l) => !stagesById[l.stageId]?.isClosing);
-	}
+	// Won/Lost cards continuam VISÍVEIS no kanban por default (decisão Vinni
+	// 2026-04-26 noite). Ocultar fechados deve ser ação manual explícita
+	// (futuro: arquivar/hide via tool ou botão UI). Flag `includeClosed` do
+	// schema fica preservada pra retrocompatibilidade — sem efeito atualmente.
 
 	if (filters.searchQuery?.trim()) {
 		const q = filters.searchQuery.trim();
@@ -111,6 +154,14 @@ export function filterLeads<T extends FilterableLead>(
 
 	if (filters.onlyStagnant) {
 		result = result.filter((l) => isStagnant(l, stagesById[l.stageId]));
+	}
+
+	const range = resolvePeriodRange(filters);
+	if (range) {
+		result = result.filter((l) => {
+			const t = new Date(l.createdAt).getTime();
+			return t >= range.from.getTime() && t <= range.to.getTime();
+		});
 	}
 
 	return result;

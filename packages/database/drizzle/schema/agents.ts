@@ -52,6 +52,62 @@ export type AgentConversationStyle = {
 };
 
 /**
+ * Configuracao granular de emojis (Phase 09 feature).
+ * - none: agente nao usa emoji
+ * - curated: usa apenas os listados em curatedList, respeitando allowed/forbidden
+ * - free: LLM decide baseado no contexto (sem restricoes)
+ */
+export type EmojiConfig = {
+	mode: "none" | "curated" | "free";
+	curatedList?: string[]; // ex: ['👋','😊','✨']
+	allowed?: Array<"greeting" | "celebration" | "achievement" | "empathy">;
+	forbidden?: Array<"pricing" | "objection" | "complaint" | "serious_topic">;
+};
+
+/**
+ * Configuracao de voz TTS (Phase 09 + 07B-v2).
+ * - mode always_text: nunca usa audio
+ * - mode always_audio: sempre converte resposta pra audio
+ * - mode triggered: usa audio quando condicoes em triggers[] sao satisfeitas
+ */
+export type VoiceConfig = {
+	enabled: boolean;
+	provider?: "elevenlabs" | "qwen-self-hosted";
+	voiceId?: string;
+	mode: "always_text" | "always_audio" | "triggered";
+	triggers?: Array<
+		"long_response" | "positive_emotion" | "objection_handling" | "greeting"
+	>;
+};
+
+/**
+ * Tecnicas comerciais mixaveis aplicadas ao prompt do agente (Phase 09 feature).
+ * Presets built-in: rapport, spin, aida, pas, objection, followup.
+ * Master Partners podem estender via technique_library table (futura Phase 13).
+ */
+export type SalesTechnique = {
+	presetId:
+		| "rapport"
+		| "spin"
+		| "aida"
+		| "pas"
+		| "objection"
+		| "followup"
+		| string;
+	intensity: "soft" | "balanced" | "aggressive";
+	customNotes?: string;
+};
+
+/**
+ * Exemplo de conversa (few-shot) pra calibrar tom natural do agente.
+ * Injetado no prompt como exemplos de interacao ideal.
+ */
+export type ConversationExample = {
+	userMessage: string;
+	agentResponse: string;
+};
+
+/**
  * Snapshot imutavel gravado em agent_version.snapshot na publicacao.
  * Permite rollback pro estado exato de qualquer versao anterior.
  */
@@ -99,6 +155,11 @@ export const agent = pgTable(
 		organizationId: text("organizationId")
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
+
+		// Phase 11: vínculo com TIME. Nullable durante migration; obrigatório após backfill.
+		// FK declarada em teams.ts via teamMember (n:m). Coluna direta aqui é
+		// atalho de query (qual TIME esse agent pertence), não relação principal.
+		teamId: text("teamId"),
 
 		// Identidade
 		name: text("name").notNull(),
@@ -154,6 +215,35 @@ export const agent = pgTable(
 		// mais quando o agente for pausado). Validacao a nivel de aplicacao.
 		whatsappInstanceId: text("whatsappInstanceId"),
 
+		// =====================================================
+		// Phase 09 features novas (v2) — ultra-personalizacao granular
+		// =====================================================
+
+		// Configuracao granular de emojis (modo + curadoria + usage rules)
+		emojiConfig: json("emojiConfig").$type<EmojiConfig>(),
+
+		// Configuracao de voz TTS (ElevenLabs primeiro, Qwen auto-hospedado depois)
+		voice: json("voice").$type<VoiceConfig>(),
+
+		// Array de tecnicas comerciais aplicadas (Rapport, SPIN, AIDA, PAS, etc)
+		salesTechniques: json("salesTechniques")
+			.$type<SalesTechnique[]>()
+			.notNull()
+			.default([]),
+
+		// Anti-patterns: lista de coisas que o agente NUNCA deve fazer
+		// Ex: ['nao falar como robo', 'nunca usar travessao', 'nunca inventar precos']
+		antiPatterns: text("antiPatterns")
+			.array()
+			.notNull()
+			.default(sql`'{}'`),
+
+		// Exemplos de conversa (few-shot) pra calibrar tom natural
+		conversationExamples: json("conversationExamples")
+			.$type<ConversationExample[]>()
+			.notNull()
+			.default([]),
+
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 		publishedAt: timestamp("publishedAt"),
@@ -161,6 +251,7 @@ export const agent = pgTable(
 	(table) => [
 		index("agent_org_status_idx").on(table.organizationId, table.status),
 		index("agent_whatsapp_instance_idx").on(table.whatsappInstanceId),
+		index("agent_team_idx").on(table.teamId),
 	],
 );
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { formatPhoneBR } from "@saas/chat/lib/phone";
-import { openConversationWithContactAction } from "@saas/whatsapp-contacts/lib/actions";
+import { findExistingConversationWithContactAction } from "@saas/whatsapp-contacts/lib/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import {
 	Dialog,
@@ -100,12 +100,14 @@ export function NewConversationDialog({
 	function choose(contactId: string) {
 		startTransition(async () => {
 			try {
-				const { conversationId } = await openConversationWithContactAction(
-					contactId,
-					organizationSlug,
-				);
+				const { conversationId } =
+					await findExistingConversationWithContactAction(contactId);
 				onOpenChange(false);
-				router.push(`/app/${organizationSlug}/crm/chat/${conversationId}`);
+				if (conversationId) {
+					router.push(`/app/${organizationSlug}/crm/chat/${conversationId}`);
+				} else {
+					router.push(`/app/${organizationSlug}/crm/chat/new/${contactId}`);
+				}
 			} catch (err) {
 				toast.error(
 					err instanceof Error ? err.message : "Falha ao abrir conversa",

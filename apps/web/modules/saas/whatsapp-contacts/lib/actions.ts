@@ -114,6 +114,71 @@ async function getDefaultPipelineAndFirstStage(organizationId: string) {
 // Criar conversa (ou retornar existente) pra iniciar chat com contato
 // ============================================================
 
+/**
+ * Cria conversa COM primeira mensagem em transação. Usado no fluxo "Nova
+ * conversa" estilo WhatsApp Web — só persiste quando user envia primeira
+ * mensagem. Reusa conversa existente se já houver.
+ */
+export async function startConversationWithMessageAction(
+	contactId: string,
+	text: string,
+	organizationSlug: string,
+): Promise<{ conversationId: string }> {
+	const user = await requireAuthed();
+	const organizationId = await getContactOrgId(contactId);
+	if (!organizationId) throw new Error("CONTACT_NOT_FOUND");
+	await requireOrgAccess(user.id, organizationId);
+
+	const trimmed = text.trim();
+	if (!trimmed) throw new Error("EMPTY_MESSAGE");
+
+	const { openConversationWithContactAction } = await import("./actions");
+	const { conversationId } = await openConversationWithContactAction(
+		contactId,
+		organizationSlug,
+	);
+
+	const { sendTextMessageAction } = await import("@saas/chat/lib/actions");
+	await sendTextMessageAction({
+		conversationId,
+		text: trimmed,
+		direction: "OUTBOUND",
+		senderType: "USER",
+	});
+
+	revalidatePath(`/app/${organizationSlug}/crm/chat`, "page");
+	return { conversationId };
+}
+
+/**
+ * Verifica se já existe conversa com este contato no canal WHATSAPP.
+ * NÃO cria nova — só retorna ID se existir, senão null.
+ * Usado no fluxo de "Nova conversa" estilo WhatsApp Web: se já existe,
+ * navega pra ela; se não, abre rota draft `/crm/chat/new/{contactId}`
+ * e a conversa só é criada quando user envia primeira mensagem.
+ */
+export async function findExistingConversationWithContactAction(
+	contactId: string,
+): Promise<{ conversationId: string | null }> {
+	const user = await requireAuthed();
+	const organizationId = await getContactOrgId(contactId);
+	if (!organizationId) throw new Error("CONTACT_NOT_FOUND");
+	await requireOrgAccess(user.id, organizationId);
+
+	const [existing] = await db
+		.select({ id: conversation.id })
+		.from(conversation)
+		.where(
+			and(
+				eq(conversation.contactId, contactId),
+				eq(conversation.channel, "WHATSAPP"),
+			),
+		)
+		.limit(1);
+
+	return { conversationId: existing?.id ?? null };
+}
+
 export async function openConversationWithContactAction(
 	contactId: string,
 	organizationSlug: string,

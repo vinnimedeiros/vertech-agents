@@ -8,6 +8,8 @@ import {
 	STATUS_FILTERS,
 	type StatusFilterKey,
 } from "@saas/chat/lib/status-config";
+import { FloatingPanel } from "@saas/shared/floating";
+import { WhatsAppSyncBanner } from "@saas/whatsapp/components/WhatsAppSyncBanner";
 import { Input } from "@ui/components/input";
 import { cn } from "@ui/lib";
 import { MessageCirclePlusIcon, SearchIcon } from "lucide-react";
@@ -17,6 +19,7 @@ type Props = {
 	conversations: ConversationListItemType[];
 	selectedId: string | null;
 	onSelect: (id: string) => void;
+	organizationId: string;
 	organizationSlug: string;
 };
 
@@ -24,6 +27,7 @@ export function ConversationList({
 	conversations,
 	selectedId,
 	onSelect,
+	organizationId,
 	organizationSlug,
 }: Props) {
 	const [newDialogOpen, setNewDialogOpen] = useState(false);
@@ -69,8 +73,11 @@ export function ConversationList({
 	}, [conversations, activeFilter, search]);
 
 	return (
-		<aside className="flex h-full w-80 shrink-0 flex-col border-r border-border/60 bg-card/40">
-			<div className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-3 border-b border-border/60">
+		<FloatingPanel
+			as="aside"
+			className="flex h-full w-80 shrink-0 flex-col"
+		>
+			<div className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-3 border-b border-border/40">
 				<div className="flex items-center justify-between">
 					<h3 className="font-semibold text-sm text-foreground">Conversas</h3>
 					<button
@@ -87,6 +94,7 @@ export function ConversationList({
 						<MessageCirclePlusIcon className="size-4" />
 					</button>
 				</div>
+				<WhatsAppSyncBanner organizationId={organizationId} />
 				<div className="relative">
 					<SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-foreground/50" />
 					<Input
@@ -103,7 +111,7 @@ export function ConversationList({
 				/>
 			</div>
 
-			<div className="flex-1 overflow-y-auto px-2 py-2">
+			<div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
 				{filtered.length === 0 ? (
 					<div
 						className={cn(
@@ -141,6 +149,6 @@ export function ConversationList({
 				open={newDialogOpen}
 				onOpenChange={setNewDialogOpen}
 			/>
-		</aside>
+		</FloatingPanel>
 	);
 }

@@ -6,9 +6,10 @@ import {
 	listOrgMembers,
 } from "@saas/crm/lib/server";
 import { ComingSoon } from "@saas/shared/components/ComingSoon";
-import { PageHeader } from "@saas/shared/components/PageHeader";
 import { UserCheckIcon } from "lucide-react";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export default async function CrmClientesPage({
 	params,
@@ -22,17 +23,13 @@ export default async function CrmClientesPage({
 	const pipelineData = await getDefaultPipelineWithStages(org.id);
 	if (!pipelineData) {
 		return (
-			<>
-				<PageHeader
-					title="Clientes"
-					subtitle="Leads convertidos em clientes ativos"
-				/>
+			<div className="flex h-full flex-col gap-3 overflow-hidden">
 				<ComingSoon
 					icon={UserCheckIcon}
 					title="Pipeline não configurado"
 					description="Este workspace ainda não tem um pipeline padrão."
 				/>
-			</>
+			</div>
 		);
 	}
 
@@ -67,19 +64,13 @@ export default async function CrmClientesPage({
 	}));
 
 	return (
-		<>
-			<PageHeader
-				title="Clientes"
-				subtitle={`${wonLeads.length} ${wonLeads.length === 1 ? "cliente fechado" : "clientes fechados"}`}
-			/>
-			<LeadsTable
-				organizationSlug={organizationSlug}
-				leads={wonLeads}
-				stages={stages}
-				members={members}
-				hideStageFilter
-				emptyMessage="Nenhum cliente fechado ainda. Mova um lead para um estágio de ganho no Kanban."
-			/>
-		</>
+		<LeadsTable
+			organizationSlug={organizationSlug}
+			leads={wonLeads}
+			stages={stages}
+			members={members}
+			hideStageFilter
+			emptyMessage="Nenhum cliente fechado ainda. Mova um lead para um estágio de ganho no Kanban."
+		/>
 	);
 }

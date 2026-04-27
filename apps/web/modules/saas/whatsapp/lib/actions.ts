@@ -233,42 +233,52 @@ export async function switchInstanceAction(
 
 	const now = new Date();
 
-	// Cria nova instance ANTES de reaponta conversations (precisa do id)
-	const [created] = await db
-		.insert(whatsappInstance)
-		.values({
-			organizationId: old.organizationId,
-			name: data.newName,
-			status: "PENDING",
-			createdAt: now,
-			updatedAt: now,
-		})
-		.returning({ id: whatsappInstance.id });
+	// Operação atômica: tudo dentro da transação, rollback completo se falhar
+	// em qualquer passo. Evita estado inconsistente (ex: nova instance criada
+	// + falha ao apagar velha = 2 instances ativas).
+	const created = await db.transaction(async (tx) => {
+		// Cria nova instance ANTES de reaponta conversations (precisa do id)
+		const [inst] = await tx
+			.insert(whatsappInstance)
+			.values({
+				organizationId: old.organizationId,
+				name: data.newName,
+				status: "PENDING",
+				createdAt: now,
+				updatedAt: now,
+			})
+			.returning({ id: whatsappInstance.id });
 
-	if (data.inheritConversations) {
-		// Reaponta conversations da instance velha pra nova; histórico preservado
-		await db
-			.update(conversation)
-			.set({ channelInstanceId: created.id, updatedAt: now })
-			.where(eq(conversation.channelInstanceId, data.oldInstanceId));
-	} else {
-		// Apaga conversations da velha (cascade messages)
-		await db
-			.delete(conversation)
-			.where(eq(conversation.channelInstanceId, data.oldInstanceId));
-	}
+		if (data.inheritConversations) {
+			// Reaponta conversations da instance velha pra nova; histórico preservado
+			await tx
+				.update(conversation)
+				.set({ channelInstanceId: inst.id, updatedAt: now })
+				.where(eq(conversation.channelInstanceId, data.oldInstanceId));
+		} else {
+			// Apaga conversations da velha (cascade messages)
+			await tx
+				.delete(conversation)
+				.where(eq(conversation.channelInstanceId, data.oldInstanceId));
+		}
 
-	if (!data.inheritContacts) {
-		// Apaga contatos criados via WhatsApp (sem lead promovido E sem conv ativa)
-		await purgeInstanceArtifacts(data.oldInstanceId, old.organizationId, {
-			conversationsAlreadyPurged: !data.inheritConversations,
-		});
-	}
+		if (!data.inheritContacts) {
+			// Apaga contatos criados via WhatsApp (sem lead promovido E sem conv ativa)
+			await purgeInstanceArtifactsTx(
+				tx,
+				data.oldInstanceId,
+				old.organizationId,
+				{ conversationsAlreadyPurged: !data.inheritConversations },
+			);
+		}
 
-	// Remove instance velha
-	await db
-		.delete(whatsappInstance)
-		.where(eq(whatsappInstance.id, data.oldInstanceId));
+		// Remove instance velha
+		await tx
+			.delete(whatsappInstance)
+			.where(eq(whatsappInstance.id, data.oldInstanceId));
+
+		return inst;
+	});
 
 	// Inicia nova pra gerar QR
 	baileysManager.startInstance(created.id).catch((err) => {
@@ -287,28 +297,45 @@ export async function switchInstanceAction(
  * Apaga artefatos pertencentes a uma instance: conversations vivas + contatos
  * criados via WhatsApp sem promoção a lead. Idempotente — pode ser chamado
  * várias vezes ou após delete prévio de conversations.
+ *
+ * Wrapper que abre sua própria transação (uso fora de fluxo já transacional).
  */
 async function purgeInstanceArtifacts(
 	instanceId: string,
 	organizationId: string,
 	opts?: { conversationsAlreadyPurged?: boolean },
 ) {
+	await db.transaction(async (tx) => {
+		await purgeInstanceArtifactsTx(tx, instanceId, organizationId, opts);
+	});
+}
+
+/**
+ * Versão transacional reusável — recebe tx existente. Usar de dentro de outra
+ * transação maior (ex: switchInstanceAction).
+ */
+async function purgeInstanceArtifactsTx(
+	tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+	instanceId: string,
+	organizationId: string,
+	opts?: { conversationsAlreadyPurged?: boolean },
+) {
 	if (!opts?.conversationsAlreadyPurged) {
-		await db
+		await tx
 			.delete(conversation)
 			.where(eq(conversation.channelInstanceId, instanceId));
 	}
 
 	// Contatos a apagar: criados via WhatsApp, sem lead promovido, sem conv viva,
 	// sem lead row (FK restrict no lead.contactId não permite apagar).
-	const contactsWithLeads = db
+	const contactsWithLeads = tx
 		.select({ id: sql<string>`DISTINCT "contactId"` })
 		.from(sql`lead`);
-	const contactsWithConvs = db
+	const contactsWithConvs = tx
 		.select({ id: sql<string>`DISTINCT "contactId"` })
 		.from(conversation);
 
-	await db
+	await tx
 		.delete(contact)
 		.where(
 			and(

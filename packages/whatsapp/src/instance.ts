@@ -3,6 +3,7 @@ import { and, contact, db, eq, isNull, whatsappInstance } from "@repo/database";
 import makeWASocket, {
 	DisconnectReason,
 	fetchLatestBaileysVersion,
+	type SignalRepositoryWithLIDStore,
 	type WASocket,
 } from "@whiskeysockets/baileys";
 import pino from "pino";
@@ -295,7 +296,13 @@ export class WhatsAppInstance {
 	private async resolveLidPhonesBackground(): Promise<void> {
 		const sock = this.sock;
 		if (!sock) return;
-		const lidMapping = (sock as any).signalRepository?.lidMapping;
+		// Baileys v7 expõe signalRepository internamente mas o type WASocket
+		// não promove o field. Cast pra shape conhecido em vez de `any` —
+		// mantém type-safety dentro do helper.
+		const sockWithRepo = sock as WASocket & {
+			signalRepository?: SignalRepositoryWithLIDStore;
+		};
+		const lidMapping = sockWithRepo.signalRepository?.lidMapping;
 		if (!lidMapping?.getPNForLID) return;
 
 		const [row] = await db

@@ -22,6 +22,7 @@ export function getMastraStorage(): PostgresStore {
 		storageInstance = new PostgresStore({
 			id: "vertech-agents-mastra",
 			connectionString: url,
+			max: 20,
 		});
 	}
 	return storageInstance;

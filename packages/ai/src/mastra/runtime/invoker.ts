@@ -8,6 +8,9 @@ import {
 	message as messageTable,
 } from "@repo/database";
 import { getMastra } from "../instance";
+import { getLogger } from "../logger";
+
+const log = getLogger("runtime/invoker");
 
 /**
  * Runtime invoker — ponto de entrada quando uma mensagem inbound precisa ser
@@ -54,7 +57,7 @@ export async function invokeAgentForMessage(
 		where: eq(messageTable.id, messageId),
 	});
 	if (!inbound) {
-		console.warn(`[invokeAgent] message ${messageId} nao existe — abort`);
+		log.warn({ messageId }, "invokeAgent abort — message não existe");
 		return null;
 	}
 
@@ -67,9 +70,7 @@ export async function invokeAgentForMessage(
 		where: eq(conversationTable.id, inbound.conversationId),
 	});
 	if (!conversation) {
-		console.warn(
-			`[invokeAgent] conversation ${inbound.conversationId} nao existe — abort`,
-		);
+		log.warn({ conversationId: inbound.conversationId }, "invokeAgent abort — conversation não existe");
 		return null;
 	}
 
@@ -88,9 +89,7 @@ export async function invokeAgentForMessage(
 		where: eq(contactTable.id, conversation.contactId),
 	});
 	if (!contact) {
-		console.warn(
-			`[invokeAgent] contact ${conversation.contactId} nao existe — abort`,
-		);
+		log.warn({ contactId: conversation.contactId }, "invokeAgent abort — contact não existe");
 		return null;
 	}
 
@@ -145,7 +144,7 @@ export async function invokeAgentForMessage(
 		responseStepsCount = resultAny.steps?.length ?? 0;
 	} catch (err) {
 		const errorMsg = err instanceof Error ? err.message : String(err);
-		console.error(`[invokeAgent] generate falhou: ${errorMsg}`);
+		log.error({ err, errorMsg, messageId }, "invokeAgent generate falhou");
 		await db
 			.update(messageTable)
 			.set({
@@ -157,7 +156,7 @@ export async function invokeAgentForMessage(
 	}
 
 	if (!responseText.trim()) {
-		console.warn("[invokeAgent] resposta vazia do agente");
+		log.warn({ messageId }, "invokeAgent resposta vazia do agente");
 		await db
 			.update(messageTable)
 			.set({

@@ -13,6 +13,7 @@ import {
 	CommandSeparator,
 	CommandShortcut,
 } from "@ui/components/command";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import {
 	BriefcaseBusinessIcon,
 	CalendarIcon,
@@ -23,7 +24,6 @@ import {
 	PlugIcon,
 	PlusIcon,
 	SettingsIcon,
-	SparklesIcon,
 	UserCheckIcon,
 	UsersIcon,
 } from "lucide-react";
@@ -100,9 +100,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 					path: `${base}/crm/integracoes`,
 				},
 				{
-					label: "Agentes",
-					icon: SparklesIcon,
-					path: `${base}/agents`,
+					label: "AI Studio",
+					icon: AiStudioIcon,
+					path: `${base}/ai-studio`,
 				},
 				{
 					label: "Configurações",
@@ -134,7 +134,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 				{
 					label: "Novo agente",
 					icon: PlusIcon,
-					path: `${base}/agents/new`,
+					path: `${base}/ai-studio`,
 				},
 			]
 		: [];

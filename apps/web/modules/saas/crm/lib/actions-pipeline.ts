@@ -10,6 +10,7 @@ import {
 	lead,
 	pipeline,
 	pipelineStage,
+	sql,
 } from "@repo/database";
 import { bus } from "@repo/events";
 import { getSession } from "@saas/auth/lib/server";
@@ -527,14 +528,24 @@ export async function reorderStagesAction(
 	}
 
 	const now = new Date();
-	await db.transaction(async (tx) => {
-		for (let i = 0; i < orderedStageIds.length; i++) {
-			await tx
-				.update(pipelineStage)
-				.set({ position: i })
-				.where(eq(pipelineStage.id, orderedStageIds[i]));
-		}
-	});
+	// Wave 1 G.P0.3 — UPDATE único com CASE WHEN em vez de loop.
+	// Antes: N stages = N round-trips. Agora: 1 query.
+	// Reduce em vez de sql.join (API interna do Drizzle, instável entre versões).
+	if (orderedStageIds.length > 0) {
+		const cases = orderedStageIds
+			.map(
+				(stageId, i) =>
+					sql`WHEN ${pipelineStage.id} = ${stageId} THEN ${i}::int`,
+			)
+			.reduce((acc, frag) => sql`${acc} ${frag}`, sql``);
+
+		await db
+			.update(pipelineStage)
+			.set({
+				position: sql`CASE ${cases} ELSE ${pipelineStage.position} END`,
+			})
+			.where(inArray(pipelineStage.id, orderedStageIds));
+	}
 
 	bus.emitEvent({
 		type: "pipeline.stage.reordered",

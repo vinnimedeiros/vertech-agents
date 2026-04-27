@@ -62,3 +62,15 @@ export const ARCHITECT_UPLOAD_LIMIT: RateLimitConfig = {
 	limit: 10,
 	windowSeconds: 60,
 };
+
+/**
+ * Config pra chat do Arquiteto (story 09.5, tech-spec § 7.3):
+ * 10 mensagens por sessao por 60s. A key inclui sessionId, nao userId, pra
+ * permitir ao mesmo usuario manter multiplas sessoes em paralelo sem se
+ * sabotar. `checkRateLimit` recebe sessionId no slot do `userId`.
+ */
+export const ARCHITECT_CHAT_LIMIT: RateLimitConfig = {
+	bucket: "architect:chat",
+	limit: 10,
+	windowSeconds: 60,
+};

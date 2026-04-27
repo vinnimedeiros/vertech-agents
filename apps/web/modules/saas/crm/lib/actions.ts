@@ -2,10 +2,14 @@
 
 import { requireOrgAccess } from "@repo/auth";
 import {
+	and,
+	asc,
+	calendarEvent,
 	contact,
 	db,
 	desc,
 	eq,
+	gte,
 	lead,
 	leadActivity,
 	pipeline,
@@ -442,10 +446,26 @@ export async function getLeadDetailsAction(leadId: string) {
 		.where(eq(leadActivity.leadId, leadId))
 		.orderBy(desc(leadActivity.createdAt));
 
+	// Eventos agendados deste lead — Meets + Eventos. Retorna futuros + recentes
+	// (até -7 dias) ordenados por data crescente. Sidebar do LeadModal renderiza
+	// cards bonitos com link Meet quando aplicável.
+	const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+	const events = await db
+		.select()
+		.from(calendarEvent)
+		.where(
+			and(
+				eq(calendarEvent.leadId, leadId),
+				gte(calendarEvent.startAt, sevenDaysAgo),
+			),
+		)
+		.orderBy(asc(calendarEvent.startAt));
+
 	return {
 		lead: row.lead,
 		contact: row.contact,
 		activities,
+		events,
 	};
 }
 

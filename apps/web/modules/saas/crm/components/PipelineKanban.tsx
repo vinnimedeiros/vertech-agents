@@ -35,6 +35,7 @@ export type KanbanLead = {
 	temperature: "COLD" | "WARM" | "HOT";
 	priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
 	origin: string | null;
+	interests?: string[];
 	stageId: string;
 	assignedTo: string | null;
 	createdAt: Date | string;

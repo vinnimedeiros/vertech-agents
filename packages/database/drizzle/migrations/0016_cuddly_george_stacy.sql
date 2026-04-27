@@ -1,0 +1,1 @@
+ALTER TABLE "knowledge_chunk" ALTER COLUMN "metadata" SET DATA TYPE jsonb;

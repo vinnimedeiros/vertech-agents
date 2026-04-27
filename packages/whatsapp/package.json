@@ -11,7 +11,7 @@
 		"@repo/events": "workspace:*",
 		"@repo/queue": "workspace:*",
 		"@repo/storage": "workspace:*",
-		"@whiskeysockets/baileys": "^6.7.9",
+		"@whiskeysockets/baileys": "7.0.0-rc.9",
 		"@hapi/boom": "^10.0.1",
 		"pino": "^9.5.0",
 		"qrcode": "^1.5.4",

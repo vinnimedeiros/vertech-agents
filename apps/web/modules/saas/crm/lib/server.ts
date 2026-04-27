@@ -40,6 +40,8 @@ export const listPipelinesByOrg = cache(async (organizationId: string) => {
 /**
  * Pipelines da org enriquecidos com contagem de leads + valor total.
  * Usado pelo PipelineSelector no header do Kanban.
+ *
+ * Wave 1 G.P0.1: agregação de leads filtra `isSandbox=false` por default.
  */
 export const listPipelinesWithStats = cache(async (organizationId: string) => {
 	const pipelines = await db
@@ -57,7 +59,12 @@ export const listPipelinesWithStats = cache(async (organizationId: string) => {
 			totalValue: sql<string>`coalesce(sum(${lead.value}), 0)::text`,
 		})
 		.from(lead)
-		.where(eq(lead.organizationId, organizationId))
+		.where(
+			and(
+				eq(lead.organizationId, organizationId),
+				eq(lead.isSandbox, false),
+			),
+		)
 		.groupBy(lead.pipelineId);
 
 	const statsByPipeline = new Map(
@@ -125,77 +132,100 @@ export const getPipelineWithStages = cache(async (pipelineId: string) => {
 // Leads
 // ============================================================
 
-export const listLeadsForOrg = cache(async (organizationId: string) => {
-	return db
-		.select({
-			id: lead.id,
-			title: lead.title,
-			description: lead.description,
-			value: lead.value,
-			currency: lead.currency,
-			temperature: lead.temperature,
-			priority: lead.priority,
-			origin: lead.origin,
-			assignedTo: lead.assignedTo,
-			stageId: lead.stageId,
-			pipelineId: lead.pipelineId,
-			createdAt: lead.createdAt,
-			updatedAt: lead.updatedAt,
-			closedAt: lead.closedAt,
-			contact: {
-				id: contact.id,
-				name: contact.name,
-				phone: contact.phone,
-				email: contact.email,
-				company: contact.company,
-				photoUrl: contact.photoUrl,
-			},
-			stage: {
-				id: pipelineStage.id,
-				name: pipelineStage.name,
-				color: pipelineStage.color,
-				isClosing: pipelineStage.isClosing,
-				isWon: pipelineStage.isWon,
-			},
-		})
-		.from(lead)
-		.innerJoin(contact, eq(lead.contactId, contact.id))
-		.innerJoin(pipelineStage, eq(lead.stageId, pipelineStage.id))
-		.where(eq(lead.organizationId, organizationId))
-		.orderBy(desc(lead.updatedAt));
-});
+/**
+ * Lista leads de uma org. Filtra `isSandbox=false` por default
+ * (Wave 1 G.P0.1) — sandbox playground deve usar endpoint dedicado.
+ */
+export const listLeadsForOrg = cache(
+	async (organizationId: string, options?: { includeSandbox?: boolean }) => {
+		const conditions = [eq(lead.organizationId, organizationId)];
+		if (!options?.includeSandbox) {
+			conditions.push(eq(lead.isSandbox, false));
+		}
 
-export const listLeadsByPipeline = cache(async (pipelineId: string) => {
-	return db
-		.select({
-			id: lead.id,
-			title: lead.title,
-			description: lead.description,
-			value: lead.value,
-			currency: lead.currency,
-			temperature: lead.temperature,
-			priority: lead.priority,
-			origin: lead.origin,
-			stageId: lead.stageId,
-			assignedTo: lead.assignedTo,
-			stageDates: lead.stageDates,
-			createdAt: lead.createdAt,
-			updatedAt: lead.updatedAt,
-			closedAt: lead.closedAt,
-			contact: {
-				id: contact.id,
-				name: contact.name,
-				phone: contact.phone,
-				email: contact.email,
-				company: contact.company,
-				photoUrl: contact.photoUrl,
-			},
-		})
-		.from(lead)
-		.innerJoin(contact, eq(lead.contactId, contact.id))
-		.where(eq(lead.pipelineId, pipelineId))
-		.orderBy(desc(lead.updatedAt));
-});
+		return db
+			.select({
+				id: lead.id,
+				title: lead.title,
+				description: lead.description,
+				value: lead.value,
+				currency: lead.currency,
+				temperature: lead.temperature,
+				priority: lead.priority,
+				origin: lead.origin,
+				assignedTo: lead.assignedTo,
+				stageId: lead.stageId,
+				pipelineId: lead.pipelineId,
+				createdAt: lead.createdAt,
+				updatedAt: lead.updatedAt,
+				closedAt: lead.closedAt,
+				contact: {
+					id: contact.id,
+					name: contact.name,
+					phone: contact.phone,
+					email: contact.email,
+					company: contact.company,
+					photoUrl: contact.photoUrl,
+				},
+				stage: {
+					id: pipelineStage.id,
+					name: pipelineStage.name,
+					color: pipelineStage.color,
+					isClosing: pipelineStage.isClosing,
+					isWon: pipelineStage.isWon,
+				},
+			})
+			.from(lead)
+			.innerJoin(contact, eq(lead.contactId, contact.id))
+			.innerJoin(pipelineStage, eq(lead.stageId, pipelineStage.id))
+			.where(and(...conditions))
+			.orderBy(desc(lead.updatedAt));
+	},
+);
+
+/**
+ * Lista leads de um pipeline. Filtra `isSandbox=false` por default
+ * (Wave 1 G.P0.1) — kanban real não deve mostrar leads de teste.
+ */
+export const listLeadsByPipeline = cache(
+	async (pipelineId: string, options?: { includeSandbox?: boolean }) => {
+		const conditions = [eq(lead.pipelineId, pipelineId)];
+		if (!options?.includeSandbox) {
+			conditions.push(eq(lead.isSandbox, false));
+		}
+
+		return db
+			.select({
+				id: lead.id,
+				title: lead.title,
+				description: lead.description,
+				value: lead.value,
+				currency: lead.currency,
+				temperature: lead.temperature,
+				priority: lead.priority,
+				origin: lead.origin,
+				interests: lead.interests,
+				stageId: lead.stageId,
+				assignedTo: lead.assignedTo,
+				stageDates: lead.stageDates,
+				createdAt: lead.createdAt,
+				updatedAt: lead.updatedAt,
+				closedAt: lead.closedAt,
+				contact: {
+					id: contact.id,
+					name: contact.name,
+					phone: contact.phone,
+					email: contact.email,
+					company: contact.company,
+					photoUrl: contact.photoUrl,
+				},
+			})
+			.from(lead)
+			.innerJoin(contact, eq(lead.contactId, contact.id))
+			.where(and(...conditions))
+			.orderBy(desc(lead.updatedAt));
+	},
+);
 
 export const getLeadById = cache(async (leadId: string) => {
 	const [row] = await db
@@ -255,13 +285,24 @@ export const listProposalsByOrg = cache(async (organizationId: string) => {
 		.orderBy(desc(proposal.updatedAt));
 });
 
-export const listActivitiesByLead = cache(async (leadId: string) => {
-	return db
-		.select()
-		.from(leadActivity)
-		.where(eq(leadActivity.leadId, leadId))
-		.orderBy(desc(leadActivity.createdAt));
-});
+/**
+ * Lista atividades de um lead. Filtra `isSandbox=false` por default
+ * (Wave 1 fix QA-1) — timeline real não mostra atividades de teste
+ * geradas pelo Atendente em sandbox.
+ */
+export const listActivitiesByLead = cache(
+	async (leadId: string, options?: { includeSandbox?: boolean }) => {
+		const conditions = [eq(leadActivity.leadId, leadId)];
+		if (!options?.includeSandbox) {
+			conditions.push(eq(leadActivity.isSandbox, false));
+		}
+		return db
+			.select()
+			.from(leadActivity)
+			.where(and(...conditions))
+			.orderBy(desc(leadActivity.createdAt));
+	},
+);
 
 // ============================================================
 // Status Templates (Phase 04F)
@@ -320,12 +361,21 @@ export const listStatusTemplatesForOrg = cache(
 // Interesses da org (pra autocomplete no InterestsPicker)
 // ============================================================
 
+/**
+ * Agrega lista de interesses únicos pra autocomplete. Filtra
+ * `isSandbox=false` (Wave 1 G.P0.1) pra não vazar interesses de teste.
+ */
 export const listAllInterestsForOrg = cache(
 	async (organizationId: string): Promise<string[]> => {
 		const rows = await db
 			.select({ interests: lead.interests })
 			.from(lead)
-			.where(eq(lead.organizationId, organizationId));
+			.where(
+				and(
+					eq(lead.organizationId, organizationId),
+					eq(lead.isSandbox, false),
+				),
+			);
 		const set = new Set<string>();
 		for (const r of rows) {
 			const arr = r.interests as string[] | null;

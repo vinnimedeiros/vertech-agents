@@ -3,7 +3,7 @@ import { relations, sql } from "drizzle-orm";
 import {
 	index,
 	integer,
-	json,
+	jsonb,
 	pgEnum,
 	pgTable,
 	text,
@@ -134,8 +134,10 @@ export const knowledgeChunk = pgTable(
 		// Vetor 1536d do embedding. Plugin pgvector habilitado na migration.
 		embedding: vector("embedding", { dimensions: 1536 }),
 
-		// Metadata denormalizado pra queries sem JOIN
-		metadata: json("metadata").$type<KnowledgeChunkMetadata>().notNull(),
+		// Metadata denormalizado pra queries sem JOIN.
+		// JSONB (não json) pra suportar jsonb_set() na transação de publish
+		// sem cast band-aid (ver ADR-002, fix C4 do verify Smith 2026-04-21).
+		metadata: jsonb("metadata").$type<KnowledgeChunkMetadata>().notNull(),
 
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 	},

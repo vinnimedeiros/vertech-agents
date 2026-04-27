@@ -26,6 +26,7 @@ export function getPgVector(): PgVector {
 	instance = new PgVector({
 		id: "vertech-agents-rag",
 		connectionString: url,
+		max: 20,
 	});
 	return instance;
 }

@@ -1,8 +1,8 @@
 ---
 type: checkpoint
-last_updated: 2026-04-19
-active_story: "Phase 08-alpha COMPLETA + pushed + PR #1 aberto — próximo: review/merge + Phase 09"
-active_agent: dev
+last_updated: 2026-04-25
+active_story: "Pivot V3 (TIME 4 agentes) + Roadmap V3 + M1-01 Mastra Studio local rodando. Q1-Q12 fechadas. R1/R2/R3 mitigados. Próximo: M1-02 Supervisor Pattern stub."
+active_agent: lmas-master
 project: vertech-agents
 tags:
   - project/vertech-agents
@@ -11,14 +11,255 @@ tags:
 
 # Project Checkpoint Vertech Agents
 
-> **Última atualização:** 2026-04-20 madrugada (**Phase 08-alpha pushed + PR #1 aberto**)
-> **Agente ativo:** `@devops` (Operator) — HALT após push/PR, aguardando review
-> **Próximo passo:** Vinni revisa PR #1 → decide entre mergear tudo ou cherry-pick 9 commits 08-alpha → depois Phase 09.1 (Niobe passa 9.1 pro Neo, UI do Arquiteto)
-> **PR:** https://github.com/vinnimedeiros/vertech-agents/pull/1
+> **Última atualização:** 2026-04-25 noite (**Pivot V3 fechado + Mastra Studio local UP** — pesquisa Mercado Agentes 1.0+2.0 + análise independente sem viés + Mastra deep dive 2026 = 12 decisões estratégicas batidas + roadmap V3 com 7 milestones + M1-01 Studio rodando em http://localhost:4111)
+> **Agente ativo:** `@lmas-master` (Morpheus) — pronto pra atacar M1-02 Supervisor Pattern
+> **Próximo passo:** M1-02 Supervisor Pattern stub — refatorar Atendente como Supervisor (estrutura pronta sem sub-agents ainda) usando `agentAsTool()`. Pré-requisito pra TIME 4 agentes em M2 (evolução progressiva Atendente → +Analista → +Campanhas → +Assistente).
+> **Roadmap consolidado:** `docs/PROJECT-ROADMAP-V3.md` (7 milestones M0-M7). Phases 09 wizard + 10 orquestrador CANCELADAS (substituídas por Mastra Supervisor + M3 Construtor V3).
+> **PRs abertos:** #1 (Phase 08-alpha) | #2 (Phase 09 UI completa). Branch atual: `feature/phase-09-architect-ui`
+
+## Sessão 2026-04-25 — Pivot V3 + Mastra Studio local
+
+**Decisões fechadas (Q1-Q12 + R1-R3):**
+- Q1 BYOK em cascata (Super→Master→Agency→Cliente herda automaticamente)
+- Q3 Multi-provider 12 modelos, default GPT-4.1-mini
+- Q4 `{{var}}` Mustache universal
+- Q5 BC 50 arquivos × 10MB formato amplo
+- Q6 Wizard primário + Canvas opt-in + IA copilot reativo (INVERTE Opção B)
+- Q7 10+ templates verticais
+- Q8 Tom desacoplado (4 Tons + 20 Traços)
+- Q9 Humanização modular 8+ módulos
+- Q10 Flow Diagram do TIME
+- Q11 Sandbox real escopo restrito (1 vertical: consultório)
+- Q12 Frameworks SPIN+NEAT+BANT+MEDDIC+GAP+Upsell+Cross-sell
+- R1 Baileys agora + API oficial paralelo (camada abstração canal Phase M6-01)
+- R2 Multi-agent evolução progressiva c/ critério mensurável >70% sucesso
+- R3 Sandbox = playground chat + tabs Pipeline+Agenda + flag is_sandbox + suite testes integração
+
+**M1-01 entregue:** Mastra Studio local em `http://localhost:4111` (mastra dev --dir mastra-runtime --env ../../.env.local). Studio mostra Agents/Workflows/Tools/Scorers/Datasets/Experiments/Metrics/Traces/Logs.
+
+**Próximas phases M1:** M1-02 Supervisor Pattern stub → M1-03 Memory completa → M1-04 Datasets → M1-05 Scorers
+
+---
+
+## Sessão 2026-04-21 (histórico) — Pacote Smith verify fixes COMPLETO
+
+> **Última atualização original:** 2026-04-21 (**Pacote Smith verify fixes COMPLETO** — Morpheus executou 3 blocos direto, typecheck passando, migration 0016 aplicada via MCP Supabase)
+> **Agente ativo:** `@lmas-master` (Morpheus) — aguardando Vinni testar wizard end-to-end na UI
+> **Próximo passo:** Vinni testa fluxo `/agents/new?template=clinical` em dev. Validar: wizard roda end-to-end, ajustar análise + aprovar funciona, ajustar plano + aprovar funciona, publish cria agente sem erro de UPDATE em knowledge_chunk, erros mostram tela amigável em vez de tela branca.
+> **PRs abertos:** #1 (Phase 08-alpha) https://github.com/vinnimedeiros/vertech-agents/pull/1 | #2 (Phase 09 UI completa 09.1→09.10) https://github.com/vinnimedeiros/vertech-agents/pull/2
 
 ## Contexto Ativo
 
-**O que está sendo feito agora:** **Phase 08-alpha COMPLETA** numa sessão maratona de madrugada. Todas as 5 stories (08A.1 até 08A.5) Ready for Review. Gate 08A.5 com verdict PASS com observações. Próximo: gate humano do Vinni + decisão de commit/push + Phase 09.
+**O que está sendo feito agora (sessão 2026-04-21):** Smith (@smith) rodou `*verify` adversarial completo no Phase 09 (24 findings). Morpheus (@lmas-master) executou o pacote completo de correções direto via MCP Supabase + Bash + Edits. **Todos os blocos concluídos**: 7 fixes aplicados, 2 tech-debts registrados formalmente, 1 decisão de negócio documentada pro Vinni decidir, 4 findings rebatidos por evidência. Migration 0016 aplicada no Supabase dev `agents-v2`. Typecheck `@repo/web` limpo. Agora aguarda só Vinni testar UI.
+
+## Sessão 2026-04-21 — Pacote Smith verify fixes COMPLETO
+
+### Executado (7 fixes + audit)
+
+**Fix-01 (C1 credentials audit) — CLEAN:** `.env.local` nunca commitado. Zero leak. Pre-commit hook gitleaks documentado como preventivo opcional.
+- Arquivo: `docs/security/secrets-audit-2026-04-21.md`
+
+**Fix-02 (PRD-1 doc divergence) — ADR-002 criado:** Pivot Phase 09 chat→wizard registrado formalmente.
+- Arquivo: `docs/architecture/adr/adr-002-phase-09-wizard-vs-chat.md`
+
+**Fix-03 (C4 metadata json→jsonb) — APLICADO:**
+- Schema `packages/database/drizzle/schema/knowledge.ts` atualizado (json→jsonb)
+- `count` re-exportado de `packages/database/drizzle/index.ts`
+- Cast removido de `packages/ai/src/mastra/tools/architect/publish-agent.ts`
+- Migration `0016_cuddly_george_stacy.sql` gerada via drizzle-kit
+- **Aplicada em prod dev Supabase via MCP** (project `nujsmuciphumofhbqprl`, success)
+
+**Fix-05 (H6 REGENERATED → APPROVED explícito):**
+- `apps/web/app/api/architect/sessions/[sessionId]/publish/route.ts`: removida força de APPROVED, retorna 409 com message guiando user
+- `apps/web/modules/saas/agents/architect/components/wizard/PlanningStep.tsx`: prop `onArtifactUpdated` + toast após ajustar pedindo aprovação explícita
+- WizardShell recebe propagação de artifact updated
+
+**Fix-06 (H1 race sessionId + completed sync):**
+- `WizardShell.tsx`: novo useEffect re-sincroniza `completed` set baseado em status de artefatos. Se user refina (REGENERATED), remove automaticamente de `completed` → stepper bloqueia navegação forward
+
+**Fix-07 (H2 ErrorBoundary + loading):**
+- `apps/web/app/(saas)/app/(organizations)/[organizationSlug]/agents/error.tsx` criado
+- `.../agents/new/error.tsx` criado
+- `.../agents/new/loading.tsx` criado
+
+**Fix-10 (PRD-10 Health Tech architect endpoint):**
+- `apps/web/app/api/admin/health/architect/route.ts` criado
+- Métricas: sessions DRAFT, ABANDONED 24h, PUBLISHED 24h, publish_rate, contagem artefatos por tipo/status
+- Alerts: critical se publish_rate < 10%, warning se DRAFT backlog > 500
+- Atende regra MUST `feedback_health_tech_dashboard.md`
+
+### Decisão pendente Vinni
+
+**Fix-09 (PRD-7 vertical library white-label):** Documento com 3 opções + recomendação Opção A (manter hardcoded, migrar em Phase 13).
+- Arquivo: `docs/architecture/decisions/vertical-library-white-label-options.md`
+
+### Adiado como tech-debt registrado
+
+**Fix-08 (H5 optimistic locking):** Defer pra Phase 07B-v2 que refatora profundamente as abas.
+- Rationale em `docs/architecture/tech-debt-register.md#td-002`
+
+### Findings Smith rebatidos por evidência
+
+- **C1** credentials → audit CLEAN
+- **PRD-2** schema v2 campos → já existem em migration 0015
+- **PRD-4** agent_version → tabela já existe
+- **PRD-5** orchestrator_audit_log → tabela já existe
+
+### Findings Smith MEDIUM/LOW adiados pra pre-prod gate
+
+Registrados em `docs/architecture/tech-debt-register.md`:
+- TD-003 C2 prompt injection admin
+- TD-004 C3 prompt injection user refine
+- TD-005 H8 /api/system/boot auth
+- TD-006 H10 rate limit architect endpoints
+- TD-007 H7 test coverage
+- TD-008 M1 silent failures enrich
+
+### Build status
+- `pnpm --filter @repo/web type-check` → limpo, zero erros após fixes
+- Migration 0016 aplicada em Supabase dev
+
+### Teste end-to-end Playwright 2026-04-21 (Firefox)
+
+Morpheus testou wizard inteiro via Playwright. **Resultado: PUBLISH OK.**
+
+Percorrido:
+1. `/agents/new?template=clinical` → renderizou sem erros
+2. Marcou Feminino, 3 perguntas, preencheu respostas → `Gerar Análise` habilitou ✅
+3. LLM gerou mini-PRD: "Clínica Odontológica Avançada", 592 chars summary, 10 serviços
+4. Clicou `Refinar` + instrução + `Aplicar refinamento` → análise atualizou ✅
+5. Clicou `Aprovar e continuar` → avançou pro Planejamento ✅
+6. LLM gerou blueprint em ~9.2s com 6 blocos narrativos ✅
+7. Clicou `Ajustar` + instrução + `Aplicar ajuste` → plano atualizou pra 7 blocos ✅
+8. Clicou `Aprovar plano` → avançou pro Conhecimento ✅
+9. `Vou adicionar depois` + `Próximo` → Criação ✅
+10. `Criar agente Camila` → primeira tentativa falhou com toast 409: "Você ajustou o plano e ainda não aprovou a versão nova" (Fix-05 safety rail ATIVOU CORRETAMENTE) ⚠️
+
+**Bug NOVO descoberto + fixado na mesma sessão:**
+Race condition React strict mode dev double-monta PlanningStep, dispara POST `/plan` 2x simultâneo, `findFirst` sem `orderBy` retorna qualquer um dos 2 blueprints criados → publish pega indeterminado e recusa.
+
+Fix aplicado:
+- Migration 0017 SQL manual: deletou 2 blueprints duplicados + criou `UNIQUE INDEX agent_artifact_session_type_unique ON (sessionId, type)`
+- Schema Drizzle: trocou `index` pra `uniqueIndex` em `agent_artifact`
+- `PlanningStep.tsx`: `useRef<string | null>` dedup pra bloquear POST dupla
+
+11. Retomou sessão + clicou `Criar agente Camila` → **publish completou, redirecionou pra `/app/demo-client/agents/qibqu8hkop7tvc4ws2ede0i9`** ✅
+12. Painel 07B v1 renderizou: tabs Identidade/Persona/Negócio/Conversas/Modelo/WhatsApp ✅
+13. Zero erros críticos no console
+
+### Fix adicional aplicado nesta sessão
+- `agent_artifact` ganhou UNIQUE constraint + client dedup em PlanningStep
+- Arquivo: `scripts/fix-artifact-dedup.ts` (one-off cleanup)
+- Arquivos modificados: `packages/database/drizzle/schema/architect-session.ts`, `apps/web/modules/saas/agents/architect/components/wizard/PlanningStep.tsx`
+
+### Sessão 2026-04-21 noite — fix regra MUST multi-layer features
+
+**Violação detectada:** Vinni reparou que conta SUPERADMIN (`/app/platform/*`) não tinha pipeline. Audit revelou que **3 das 4 orgs** (SUPERADMIN, MASTER, AGENCY) estavam sem kit operacional completo. Até CLIENT tinha gap (0 pipeline_views).
+
+**Causa raiz:** `packages/auth/lib/organizations-hierarchy.ts:91` tinha gate hardcoded:
+```ts
+if (childType === "CLIENT") {
+  await ensureDefaultPipeline(newOrg.id);
+}
+```
+Anti-padrão explícito em `feedback_multi_layer_features.md`: "❌ Pipeline é criado automaticamente ao criar CLIENT".
+
+**Fix aplicado:**
+1. Novo helper `ensureDefaultPipelineView` em `packages/auth/lib/pipeline-defaults.ts` (cria Kanban view padrão)
+2. Novo helper `ensureDefaultOperationalKit` que agrega pipeline + view
+3. `organizations-hierarchy.ts` removeu gate — agora aplica pra TODO org type
+4. Backfill script `scripts/backfill-org-features.ts` aplicado em dev — todas as 4 orgs agora têm 1 pipeline + 6 stages + 1 kanban view
+5. Seed script `scripts/seed-builtin-templates.ts` — adicionou template "Infoproduto" que faltava (4 dos 5 built-ins já existiam)
+
+**Audit final (após fix):**
+| Org | Pipeline | Stages | Views |
+|-----|----------|--------|-------|
+| SUPERADMIN | 1 ✅ | 6 ✅ | 1 ✅ |
+| MASTER | 1 ✅ | 6 ✅ | 1 ✅ |
+| AGENCY | 1 ✅ | 6 ✅ | 1 ✅ |
+| CLIENT | 2 ✅ | 7 ✅ | 1 ✅ |
+
+Agentes/WhatsApp/leads = 0 em 3 das 4 é esperado (opt-in — user cria quando quiser).
+
+### Sessão 2026-04-21 fim — Agenda completa (Phase 11 antecipada)
+
+**Objetivo Vinni:** criar agenda com visual da referência em `design-refs/calendar/`.
+
+**Entregue:**
+
+1. **Schema DB** (migration 0017):
+   - Tabela `calendar` (id, orgId, name, color, type, visible, isDefault, position)
+   - Tabela `calendar_event` (id, orgId, calendarId, title, description, startAt, duration, allDay, type, color, location, attendees jsonb, reminder)
+   - Enums `CalendarType` (personal/work/shared) e `CalendarEventType` (meeting/event/personal/task/reminder)
+   - FKs cascata + índices
+
+2. **Seed default:** `ensureDefaultCalendar` adicionado ao `ensureDefaultOperationalKit`. Toda org (Super/Master/Agency/Client) recebe calendar "Pessoal" azul ao ser criada. Backfill aplicado.
+
+3. **Server actions** em `apps/web/modules/saas/agenda/lib/actions.ts`:
+   - createCalendar/update/delete
+   - createEvent/update/delete
+   - Zod validation + requireOrgAccess + revalidatePath
+
+4. **UI components** em `apps/web/modules/saas/agenda/components/`:
+   - `AgendaShell` — container 2 colunas + Sheet mobile + dialogs
+   - `AgendaSidebar` — "Novo evento" btn + DatePicker + lista calendars + "Novo calendário" btn
+   - `AgendaMain` — header com nav mês + "Hoje" + search + view toggle (Mês/Lista) + grid 7x6 + list view + eventos coloridos
+   - `CalendarPicker` — shadcn day-picker com dot indicator em dias com eventos
+   - `CalendarsList` — collapsible com toggle visibility + dropdown menu (editar/ocultar/excluir)
+   - `EventForm` — Dialog completo: título, tipo, calendário, data, horário, duração, all-day, lembrete, local, attendees, descrição
+   - `NewCalendarDialog` — form nome + paleta 8 cores + tipo
+
+5. **UI shadcn novos** em `apps/web/modules/ui/components/`:
+   - `calendar.tsx` (wrapper react-day-picker v9)
+   - `collapsible.tsx` (radix primitive)
+
+6. **Deps adicionadas:** react-day-picker, @radix-ui/react-collapsible
+
+7. **Page server component** em `apps/web/app/(saas)/app/(organizations)/[organizationSlug]/crm/agenda/page.tsx`:
+   - Substituiu placeholder "Agenda em breve"
+   - Server fetch de calendars + eventos do range ±2 meses
+   - Passa pra AgendaShell client
+
+**Teste Playwright end-to-end:**
+- `/app/demo-client/crm/agenda` — renderizou grid mensal + sidebar com calendar "Pessoal"
+- Criou evento "Reunião de kickoff com time" (tipo Reunião, 23/abril 12h, 1 hora, sala principal) via form
+- Evento aparece no grid mensal dia 23 com cor azul ✅
+- `/app/platform/crm/agenda` (Superadmin) — renderizou idêntico com calendar default Pessoal ✅
+
+**Arquivos criados:**
+- `packages/database/drizzle/schema/agenda.ts`
+- `packages/database/drizzle/migrations/0017_melted_sharon_ventura.sql`
+- `apps/web/modules/saas/agenda/*` (9 arquivos)
+- `apps/web/modules/ui/components/calendar.tsx`
+- `apps/web/modules/ui/components/collapsible.tsx`
+- `apps/web/app/(saas)/app/(organizations)/[organizationSlug]/crm/agenda/page.tsx` (substituído)
+- `scripts/apply-migration-0017.ts`
+- `scripts/check-events.ts`
+
+**Arquivos modificados:**
+- `packages/auth/lib/pipeline-defaults.ts` (+ ensureDefaultCalendar)
+- `packages/database/drizzle/schema/index.ts` (export agenda)
+
+**Typecheck:** limpo
+**Phase 11 (Calendar) antecipada** do roadmap original.
+
+### Gate humano pendente
+
+Vinni precisa testar na UI:
+1. `/agents/new?template=clinical` abre wizard sem erros
+2. Preencher 3+ perguntas + clicar Gerar Análise → mostra mini-PRD
+3. Clicar Ajustar + texto + Aplicar → mini-PRD atualiza com toast pedindo aprovação explícita
+4. Clicar Aprovar e continuar → vai pro Planejamento
+5. Mesmo fluxo no Planejamento (Ajustar + Aprovar plano)
+6. Upload arquivo ou Pular → Criar agente → publish completa SEM erro `UPDATE knowledge_chunk`
+7. Forçar erro (ex: desligar internet no meio) → mostra tela amigável de erro, não tela branca
+
+## Contexto anterior (Phase 08-alpha + 09)
+
+**Branch atual:** `feature/phase-09-architect-ui` — sucessora de `feature/phase-08a-09-architect`. 5 commits de wizard refactor + fixes.
+**Branch main:** atualizada até Phase 07A (commit `3458641`).
+**Status do DB:** migrations 0000-0015 aplicadas em prod via MCP. Bucket `architect-uploads` criado em prod em 08A.4.
+**Status do backlog:** 5/5 de 08-alpha entregues, 10/10 de Phase 09 entregues, Phase 09 Ready for Review aguarda gate humano end-to-end + merge PR #2.
 
 **Branch atual:** `feature/phase-08a-09-architect` — 9 commits 08-alpha + 5 carry-over 07B v1, **pushed pro origin**, PR #1 aberto contra `main`. 07B v1 permanece em hold em `feature/07B.1-agents-list-and-new` (duplicado carry-over aqui, decisão no merge se mantém ou cherry-pick).
 **Branch main:** atualizada até Phase 07A (commit `3458641`).
@@ -143,6 +384,111 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - **Coolify VPS:** destino de deploy quando CRM + Chat + WhatsApp + Agenda (Phase 11) estiverem prontos
 
 ## Ultimo Trabalho Realizado
+
+### Sessão 2026-04-20 (Neo entrega 09.6→09.10 — Phase 09 COMPLETA)
+
+**Stories 09.6 até 09.10 Ready for Review numa sessão maratona:**
+
+- **09.6 ArtifactCard inline:** 4 renderers (BusinessProfile/AgentBlueprint/KnowledgeBase/FinalSummary) + card base com 3 estados (generated/regenerated/approved) + 3 ações (Refinar/Chat/Aprovar) + keyboard R/C/A + a11y. Realtime subscribe em `agent_artifact` via `useArtifactEvents`. Endpoints: GET `/api/architect/artifacts?sessionId=xxx` (hidratação retomada) + POST `/api/architect/artifacts/[id]/approve` (marca APPROVED + avança draftSnapshot.currentStage). Commit `b28cc0e`.
+
+- **09.7 Refinamento inline:** Forms estruturados pros 2 tipos simples (BusinessProfile 5 campos + KnowledgeBase docs+notas). Zod schemas. Reuso TagList 07B. Endpoint POST `/api/architect/artifacts/[id]/refine` atualiza content direto (sem LLM), incrementa version, marca REGENERATED. Remove docs desassocia sessionId. Commit `[09.7]`.
+
+- **09.8 Blueprint Dialog:** Single-file Dialog com Accordion 7 seções (Identidade GenderPill / Personalidade 4 sliders / Anti-patterns TagList / Técnicas 6 checkboxes + intensity select / Emojis modo+curated list / Voz toggle+provider+voiceId+mode / Capabilities 5 checkboxes). Validação Zod. POST `/api/architect/artifacts/[id]/refine-blueprint`. Voice Qwen com badge "em breve". Commit `[09.8]`.
+
+- **09.9 FlowDiagram + publishAgentFromSession:** Extraído `publishAgentFromSessionCore` do tool (pub em packages/ai) pra reuso via route handler. Install `@xyflow/react` + `@dagrejs/dagre`. FlowDiagramPreview readonly com Dagre TB layout (Agente → Capabilities). CreateAgentCTA com estados idle/publishing. POST `/api/architect/sessions/[id]/publish` valida FINAL_SUMMARY APPROVED + hidrata working memory + chama core (transação 10 steps). Redirect pra `/app/[slug]/agents/[id]` pós-sucesso (placeholder até 07B-v2). Commit `5a0c5b8`.
+
+- **09.10 Estados offline + rate limit (parcial):** `useOnlineStatus` hook. OfflineBadge vermelho pulsante no header. RateLimitCountdown component 1s tick auto-dismiss acima do composer. E2E tests Playwright + queue offline + QA gate report ficam pra iteração com Oracle. Commit `3234120`.
+
+**Fluxo end-to-end agora funcional:**
+1. `/agents` (09.1) → escolhe template
+2. `/agents/new?template=X` → Welcome CTA
+3. Click "Iniciar construção" → typing indicator → Arquiteto se apresenta
+4. Conversa natural, typing indicator entre turnos
+5. Arquiteto gera artefatos → cards aparecem inline via Realtime
+6. User refina inline (Perfil/Conhecimento) ou Dialog (Blueprint)
+7. User aprova card → stage avança → StatusBar atualiza
+8. Resumo Final aprovado → FlowDiagram + "Criar agente" CTA
+9. Click CTA → transação atômica → agente criado em DRAFT + redirect
+
+**Gates:** Typecheck `@repo/ai` + `@repo/web` passam ✅ | Biome 0 errors (36 warnings baseline).
+
+### Sessão 2026-04-20 (Neo entrega 09.5 — Arquiteto conversa de verdade)
+
+**Story 09.5 Ready for Review:**
+- **Working memory schema (`types/architect-working-memory.ts`):** Zod schema completo tech-spec § 3.1 com defaults pra todos os campos. Consumido pelo Memory do Mastra via `workingMemory.schema`.
+- **7 templates (`templates/{clinical,ecommerce,real-estate,info-product,saas,local-services,custom}.ts + index.ts`):** cada um com `promptInjection` por vertical (perguntas-chave, presets de técnicas comerciais, persona sugerida, emojis, capabilities).
+- **Instructions builder (`instructions/architect.ts`):** `buildArchitectInstructions(context)` monta system prompt pt-BR com persona + 4 etapas + regras de fluxo + tool narration + template injection + checklist atual + uploadedDocuments. Fonte do working memory no Agent callback: `agentCreationSession.draftSnapshot` + `knowledgeDocument` pra lista de docs.
+- **Memory config (`memory/architect.ts`):** PostgresStore singleton + PgVector (knowledge_chunk index) + embedder string `openai/text-embedding-3-small` + `lastMessages: 20` + `semanticRecall` HNSW dotproduct (params em `hnsw: {}` aninhado na API v1.25) + `workingMemory.schema` Zod.
+- **Architect Agent (`agents/architect.ts`):** `model: 'openai/gpt-4o'` (forte, tech-spec § 1.1), tools = `architectTools`, memory = `getArchitectAgentMemory()`, instructions dinâmicas via callback que consulta DB.
+- **Instance registration:** `getMastra()` agora registra `architectAgent` além do `commercialAgent`.
+- **Route handler (`/api/architect/chat/route.ts`):** POST com auth → rate limit 10/min por sessionId (`ARCHITECT_CHAT_LIMIT`) → ownership check (sessão DRAFT do user) → `RequestContext` populado (sessionId, userId, orgId, templateId, currentStage, attachmentIds, workingMemory placeholder) → `mastra.getAgent('architectAgent').stream()` com `memory: { thread, resource }` → retorna `result.textStream` como `Response text/plain`. Auto-save de `updatedAt` a cada turno.
+- **Hook `useArchitectChat`:** wrapper `useChat` de `ai/react` com `streamProtocol: 'text'` + `experimental_prepareRequestBody` injetando sessionId + attachmentIds (via ref pra permitir envio síncrono sem re-render). Handler 429 aciona callback `onRateLimited`. Exporta `sendWithAttachments(text, documentIds)`.
+- **Hook `useSessionEvents`:** subscribe Supabase Realtime em `agent_creation_session` filtrado por id. Quando `draftSnapshot.currentStage` muda (Arquiteto avança etapa via tool call), hook notifica shell → StatusBar marca etapa anterior como done + troca current.
+- **MessageBubble:** renderiza mensagens user (bubble direito bg-primary/5) e assistant (avatar Sparkles + texto corrido) com cursor piscando quando streaming.
+- **ChatShell integrado:** substitui handleSend stub pelo `sendWithAttachments` real, passa StatusBar dinâmico com `doneStages`, mostra toast de rate limit com countdown, MessagesArea renderiza `messages.map(MessageBubble)`, shimmer só no primeiro turn carregando.
+- **ArchitectComposer:** novo prop `onStop` + `isStreaming`. ESC durante stream aborta. Botão de enviar vira botão de parar (SquareIcon + variant=secondary) quando `isStreaming`.
+- **Gates:** `pnpm --filter @repo/web type-check` passa ✅ | `pnpm --filter @repo/ai type-check` passa ✅ | Biome 0 errors (36 warnings useBlockStatements, baseline do projeto).
+- **15 arquivos novos + 5 modificados** em `packages/ai/src/mastra/` e `apps/web/`.
+- **Commit:** `b7cb1f9`.
+
+### Sessão 2026-04-20 (Neo entrega 09.4 — anexos funcionais no chat)
+
+**Story 09.4 Ready for Review:**
+- **Endpoint auxiliar:** `POST /api/architect/sessions` cria DRAFT lazy (templateId + org validados, mastraThreadId = sessionId, mastraResourceId = userId). Destrava flow end-to-end antes de 09.5 (Mastra useChat).
+- **Menu de anexos:** DropdownMenu com 3 opções (Arquivo 10MB / Imagem 5MB / Link). Cmd+K abre via ref forward. Inputs file hidden com accept filtrado por tipo. Limite de 5 anexos com disable das opções + toast.
+- **Hook `useFileUpload`:** cria sessão lazy, FormData multi-file, AbortController por lote, mapeia response por fileName (ordem Promise.allSettled instável), toast em erros de rede, filtra imagens client-side (server 08A.4 rejeita MIME img) com preview via `URL.createObjectURL`.
+- **Hook `useDocumentEvents`:** subscribe Supabase Realtime em `knowledge_document` filtrado por sessionId. Mapeia PENDING/PROCESSING/READY/ERROR pra states do mini-card (uploading/processing/indexed/error).
+- **`UrlAnchorDialog`:** Dialog com Input type=url, valida http(s), submit chama `uploadLink` (POST /upload-link já existia em 08A.4).
+- **Mini-cards:** `AttachmentPendingCard` (acima do textarea, status spinner/check/error + botão X hover) + `AttachmentMessageCard` (pra bubble da mensagem enviada em 09.5, stub exportado).
+- **Integração composer:** novo prop `attachmentSlot` + `attachments` + `onRemoveAttachment`. Guard de envio enquanto tem upload em andamento (`hasUploadingAttachment`). Placeholder muda pra "Aguardando processar anexos..." durante upload.
+- **ChatShell:** gerencia `sessionId` + `attachments` state, monta AttachmentMenu com ref, plugou os 2 hooks, toast via sonner.
+- **Divergências documentadas na story:** strings hardcoded pt-BR (pattern projeto), preview local de imagem adicionado ao escopo (AC Scope OUT relaxado), imagens não vão pro bucket até RAG suportar extractor.
+- **Gates:** `pnpm --filter @repo/web type-check` passa ✅ | Biome 0 errors (20 warnings useBlockStatements, baseline do projeto).
+- **8 arquivos novos + 3 modificados** em `apps/web/modules/saas/agents/architect/` + `apps/web/app/api/architect/sessions/`.
+
+### Sessão 2026-04-20 (Operator pusha Phase 09 + abre PR #2 stacked)
+
+**Branch pushed e PR #2 aberta:**
+- `git push -u origin feature/phase-09-architect-ui` OK (new branch no remote, upstream configurado)
+- PR #2 stacked contra `feature/phase-08a-09-architect` (base da PR #1) — não duplica os ~35K linhas já na PR #1. Review isola os 3 commits de Phase 09. Quando PR #1 mergear, GitHub ajusta #2 pra main automaticamente
+- Quality gates pré-push: `pnpm lint` e `pnpm typecheck` rodados. Erros de lint/typecheck presentes são **pré-existentes do boilerplate** (`packages/mail/emails/` JSX config, biome block-statements) — `git log main..HEAD -- packages/mail/ tooling/scripts/ packages/auth/` confirma que Phase 09 não tocou nesses pacotes. `@repo/web` passa typecheck sem erros
+- Body da PR detalha os 3 commits, arquivos por sub-phase, status honesto dos gates e follow-ups (mover `.playwright-mcp/` e `mercado-agentes-*.png` pra `docs/research/`)
+- PR URL: https://github.com/vinnimedeiros/vertech-agents/pull/2
+
+### Sessão 2026-04-20 manhã (Neo entrega 09.3 — Composer funcional)
+
+**Story 09.3 Ready for Review:**
+- `ArchitectComposer` substitui `ComposerPlaceholder` no ChatShell
+- Textarea auto-resize 1→8 rows via hook `useAutoResizeTextarea` (scrollHeight cap em line-height × maxRows + padding; reset `auto` antes de medir)
+- Shortcuts: Enter envia, Shift+Enter quebra linha, Cmd/Ctrl+K abre menu. Guard IME (`e.nativeEvent.isComposing`)
+- Placeholder dinâmico 3 estados: offline/blocked/idle (listener `online`/`offline` no window)
+- CharCounter com thresholds relativos ao `max`: muted em max-500, amber em max-100, destructive em ≥max (bloqueia envio + Tooltip)
+- Stub `onSend` no ChatShell ativa dirty flag → aciona ExitDialog no header. 09.5 pluga Mastra `useChat`
+- Typecheck + 92/92 tests + biome 0 errors
+- 3 novos + 1 modificado
+
+### Sessão 2026-04-20 manhã (Neo entrega 09.2 — Shell do chat Arquiteto)
+
+**Story 09.2 Ready for Review — Shell do chat `/agents/new`:**
+- Substituiu o `NewAgentForm` antigo (07B v1) na rota `/agents/new`. Conflito esperado no merge se PR #1 mergear 07B v1 junto — documentado.
+- 7 componentes client criados em `architect/components/chat/`: ChatShell (orchestra) + ArchitectHeader (breadcrumb + save-exit) + ExitDialog (AlertDialog shadcn) + StatusBar (4 etapas + mobile compact + a11y `<output>`) + MessagesArea (max-w 800 + shimmer) + ComposerPlaceholder (disabled pra 09.3 substituir)
+- page.tsx server component com guards: sem query→redirect `/agents`, template inválido→404, session sem ownership→404. Session param tem precedência (carrega template da row)
+- Server query `getArchitectSessionForUser` adicionada a `architect/lib/server.ts` (tenant isolation via userId+orgId)
+- `useChatSession` hook mencionado no File List não foi criado — rationale: shell puro não precisa de state client-side, hook real fica pra 09.5 quando Mastra useChat for integrado
+- Divergência translations documentada (consistente com 09.1): projeto usa pt-BR hardcoded
+- Typecheck web + 92/92 vitest + biome 0 errors
+- 8 arquivos no total (7 novos + 1 modificado)
+
+### Sessão 2026-04-20 manhã (Neo entrega 09.1 — Tela de boas-vindas do Arquiteto)
+
+**Story 09.1 Ready for Review — UI foundation da Phase 09:**
+- Branch nova `feature/phase-09-architect-ui` a partir de `feature/phase-08a-09-architect` (não contamina PR #1)
+- Estrutura nova `apps/web/modules/saas/agents/architect/{components/welcome,lib}` separada do agents/ tradicional (07B v1)
+- 8 componentes/libs criados: Hero (2 variantes empty/compressed), TemplateCard + TemplateGrid responsivo (2/3/4 cols), DraftCard + SessionHistory (accordion), registry de 7 templates, formatRelativeTime em pt-BR, getDraftSessions server query
+- page.tsx reescrita: estado vazio (Hero dominante + templates) vs estado com agentes (Hero compressed + accordions Rascunhos/Agentes/Templates)
+- Divergência da spec documentada: AC20 pede translations pt-BR.json, mas projeto inteiro usa pt-BR hardcoded. Seguido pattern existente (AgentCard, etc)
+- Typecheck web + 92/92 vitest + biome 0 errors
+- 9 arquivos no total (8 novos + 1 modificado)
 
 ### Sessão 2026-04-20 madrugada (Operator consolida push + PR)
 
@@ -381,10 +727,15 @@ Todas viram abas novas em 07B-v2 + tools paritárias em `architectTools`.
 - [x] ~~@devops consolida push de ~55 arquivos em 9 commits organizados~~ ✅ pushed `feature/phase-08a-09-architect`
 - [x] ~~@devops abre PR #1 contra main~~ ✅ https://github.com/vinnimedeiros/vertech-agents/pull/1
 - [ ] **Vinni revisa PR #1:** ler summary + gate report + (recomendado) 1 upload manual end-to-end em dev
-- [ ] Vinni decide merge strategy no PR: mergear tudo (14 commits) vs cherry-pick dos 9 de 08-alpha
+- [ ] Vinni decide merge strategy no PR #1: mergear tudo (14 commits) vs cherry-pick dos 9 de 08-alpha
 - [ ] (Opcional) CodeRabbit antes do merge final
-- [ ] Phase 09.1 (Niobe → Neo): Tela de boas-vindas + grid 7 templates + SessionHistory — **pode começar em paralelo** enquanto PR aguarda review
-- [ ] `@devops` (Operator) consolida push no fim de 08-alpha e depois 09
+- [x] ~~Phase 09.1 (Niobe → Neo): Tela de boas-vindas + grid 7 templates + SessionHistory~~ ✅ Ready for Review + pushed
+- [x] ~~Phase 09.2 (Neo): Shell do chat `/agents/new`~~ ✅ Ready for Review + pushed
+- [x] ~~Phase 09.3 (Neo): Composer funcional + CharCounter + auto-resize hook~~ ✅ Ready for Review + pushed
+- [x] ~~@devops consolida push de Phase 09 e abre PR #2 stacked~~ ✅ https://github.com/vinnimedeiros/vertech-agents/pull/2
+- [ ] **Vinni revisa PR #2:** rodar dev, testar `/agents` + `/agents/new`, validar composer (Enter, Shift+Enter, Cmd+K, over-limit)
+- [ ] Phase 09.4 (Neo): AttachmentMenu + upload flow (Cmd+K no composer conecta ao bucket `architect-uploads`)
+- [ ] Follow-up housekeeping: mover `.playwright-mcp/*.yml` + `mercado-agentes-*.png` pra `docs/research/` + gitignore (PR separada)
 - [ ] Gate humano Vinni após 08-alpha concluída e após 09 concluída (antes de 07B-v2)
 
 ## Git Recente

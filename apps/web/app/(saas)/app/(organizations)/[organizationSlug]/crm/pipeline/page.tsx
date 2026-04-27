@@ -120,6 +120,7 @@ export default async function CrmPipelinePage({
 		temperature: l.temperature,
 		priority: l.priority,
 		origin: l.origin,
+		interests: l.interests,
 		stageId: l.stageId,
 		assignedTo: l.assignedTo,
 		createdAt: l.createdAt,

@@ -1,7 +1,10 @@
 "use client";
 
+import { IntegrationLogo } from "@saas/shared/components/IntegrationLogo";
+import { FloatingPanel } from "@saas/shared/floating";
 import { ConnectInstanceDialog } from "@saas/whatsapp/components/ConnectInstanceDialog";
 import { QRCodeDialog } from "@saas/whatsapp/components/QRCodeDialog";
+import { SwitchInstanceDialog } from "@saas/whatsapp/components/SwitchInstanceDialog";
 import {
 	deleteInstanceAction,
 	disconnectInstanceAction,
@@ -21,6 +24,7 @@ import {
 import { Button } from "@ui/components/button";
 import { cn } from "@ui/lib";
 import {
+	ArrowLeftRightIcon,
 	CheckCircle2Icon,
 	CircleDashedIcon,
 	LinkIcon,
@@ -83,10 +87,15 @@ export function WhatsAppIntegrationCard({
 	instances,
 }: Props) {
 	const [connectOpen, setConnectOpen] = useState(false);
+	const [switchOpen, setSwitchOpen] = useState(false);
 	const [qrInstanceId, setQrInstanceId] = useState<string | null>(null);
 	const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 	const [actionPending, startAction] = useTransition();
 	const router = useRouter();
+
+	// "Trocar" só faz sentido com exatamente 1 instance — caso comum. Quando
+	// há múltiplas, mantemos "Conectar número" (legado pra adicionar mais).
+	const primaryInstance = instances.length === 1 ? instances[0] : null;
 
 	function openQRFor(id: string) {
 		setQrInstanceId(id);
@@ -115,12 +124,16 @@ export function WhatsAppIntegrationCard({
 		});
 	}
 
+	const connectedCount = instances.filter(
+		(i) => i.status === "CONNECTED",
+	).length;
+
 	return (
-		<div className="flex flex-col gap-4 rounded-lg border border-border/60 bg-card/30 p-5">
+		<FloatingPanel variant="elevated" className="flex flex-col gap-4 p-5">
 			<header className="flex items-start justify-between gap-4">
 				<div className="flex items-start gap-3">
-					<div className="flex size-10 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-500">
-						<MessageCircleIcon className="size-5" />
+					<div className="flex size-11 items-center justify-center rounded-md bg-emerald-500/10">
+						<IntegrationLogo provider="whatsapp" className="size-7" />
 					</div>
 					<div>
 						<h3 className="font-semibold text-sm text-foreground">
@@ -132,14 +145,47 @@ export function WhatsAppIntegrationCard({
 						</p>
 					</div>
 				</div>
-				<Button
-					size="sm"
-					onClick={() => setConnectOpen(true)}
-					className="gap-1.5"
-				>
-					<PlusIcon className="size-3.5" />
-					Conectar número
-				</Button>
+				<div className="flex shrink-0 items-center gap-2">
+					{instances.length > 0 ? (
+						<span
+							className={cn(
+								"flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium",
+								connectedCount > 0
+									? "bg-emerald-500/10 text-emerald-400"
+									: "bg-amber-500/10 text-amber-400",
+							)}
+						>
+							<span
+								className={cn(
+									"size-1.5 rounded-full",
+									connectedCount > 0 ? "bg-emerald-400" : "bg-amber-400",
+								)}
+							/>
+							{connectedCount > 0
+								? `${connectedCount} conectado${connectedCount > 1 ? "s" : ""}`
+								: "Pendente"}
+						</span>
+					) : null}
+					{primaryInstance ? (
+						<Button
+							size="sm"
+							onClick={() => setSwitchOpen(true)}
+							className="gap-1.5"
+						>
+							<ArrowLeftRightIcon className="size-3.5" />
+							Trocar número
+						</Button>
+					) : (
+						<Button
+							size="sm"
+							onClick={() => setConnectOpen(true)}
+							className="gap-1.5"
+						>
+							<PlusIcon className="size-3.5" />
+							Conectar número
+						</Button>
+					)}
+				</div>
 			</header>
 
 			{instances.length === 0 ? (
@@ -267,6 +313,20 @@ export function WhatsAppIntegrationCard({
 				onCreated={(id) => setQrInstanceId(id)}
 			/>
 
+			{primaryInstance ? (
+				<SwitchInstanceDialog
+					oldInstanceId={primaryInstance.id}
+					currentName={primaryInstance.name}
+					organizationSlug={organizationSlug}
+					open={switchOpen}
+					onOpenChange={setSwitchOpen}
+					onSwitched={(id) => {
+						setQrInstanceId(id);
+						router.refresh();
+					}}
+				/>
+			) : null}
+
 			{qrInstanceId ? (
 				<QRCodeDialog
 					instanceId={qrInstanceId}
@@ -286,8 +346,9 @@ export function WhatsAppIntegrationCard({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Remover esta conexão?</AlertDialogTitle>
 						<AlertDialogDescription>
-							O número será deslogado do WhatsApp e a conexão removida. As
-							conversas e mensagens anteriores permanecem no chat.
+							O número será deslogado e a conexão removida. Conversas e
+							contatos criados via WhatsApp (sem lead promovido) também
+							serão apagados.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -301,6 +362,6 @@ export function WhatsAppIntegrationCard({
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</div>
+		</FloatingPanel>
 	);
 }

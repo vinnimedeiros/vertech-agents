@@ -28,7 +28,12 @@ export { acknowledgeUpload } from "./architect/acknowledge-upload";
 export { approveArtifact } from "./architect/approve-artifact";
 export { generateArtifact } from "./architect/generate-artifact";
 export { getDocumentKnowledge } from "./architect/get-document-knowledge";
-export { publishAgentFromSession } from "./architect/publish-agent";
+export {
+	publishAgentFromSession,
+	publishAgentFromSessionCore,
+	type PublishAgentCoreInput,
+	type PublishAgentCoreResult,
+} from "./architect/publish-agent";
 export { refineArtifact } from "./architect/refine-artifact";
 export { searchChunks } from "./architect/search-chunks";
 export { updateAgentStructurally } from "./architect/update-agent-structurally";
@@ -48,15 +53,19 @@ export type {
 	FieldDiff,
 } from "./architect/helpers";
 
+/**
+ * Tools expostas ao main LLM do Arquiteto (arquitetura extractor-driven).
+ *
+ * Só inclui tools "read" ou de efeito leve. Tools que escrevem artifacts
+ * (generate/refine/approve) foram removidas — o extractor LLM secundário
+ * cuida disso em background. publishAgentFromSession e updateAgentStructurally
+ * continuam exportadas via named exports pra uso em routes server-side mas
+ * não ficam no registry do main LLM.
+ */
 export const architectTools = {
 	acknowledgeUpload,
-	generateArtifact,
-	refineArtifact,
-	approveArtifact,
 	searchChunks,
 	getDocumentKnowledge,
-	publishAgentFromSession,
-	updateAgentStructurally,
 } as const;
 
 export type ArchitectToolKey = keyof typeof architectTools;

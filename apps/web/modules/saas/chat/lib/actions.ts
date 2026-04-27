@@ -113,12 +113,14 @@ async function assertConversationAccess(userId: string, conversationId: string) 
 
 async function getContactPhoneForConversation(conversationId: string) {
 	const [row] = await db
-		.select({ phone: contact.phone })
+		.select({ phone: contact.phone, whatsappJid: contact.whatsappJid })
 		.from(conversation)
 		.innerJoin(contact, eq(conversation.contactId, contact.id))
 		.where(eq(conversation.id, conversationId))
 		.limit(1);
-	return row?.phone ?? null;
+	// Preferir whatsappJid (preserva @lid quando aplicável). Fallback
+	// pra phone bruto (legacy) — jidOf normaliza pra @s.whatsapp.net.
+	return row?.whatsappJid ?? row?.phone ?? null;
 }
 
 /**
@@ -312,6 +314,8 @@ export async function sendTextMessageAction(
 			.set({
 				lastMessageAt: now,
 				lastMessagePreview: preview,
+				lastMessageDirection: data.direction,
+				lastMessageStatus: initialStatus,
 				// Incrementa unreadCount apenas em mensagens INBOUND
 				unreadCount:
 					data.direction === "INBOUND"
@@ -520,6 +524,10 @@ export async function sendMediaMessageAction(
 						externalId: result?.key?.id ?? null,
 					})
 					.where(eq(message.id, created.id));
+				await db
+					.update(conversation)
+					.set({ lastMessageStatus: "SENT", updatedAt: new Date() })
+					.where(eq(conversation.id, data.conversationId));
 			} catch (err) {
 				console.error(
 					"[sendMediaMessageAction] whatsapp send failed",
@@ -529,6 +537,10 @@ export async function sendMediaMessageAction(
 					.update(message)
 					.set({ status: "FAILED" })
 					.where(eq(message.id, created.id));
+				await db
+					.update(conversation)
+					.set({ lastMessageStatus: "FAILED", updatedAt: new Date() })
+					.where(eq(conversation.id, data.conversationId));
 			}
 		} else {
 			console.warn(
@@ -693,4 +705,132 @@ export async function deleteConversationAction(
 
 	await db.delete(conversation).where(eq(conversation.id, conversationId));
 	revalidateChat(organizationSlug);
+}
+
+// ============================================================
+// Retry de mensagem FAILED — Wave 1 G.P0.2
+// ============================================================
+//
+// Operador clica "Tentar de novo" no MessageBubble FAILED. Re-dispara
+// envio via WhatsApp baseado no `type` da message original. Retry
+// automático/queue durável fica pra Wave 2 (BullMQ outbound).
+
+export async function retryMessageAction(
+	messageId: string,
+	organizationSlug?: string,
+): Promise<{ ok: boolean; status: "SENT" | "FAILED" }> {
+	const user = await requireAuthed();
+
+	// Wave 1 fix QA-2 — lookup minimal pra obter conversationId, validar
+	// acesso ANTES de carregar dados completos da message. Evita IDOR
+	// parcial (user de outra org descobrir messageId existente).
+	const [msgMeta] = await db
+		.select({ id: message.id, conversationId: message.conversationId })
+		.from(message)
+		.where(eq(message.id, messageId))
+		.limit(1);
+
+	if (!msgMeta) {
+		throw new Error("Mensagem não encontrada");
+	}
+
+	const conv = await assertConversationAccess(user.id, msgMeta.conversationId);
+
+	const [msg] = await db
+		.select()
+		.from(message)
+		.where(eq(message.id, messageId))
+		.limit(1);
+
+	if (!msg) {
+		throw new Error("Mensagem não encontrada");
+	}
+	if (msg.status !== "FAILED") {
+		throw new Error("Apenas mensagens FAILED podem ser reenviadas");
+	}
+	if (msg.direction !== "OUTBOUND") {
+		throw new Error("Apenas mensagens OUTBOUND podem ser reenviadas");
+	}
+	if (conv.channel !== "WHATSAPP") {
+		throw new Error("Retry suportado apenas em conversas WhatsApp");
+	}
+
+	const instanceId = await resolveWhatsAppInstanceId(
+		msg.conversationId,
+		conv.organizationId,
+		conv.channelInstanceId,
+	);
+	const phone = await getContactPhoneForConversation(msg.conversationId);
+
+	if (!instanceId || !phone) {
+		throw new Error("Instância WhatsApp ou telefone do contato indisponível");
+	}
+
+	try {
+		let result: any;
+		switch (msg.type) {
+			case "TEXT":
+				result = await sendWhatsAppText(instanceId, phone, msg.text ?? "");
+				break;
+			case "IMAGE":
+				if (!msg.mediaUrl) throw new Error("Mensagem IMAGE sem mediaUrl");
+				result = await sendWhatsAppImage(
+					instanceId,
+					phone,
+					msg.mediaUrl,
+					msg.caption ?? undefined,
+				);
+				break;
+			case "VIDEO":
+				if (!msg.mediaUrl) throw new Error("Mensagem VIDEO sem mediaUrl");
+				result = await sendWhatsAppVideo(
+					instanceId,
+					phone,
+					msg.mediaUrl,
+					msg.caption ?? undefined,
+				);
+				break;
+			case "AUDIO":
+				if (!msg.mediaUrl) throw new Error("Mensagem AUDIO sem mediaUrl");
+				result = await sendWhatsAppVoiceNote(instanceId, phone, msg.mediaUrl);
+				break;
+			case "DOCUMENT":
+				if (!msg.mediaUrl) throw new Error("Mensagem DOCUMENT sem mediaUrl");
+				result = await sendWhatsAppDocument(
+					instanceId,
+					phone,
+					msg.mediaUrl,
+					msg.mediaFileName ?? "arquivo",
+					msg.mediaMimeType ?? "application/octet-stream",
+				);
+				break;
+			default:
+				throw new Error(`Tipo ${msg.type} não suporta retry`);
+		}
+
+		await db
+			.update(message)
+			.set({ status: "SENT", externalId: result?.key?.id ?? null })
+			.where(eq(message.id, messageId));
+
+		revalidateChat(organizationSlug);
+		return { ok: true, status: "SENT" };
+	} catch (err) {
+		// TODO Wave 2: trocar todos os console.error/warn deste arquivo por
+		// logger pino centralizado quando @repo/logger for criado. Mantido
+		// console.error aqui pra consistência com sendMediaMessageAction
+		// (linhas 364/374/524/534) — substituição em massa numa única story.
+		console.error(
+			"[retryMessageAction] reenvio falhou",
+			JSON.stringify({
+				messageId,
+				errorMessage: err instanceof Error ? err.message : String(err),
+			}),
+		);
+		await db
+			.update(message)
+			.set({ status: "FAILED" })
+			.where(eq(message.id, messageId));
+		return { ok: false, status: "FAILED" };
+	}
 }

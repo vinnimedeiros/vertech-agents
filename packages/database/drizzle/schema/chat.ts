@@ -110,6 +110,11 @@ export const conversation = pgTable(
 		// Metadata pra lista
 		lastMessageAt: timestamp("lastMessageAt"),
 		lastMessagePreview: text("lastMessagePreview"),
+		// Direção e status da ÚLTIMA mensagem — usado pela UI pra renderizar
+		// checks (✓ enviado / ✓✓ entregue / ✓✓ azul lido) no preview da lista
+		// quando a última mensagem foi OUTBOUND. Atualizados junto com preview.
+		lastMessageDirection: messageDirectionEnum("lastMessageDirection"),
+		lastMessageStatus: messageStatusEnum("lastMessageStatus"),
 		unreadCount: integer("unreadCount").notNull().default(0),
 		// Fixada no topo (ordenada por este timestamp DESC). Limite de 3 por org
 		// validado a nível de action. Null = não fixada.

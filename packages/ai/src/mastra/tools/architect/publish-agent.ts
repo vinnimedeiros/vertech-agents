@@ -42,19 +42,138 @@ const outputSchema = z.discriminatedUnion("success", [
 ]);
 
 /**
+ * Função core da transação atômica (story 08A.3, reaproveitada em 09.9).
+ *
+ * Extraída pra permitir reuso direto via route handler (sem precisar de
+ * Mastra runtime context). A tool publishAgentFromSession e o endpoint
+ * HTTP usam ambos esta função.
+ */
+export type PublishAgentCoreInput = {
+	sessionId: string;
+	userId: string;
+	organizationId: string;
+	workingMemory: ArchitectWorkingMemory;
+};
+
+export type PublishAgentCoreResult = {
+	id: string;
+	name: string;
+	status: "DRAFT" | "ACTIVE" | "PAUSED" | "ARCHIVED";
+	version: number;
+};
+
+export async function publishAgentFromSessionCore(
+	input: PublishAgentCoreInput,
+): Promise<PublishAgentCoreResult> {
+	const { sessionId, userId, organizationId, workingMemory } = input;
+
+	const checklistErrors = validateFullChecklist(workingMemory);
+	if (checklistErrors.length > 0) {
+		throw new ArchitectToolError(
+			"CHECKLIST_INCOMPLETE",
+			`Checklist incompleto (${checklistErrors.length} campo${checklistErrors.length === 1 ? "" : "s"} faltando). Finalize antes de publicar.`,
+			checklistErrors,
+		);
+	}
+
+	const result = await db.transaction(async (tx) => {
+		const sessionRow = await tx.query.agentCreationSession.findFirst({
+			where: and(
+				eq(agentCreationSession.id, sessionId),
+				eq(agentCreationSession.userId, userId),
+				eq(agentCreationSession.status, "DRAFT"),
+			),
+		});
+		if (!sessionRow) {
+			throw new ArchitectToolError(
+				"SESSION_NOT_FOUND",
+				`Sessão ${sessionId} não encontrada ou já publicada.`,
+			);
+		}
+
+		const insertValues = buildAgentInsertValues(
+			workingMemory,
+			organizationId,
+		);
+		const inserted = await tx
+			.insert(agentTable)
+			.values(insertValues)
+			.returning();
+		const createdAgent = inserted[0];
+		if (!createdAgent) {
+			throw new ArchitectToolError(
+				"PUBLISH_FAILED",
+				"INSERT agent não retornou row.",
+			);
+		}
+
+		await tx
+			.update(knowledgeDocument)
+			.set({ agentId: createdAgent.id, sessionId: null })
+			.where(eq(knowledgeDocument.sessionId, sessionId));
+
+		// metadata é jsonb (alterado em migration 0016, ADR-002).
+		// jsonb_set nativo — sem cast.
+		await tx.execute(sql`
+			UPDATE knowledge_chunk
+			SET metadata = jsonb_set(
+				jsonb_set(metadata, '{agentId}', to_jsonb(${createdAgent.id}::text)),
+				'{sessionId}', 'null'::jsonb
+			)
+			WHERE (metadata->>'sessionId') = ${sessionId}
+		`);
+
+		const snapshot = buildAgentSnapshot(createdAgent);
+		await tx.insert(agentVersion).values({
+			agentId: createdAgent.id,
+			version: 1,
+			snapshot,
+			createdByUserId: userId,
+		});
+
+		await tx
+			.update(agentCreationSession)
+			.set({
+				status: "PUBLISHED",
+				publishedAgentId: createdAgent.id,
+				updatedAt: new Date(),
+			})
+			.where(eq(agentCreationSession.id, sessionId));
+
+		await tx.insert(orchestratorAuditLog).values({
+			organizationId,
+			userId,
+			actorType: "architect",
+			actorId: userId,
+			resource: "agent",
+			resourceId: createdAgent.id,
+			action: "agent_published",
+			before: null,
+			after: {
+				sessionId,
+				agentName: createdAgent.name,
+				knowledgeDocCount:
+					workingMemory.checklist.knowledge.documentIds.length,
+			},
+		});
+
+		return createdAgent;
+	});
+
+	return {
+		id: result.id,
+		name: result.name,
+		status: result.status,
+		version: result.version,
+	};
+}
+
+/**
  * Tool 7 — publishAgentFromSession (story 08A.3).
  *
- * Tool mais crítica da phase. Transação Postgres atômica de 10 steps (tech
- * spec § 6.1) que consolida o working memory da sessão num agente publicado.
- * Qualquer falha dispara rollback automático do Postgres — sessão permanece
- * DRAFT, nenhuma row é criada, usuário pode retentar (UI faz backoff 1/3/9s).
- *
- * Input vazio: tudo vem do runtimeContext (sessionId, userId, organizationId,
- * workingMemory populado pelo Agent Arquiteto em 09.5).
- *
- * Events (step 10 tech spec) são emitidos implicitamente via Realtime da
- * tabela agent e knowledge_document (clientes subscrevem UPDATE/INSERT).
- * Emit explícito fica pra 09.5 se necessário.
+ * Agora wrapper fino em cima de `publishAgentFromSessionCore`. A lógica
+ * de transação vive no core pra ser reusada pelo route handler 09.9
+ * (UI "Criar agente" CTA).
  */
 export const publishAgentFromSession = createTool({
 	id: "publish-agent-from-session",
@@ -70,120 +189,16 @@ Transação atômica: ou publica tudo ou nada (rollback em falha).`,
 					requestContext as ArchitectRuntimeContext | undefined,
 				);
 
-			// Step 3 adiantado: validação pré-tx pra falhar cedo sem abrir conexão.
-			const checklistErrors = validateFullChecklist(workingMemory);
-			if (checklistErrors.length > 0) {
-				throw new ArchitectToolError(
-					"CHECKLIST_INCOMPLETE",
-					`Checklist incompleto (${checklistErrors.length} campo${checklistErrors.length === 1 ? "" : "s"} faltando). Finalize antes de publicar.`,
-					checklistErrors,
-				);
-			}
-
-			const result = await db.transaction(async (tx) => {
-				// Step 1: Carrega sessão com lock lógico (status DRAFT + userId match)
-				const session = await tx.query.agentCreationSession.findFirst({
-					where: and(
-						eq(agentCreationSession.id, sessionId),
-						eq(agentCreationSession.userId, userId),
-						eq(agentCreationSession.status, "DRAFT"),
-					),
-				});
-				if (!session) {
-					throw new ArchitectToolError(
-						"SESSION_NOT_FOUND",
-						`Sessão ${sessionId} não encontrada ou já publicada.`,
-					);
-				}
-
-				// Step 4: Cria agent consolidando working memory
-				const insertValues = buildAgentInsertValues(
-					workingMemory,
-					organizationId,
-				);
-				const inserted = await tx
-					.insert(agentTable)
-					.values(insertValues)
-					.returning();
-
-				const createdAgent = inserted[0];
-				if (!createdAgent) {
-					throw new ArchitectToolError(
-						"PUBLISH_FAILED",
-						"INSERT agent não retornou row.",
-					);
-				}
-
-				// Step 5: Migra knowledge_documents (sessionId -> null, agentId -> novo)
-				await tx
-					.update(knowledgeDocument)
-					.set({ agentId: createdAgent.id, sessionId: null })
-					.where(eq(knowledgeDocument.sessionId, sessionId));
-
-				// Step 6: Atualiza metadata dos chunks (jsonb_set chained)
-				// Escopo via metadata.sessionId pra não misturar com outras sessões.
-				await tx.execute(sql`
-					UPDATE knowledge_chunk
-					SET metadata = jsonb_set(
-						jsonb_set(metadata, '{agentId}', to_jsonb(${createdAgent.id}::text)),
-						'{sessionId}', 'null'::jsonb
-					)
-					WHERE (metadata->>'sessionId') = ${sessionId}
-				`);
-
-				// Step 7: Cria snapshot v1 em agent_version
-				const snapshot = buildAgentSnapshot(createdAgent);
-				await tx.insert(agentVersion).values({
-					agentId: createdAgent.id,
-					version: 1,
-					snapshot,
-					createdByUserId: userId,
-				});
-
-				// Step 8: Marca sessão PUBLISHED + publishedAgentId
-				await tx
-					.update(agentCreationSession)
-					.set({
-						status: "PUBLISHED",
-						publishedAgentId: createdAgent.id,
-						updatedAt: new Date(),
-					})
-					.where(eq(agentCreationSession.id, sessionId));
-
-				// Step 9: Audit log (actorType: architect)
-				await tx.insert(orchestratorAuditLog).values({
-					organizationId,
-					userId,
-					actorType: "architect",
-					actorId: userId,
-					resource: "agent",
-					resourceId: createdAgent.id,
-					action: "agent_published",
-					before: null,
-					after: {
-						sessionId,
-						agentName: createdAgent.name,
-						knowledgeDocCount:
-							workingMemory.checklist.knowledge.documentIds
-								.length,
-					},
-				});
-
-				return createdAgent;
+			const agent = await publishAgentFromSessionCore({
+				sessionId,
+				userId,
+				organizationId,
+				workingMemory,
 			});
-
-			// Step 10: eventos via Realtime Supabase (automático no UPDATE/INSERT das
-			// tabelas agent, knowledge_document, agent_creation_session). Sem emit
-			// explícito necessário nesta phase.
 
 			return {
 				success: true as const,
-				agent: {
-					id: result.id,
-					name: result.name,
-					status: result.status,
-					version: result.version,
-				},
+				agent,
 			};
 		} catch (err) {
 			return toFailure(err);

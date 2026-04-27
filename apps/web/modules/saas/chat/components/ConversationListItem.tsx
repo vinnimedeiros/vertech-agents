@@ -20,15 +20,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import { cn } from "@ui/lib";
 import {
+	CheckIcon,
+	CheckCheckIcon,
+	ClockIcon,
 	MailIcon,
 	MessageCircleIcon,
 	MonitorIcon,
 	PinIcon,
 	PinOffIcon,
 	Trash2Icon,
+	TriangleAlertIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 type Props = {
@@ -54,17 +59,60 @@ function ChannelIcon({ channel }: { channel: ConversationListItemType["channel"]
 	return <MessageCircleIcon className={className} />;
 }
 
+/**
+ * Renderiza o ícone de status da última mensagem outbound (estilo WhatsApp).
+ * - PENDING/QUEUED: relógio
+ * - SENT: ✓
+ * - DELIVERED: ✓✓
+ * - READ: ✓✓ azul
+ * - FAILED: triângulo de alerta
+ * Inbound (recebida) não mostra ícone.
+ */
+function OutboundStatusIcon({
+	status,
+}: {
+	status: ConversationListItemType["lastMessageStatus"];
+}) {
+	if (!status) return null;
+	const base = "size-3.5 shrink-0";
+	if (status === "PENDING" || status === "QUEUED" || status === "PROCESSING") {
+		return <ClockIcon className={cn(base, "text-foreground/40")} />;
+	}
+	if (status === "SENT") {
+		return <CheckIcon className={cn(base, "text-foreground/55")} />;
+	}
+	if (status === "DELIVERED") {
+		return <CheckCheckIcon className={cn(base, "text-foreground/55")} />;
+	}
+	if (status === "READ") {
+		return <CheckCheckIcon className={cn(base, "text-sky-400")} />;
+	}
+	if (status === "FAILED") {
+		return <TriangleAlertIcon className={cn(base, "text-rose-500")} />;
+	}
+	return null;
+}
+
 export function ConversationListItem({
 	conversation,
 	isSelected,
 	onSelect,
 	organizationSlug,
 }: Props) {
-	const { contact, lastMessageAt, lastMessagePreview, unreadCount, channel } =
-		conversation;
-	const displayName = contact.name?.trim() || contact.phone || "Sem nome";
+	const {
+		contact,
+		lastMessageAt,
+		lastMessagePreview,
+		lastMessageDirection,
+		lastMessageStatus,
+		unreadCount,
+		channel,
+	} = conversation;
+	const displayName =
+		contact.name?.trim() || contact.phone || contact.lid || "Sem nome";
 	const hasUnread = unreadCount > 0;
 	const isPinned = !!conversation.pinnedAt;
+	const isOutbound = lastMessageDirection === "OUTBOUND";
 
 	const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 	const [confirmDelete, setConfirmDelete] = useState(false);
@@ -175,6 +223,9 @@ export function ConversationListItem({
 					</div>
 					<div className="mt-0.5 flex items-center gap-1.5">
 						<ChannelIcon channel={channel} />
+						{isOutbound ? (
+							<OutboundStatusIcon status={lastMessageStatus} />
+						) : null}
 						<span
 							className={cn(
 								"truncate text-xs",
@@ -192,43 +243,49 @@ export function ConversationListItem({
 				</div>
 			</button>
 
-			{menu ? (
-				<div
-					ref={menuRef}
-					style={{ top: menu.y, left: menu.x }}
-					className="fixed z-50 min-w-[180px] overflow-hidden rounded-md border border-border/60 bg-popover p-1 shadow-lg"
-					onClick={(e) => e.stopPropagation()}
-				>
-					<button
-						type="button"
-						onClick={togglePin}
-						className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-foreground/5"
-					>
-						{isPinned ? (
-							<>
-								<PinOffIcon className="size-3.5 text-foreground/60" />
-								Desafixar conversa
-							</>
-						) : (
-							<>
-								<PinIcon className="size-3.5 text-foreground/60" />
-								Fixar conversa
-							</>
-						)}
-					</button>
-					<button
-						type="button"
-						onClick={() => {
-							setMenu(null);
-							setConfirmDelete(true);
-						}}
-						className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-rose-500 transition-colors hover:bg-rose-500/10"
-					>
-						<Trash2Icon className="size-3.5" />
-						Excluir conversa
-					</button>
-				</div>
-			) : null}
+			{menu && typeof document !== "undefined"
+				? createPortal(
+						<div
+							ref={menuRef}
+							style={{
+								top: Math.min(menu.y, window.innerHeight - 100),
+								left: Math.min(menu.x, window.innerWidth - 200),
+							}}
+							className="fixed z-[9999] min-w-[180px] overflow-hidden rounded-md border border-border/60 bg-popover p-1 shadow-lg"
+							onClick={(e) => e.stopPropagation()}
+						>
+							<button
+								type="button"
+								onClick={togglePin}
+								className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors hover:bg-foreground/5"
+							>
+								{isPinned ? (
+									<>
+										<PinOffIcon className="size-3.5 text-foreground/60" />
+										Desafixar conversa
+									</>
+								) : (
+									<>
+										<PinIcon className="size-3.5 text-foreground/60" />
+										Fixar conversa
+									</>
+								)}
+							</button>
+							<button
+								type="button"
+								onClick={() => {
+									setMenu(null);
+									setConfirmDelete(true);
+								}}
+								className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-rose-500 transition-colors hover:bg-rose-500/10"
+							>
+								<Trash2Icon className="size-3.5" />
+								Excluir conversa
+							</button>
+						</div>,
+						document.body,
+					)
+				: null}
 
 			<AlertDialog
 				open={confirmDelete}

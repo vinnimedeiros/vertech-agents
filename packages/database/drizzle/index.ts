@@ -2,11 +2,13 @@ export * from "./client";
 export * from "./zod";
 export * from "./queries";
 export * from "./schema";
+export * from "./crypto/oauth-cipher";
 
 // Re-export commonly used Drizzle helpers so consumers don't need to install drizzle-orm directly
 export {
 	and,
 	asc,
+	count,
 	desc,
 	eq,
 	gt,

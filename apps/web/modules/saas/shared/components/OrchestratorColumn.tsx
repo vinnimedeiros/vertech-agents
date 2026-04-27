@@ -1,8 +1,9 @@
 "use client";
 
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { Button } from "@ui/components/button";
 import { cn } from "@ui/lib";
-import { SparklesIcon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 
 type OrchestratorColumnProps = {
 	open: boolean;
@@ -30,7 +31,7 @@ export function OrchestratorColumn({
 			>
 				<header className="flex h-10 shrink-0 items-center justify-between border-b border-border/50 px-3">
 					<div className="flex items-center gap-1.5">
-						<SparklesIcon className="size-3.5 text-primary" />
+						<AiStudioIcon className="size-3.5" />
 						<span className="text-sm font-semibold">
 							Peça ao Orquestrador
 						</span>
@@ -49,7 +50,7 @@ export function OrchestratorColumn({
 
 				<div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
 					<div className="flex size-12 items-center justify-center rounded-full bg-primary/10">
-						<SparklesIcon className="size-5 text-primary" />
+						<AiStudioIcon className="size-5" />
 					</div>
 					<div className="space-y-1">
 						<p className="text-sm font-semibold">Orquestrador Vertech</p>

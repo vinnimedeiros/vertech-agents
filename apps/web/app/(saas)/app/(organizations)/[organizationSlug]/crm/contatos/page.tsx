@@ -5,6 +5,7 @@ import {
 	getWhatsAppContactStats,
 	listWhatsAppContactsForOrg,
 } from "@saas/whatsapp-contacts/lib/server";
+import { WhatsAppSyncBanner } from "@saas/whatsapp/components/WhatsAppSyncBanner";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function WhatsAppContactsPage({
 				title="Contatos WhatsApp"
 				subtitle="Contatos da sua agenda sincronizados do WhatsApp. Promova qualquer um a lead no pipeline com um clique."
 			/>
+			<WhatsAppSyncBanner organizationId={org.id} className="mb-3" />
 			<WhatsAppContactsTable
 				organizationId={org.id}
 				organizationSlug={organizationSlug}

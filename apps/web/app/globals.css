@@ -8,6 +8,17 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+/* Canvas dot grid (StudioCanvas/FloatingCanvas) — Figma/Miro style.
+ * Light: dots cinza escuros visíveis sobre bg zinc-100.
+ * Dark: dots brancos sutis sobre bg zinc-950.
+ */
+:root {
+	--canvas-dot-color: rgba(24, 24, 27, 0.10);
+}
+.dark {
+	--canvas-dot-color: rgba(255, 255, 255, 0.05);
+}
+
 pre.shiki {
 	@apply mb-4 rounded-lg p-6;
 }
@@ -39,6 +50,58 @@ div[role="tablist"].bg-secondary {
 
 input[cmdk-input] {
 	@apply border-none focus-visible:ring-0;
+}
+
+/* Scrollbar global — fina, sem fundo, padrão SaaS premium.
+ * Forçado com !important porque Tailwind v4 preflight + Radix ScrollArea
+ * sobrescrevem em vários níveis. Aplicado em html/body/* pra cobrir tudo.
+ * Firefox: scrollbar-width thin + scrollbar-color custom.
+ * WebKit (Chrome/Safari/Edge): pseudo-elementos.
+ */
+html,
+body,
+*,
+*::before,
+*::after {
+	scrollbar-width: thin !important;
+	scrollbar-color: rgba(120, 120, 130, 0.35) transparent !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+	width: 6px !important;
+	height: 6px !important;
+	background: transparent !important;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+	background: rgba(120, 120, 130, 0.3) !important;
+	border-radius: 9999px !important;
+	border: none !important;
+	transition: background 0.2s !important;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+	background: rgba(160, 160, 170, 0.5) !important;
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+	background: transparent !important;
 }
 
 /* Scrollbar horizontal visível no Kanban (estilo fino mas sempre presente) */

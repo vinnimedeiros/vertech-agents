@@ -8,6 +8,7 @@ import {
 	pgTable,
 	text,
 	timestamp,
+	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
 import { agent } from "./agents";
@@ -234,7 +235,14 @@ export const agentArtifact = pgTable(
 		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 	},
 	(table) => [
-		index("agent_artifact_session_type_idx").on(table.sessionId, table.type),
+		// UNIQUE: garante 1 artifact por (sessionId, type). Previne race
+		// condition onde React strict mode dev double-monta PlanningStep
+		// e dispara POST /plan 2x simultâneo, criando blueprints duplicados.
+		// Descoberto via Playwright test 2026-04-21 (Fix adicional Smith verify).
+		uniqueIndex("agent_artifact_session_type_unique").on(
+			table.sessionId,
+			table.type,
+		),
 		index("agent_artifact_session_status_idx").on(
 			table.sessionId,
 			table.status,

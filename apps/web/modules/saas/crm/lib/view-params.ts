@@ -1,5 +1,7 @@
 import {
 	EMPTY_FILTERS,
+	PERIOD_PRESETS,
+	type PeriodPreset,
 	PRIORITIES,
 	type SortKey,
 	SORT_KEYS,
@@ -26,6 +28,9 @@ export const PARAM = {
 	onlyStagnant: "stg",
 	includeClosed: "cls",
 	sortBy: "sb",
+	periodPreset: "p",
+	periodFrom: "pf",
+	periodTo: "pt",
 } as const;
 
 type ReadableParams = {
@@ -70,6 +75,15 @@ export function parseFiltersFromParams(sp: ReadableParams): ViewFiltersState {
 	if (vx != null) filters.valueMax = vx;
 	if (sp.get(PARAM.onlyStagnant) === "1") filters.onlyStagnant = true;
 	if (sp.get(PARAM.includeClosed) === "1") filters.includeClosed = true;
+
+	const preset = sp.get(PARAM.periodPreset);
+	if (preset && (PERIOD_PRESETS as readonly string[]).includes(preset)) {
+		filters.periodPreset = preset as PeriodPreset;
+	}
+	const from = sp.get(PARAM.periodFrom);
+	if (from) filters.periodFrom = from;
+	const to = sp.get(PARAM.periodTo);
+	if (to) filters.periodTo = to;
 
 	return filters;
 }
@@ -138,6 +152,12 @@ export function writeStateToParams(
 	);
 	setOrDelete(PARAM.onlyStagnant, f.onlyStagnant ? "1" : undefined);
 	setOrDelete(PARAM.includeClosed, f.includeClosed ? "1" : undefined);
+	setOrDelete(
+		PARAM.periodPreset,
+		f.periodPreset && f.periodPreset !== "all" ? f.periodPreset : undefined,
+	);
+	setOrDelete(PARAM.periodFrom, f.periodFrom || undefined);
+	setOrDelete(PARAM.periodTo, f.periodTo || undefined);
 	setOrDelete(
 		PARAM.sortBy,
 		state.sortBy !== "none" ? state.sortBy : undefined,

@@ -1,7 +1,7 @@
 import { db, eq, member, organization } from "@repo/database";
 import type { OrganizationType } from "./access";
 import { requireOrgAccess } from "./access";
-import { ensureDefaultPipeline } from "./pipeline-defaults";
+import { ensureDefaultOperationalKit } from "./pipeline-defaults";
 
 /**
  * Invariantes da hierarquia:
@@ -88,10 +88,10 @@ export async function createChildOrganization(
 		createdAt: now,
 	});
 
-	// CLIENT workspaces get a default sales pipeline automatically.
-	if (childType === "CLIENT") {
-		await ensureDefaultPipeline(newOrg.id);
-	}
+	// TODAS as orgs (SUPERADMIN/MASTER/AGENCY/CLIENT) recebem kit operacional
+	// default — pipeline principal + kanban view — conforme regra MUST
+	// `feedback_multi_layer_features.md`: cada workspace opera comercialmente.
+	await ensureDefaultOperationalKit(newOrg.id);
 
 	return newOrg;
 }

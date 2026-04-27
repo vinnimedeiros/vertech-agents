@@ -4,7 +4,9 @@ import { WhatsAppInstance } from "./instance";
 
 const logger = pino({ level: "warn" });
 
-const GLOBAL_KEY = "__vertechBaileysManager";
+// Bump após upgrade Baileys 6.7.9 → 7.0.0-rc.9 — instances v6 cacheadas no
+// globalThis ficam stale após reload do código v7, garantir Map fresco.
+const GLOBAL_KEY = "__vertechBaileysManager_v7";
 
 class BaileysManager {
 	private instances = new Map<string, WhatsAppInstance>();

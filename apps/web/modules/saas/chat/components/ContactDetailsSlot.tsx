@@ -1,6 +1,7 @@
 "use client";
 
 import { useChatDetails } from "@saas/chat/components/ChatDetailsContext";
+import { FloatingPanel } from "@saas/shared/floating";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -12,8 +13,11 @@ export function ContactDetailsSlot({ children }: Props) {
 	if (!isOpen) return null;
 
 	return (
-		<aside className="hidden w-80 shrink-0 flex-col border-l border-border/60 bg-card/40 lg:flex">
+		<FloatingPanel
+			as="aside"
+			className="hidden h-full w-80 shrink-0 flex-col overflow-y-auto lg:flex"
+		>
 			{children}
-		</aside>
+		</FloatingPanel>
 	);
 }

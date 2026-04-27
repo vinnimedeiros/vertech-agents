@@ -1,22 +1,23 @@
 "use client";
 
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
 import {
 	BriefcaseIcon,
 	CpuIcon,
-	type LucideIcon,
+	FlaskConicalIcon,
 	MessageSquareIcon,
 	PhoneIcon,
-	SparklesIcon,
 	UserIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ComponentType } from "react";
 
 type MenuItem = {
 	id: string;
 	label: string;
-	icon: LucideIcon;
+	icon: ComponentType<{ className?: string }>;
 	pathSuffix: string; // "" pro item raiz (Identidade)
 };
 
@@ -25,7 +26,7 @@ const ITEMS: MenuItem[] = [
 	{
 		id: "persona",
 		label: "Persona",
-		icon: SparklesIcon,
+		icon: AiStudioIcon,
 		pathSuffix: "/persona",
 	},
 	{
@@ -46,6 +47,12 @@ const ITEMS: MenuItem[] = [
 		label: "WhatsApp",
 		icon: PhoneIcon,
 		pathSuffix: "/whatsapp",
+	},
+	{
+		id: "sandbox",
+		label: "Sandbox",
+		icon: FlaskConicalIcon,
+		pathSuffix: "/sandbox",
 	},
 ];
 

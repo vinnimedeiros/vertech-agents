@@ -34,6 +34,44 @@ function truncate(s: string, max: number): string {
 	return clean.length > max ? `${clean.slice(0, max)}…` : clean;
 }
 
+import {
+	detectJidKind,
+	normalizeLidFromJid,
+	normalizePhoneFromJid,
+} from "./jid-utils";
+
+type ResolvedJid =
+	| { kind: "phone"; value: string }
+	| { kind: "lid"; value: string }
+	| { kind: "group" }
+	| { kind: "broadcast" }
+	| { kind: "unknown" };
+
+/**
+ * Resolve um remoteJid do WhatsApp em sua semântica Baileys v7. Sempre
+ * normaliza via helpers — strippa `@domínio` E `:deviceId` antes de
+ * extrair dígitos.
+ *
+ * - "5511999999999:0@s.whatsapp.net" → { kind: "phone", value: "5511999999999" }
+ * - "12345678:0@lid"                 → { kind: "lid", value: "12345678" }
+ * - "5511...@g.us"                   → group (filtrado)
+ * - "status@broadcast"               → broadcast (filtrado)
+ */
+function resolveRemoteJid(remoteJid: string): ResolvedJid {
+	const kind = detectJidKind(remoteJid);
+	if (kind === "broadcast") return { kind: "broadcast" };
+	if (kind === "group") return { kind: "group" };
+	if (kind === "lid") {
+		const value = normalizeLidFromJid(remoteJid);
+		return value ? { kind: "lid", value } : { kind: "unknown" };
+	}
+	if (kind === "phone") {
+		const value = normalizePhoneFromJid(remoteJid);
+		return value ? { kind: "phone", value } : { kind: "unknown" };
+	}
+	return { kind: "unknown" };
+}
+
 /**
  * Recebe uma WAMessage inbound do Baileys e:
  * 1. upsert do contato (por telefone na org)
@@ -52,8 +90,14 @@ export async function handleIncomingMessage(
 ): Promise<void> {
 	if (!msg.message || msg.key.fromMe) return;
 	const remoteJid = msg.key.remoteJid;
-	if (!remoteJid || remoteJid.endsWith("@g.us") || remoteJid === "status@broadcast") {
-		// Grupos e status broadcast: fora do escopo MVP
+	if (!remoteJid) return;
+
+	const resolved = resolveRemoteJid(remoteJid);
+	if (resolved.kind === "group" || resolved.kind === "broadcast") {
+		return;
+	}
+	if (resolved.kind === "unknown") {
+		console.warn("[handleIncomingMessage] remoteJid desconhecido:", remoteJid);
 		return;
 	}
 
@@ -64,24 +108,30 @@ export async function handleIncomingMessage(
 		.limit(1);
 	if (!inst) return;
 
-	const phone = remoteJid.split("@")[0];
-	if (!phone) return;
 	const senderName = msg.pushName ?? "Desconhecido";
-
 	const now = new Date();
 
-	// Upsert contact
+	// Lookup contact por lid OU phone conforme semântica do JID. LID-only
+	// (Anonymous mode WhatsApp) entra com lid populado e phone null até
+	// o evento `lid-mapping.update` revelar o telefone.
+	const isLid = resolved.kind === "lid";
+	const lookupColumn = isLid ? contact.lid : contact.phone;
+	const identifier = resolved.value;
+
 	const [existingContact] = await db
 		.select({
 			id: contact.id,
 			name: contact.name,
 			photoUrl: contact.photoUrl,
+			whatsappJid: contact.whatsappJid,
+			lid: contact.lid,
+			phone: contact.phone,
 		})
 		.from(contact)
 		.where(
 			and(
 				eq(contact.organizationId, inst.organizationId),
-				eq(contact.phone, phone),
+				eq(lookupColumn, identifier),
 			),
 		)
 		.limit(1);
@@ -90,19 +140,27 @@ export async function handleIncomingMessage(
 	let needsEnrichment = false;
 	if (existingContact) {
 		contactId = existingContact.id;
-		// Só atualiza name se o atual estiver vazio/placeholder
+		const updates: Partial<typeof contact.$inferInsert> = {};
+		// Preserva remoteJid completo (Wave 3 paliativo, mantido por compat)
+		if (existingContact.whatsappJid !== remoteJid) {
+			updates.whatsappJid = remoteJid;
+		}
+		// Backfill do campo nativo v7 quando vazio
+		if (isLid && !existingContact.lid) updates.lid = identifier;
+		if (!isLid && !existingContact.phone) updates.phone = identifier;
 		if (
 			!existingContact.name ||
 			existingContact.name === "Desconhecido" ||
-			existingContact.name === phone
+			existingContact.name === identifier
 		) {
+			updates.name = senderName;
+		}
+		if (Object.keys(updates).length > 0) {
 			await db
 				.update(contact)
-				.set({ name: senderName, updatedAt: now })
+				.set({ ...updates, updatedAt: now })
 				.where(eq(contact.id, contactId));
 		}
-		// Re-enriquecer se ainda não tem foto (primeira vez ou foto foi
-		// habilitada depois)
 		if (!existingContact.photoUrl) needsEnrichment = true;
 	} else {
 		const [created] = await db
@@ -110,7 +168,9 @@ export async function handleIncomingMessage(
 			.values({
 				organizationId: inst.organizationId,
 				name: senderName,
-				phone,
+				phone: isLid ? null : identifier,
+				lid: isLid ? identifier : null,
+				whatsappJid: remoteJid,
 				source: "whatsapp",
 				createdAt: now,
 				updatedAt: now,
@@ -193,8 +253,10 @@ export async function handleIncomingMessage(
 		});
 	}
 
-	// Parse + download (se mídia)
+	// Parse + download (se mídia). null = mensagem de controle (reaction,
+	// protocol). Pula sem inserir.
 	const parsed = await parseMessageContent(msg, inst.organizationId);
+	if (!parsed) return;
 	const preview = previewFromParsed(parsed);
 	const createdAt = msg.messageTimestamp
 		? new Date(Number(msg.messageTimestamp) * 1000)
@@ -239,6 +301,8 @@ export async function handleIncomingMessage(
 		.set({
 			lastMessageAt: createdAt,
 			lastMessagePreview: preview,
+			lastMessageDirection: "INBOUND",
+			lastMessageStatus: "DELIVERED",
 			unreadCount: sql`${conversation.unreadCount} + 1`,
 			status: previousStatus === "RESOLVED" ? "ACTIVE" : conversation.status,
 			updatedAt: now,

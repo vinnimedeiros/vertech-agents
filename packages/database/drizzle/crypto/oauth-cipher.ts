@@ -25,6 +25,15 @@ function getKey(): Buffer {
 		cachedKey = decoded;
 		return cachedKey;
 	}
+	// Fallback scrypt com salt fixo aceita strings arbitrárias mas é frágil
+	// (salt determinístico = vulnerável a rainbow tables se key vazar). Só
+	// permitido em dev pra facilitar setup local. Prod EXIGE base64 32B.
+	if (process.env.NODE_ENV === "production") {
+		throw new Error(
+			"[oauth-cipher] OAUTH_ENCRYPTION_KEY deve ser base64 32-byte em production. " +
+				`Recebido ${decoded.length} bytes. Gerar com: openssl rand -base64 32`,
+		);
+	}
 	cachedKey = scryptSync(raw, "vertech-oauth-salt", 32);
 	return cachedKey;
 }

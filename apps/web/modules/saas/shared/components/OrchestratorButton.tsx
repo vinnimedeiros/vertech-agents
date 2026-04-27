@@ -1,7 +1,7 @@
 "use client";
 
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
-import { SparklesIcon } from "lucide-react";
 
 type OrchestratorButtonProps = {
 	open: boolean;
@@ -41,9 +41,9 @@ export function OrchestratorButton({
 			>
 				Peça ao Orquestrador
 			</span>
-			<SparklesIcon
+			<AiStudioIcon
 				className={cn(
-					"size-4 shrink-0 text-primary transition-transform duration-300",
+					"size-4 transition-transform duration-300",
 					"group-hover/orchestrator:rotate-180",
 					open && "rotate-180",
 				)}

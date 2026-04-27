@@ -20,6 +20,16 @@ export type SortKey = (typeof SORT_KEYS)[number];
 export const PRIORITIES = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
 export const TEMPERATURES = ["COLD", "WARM", "HOT"] as const;
 
+export const PERIOD_PRESETS = [
+	"all",
+	"today",
+	"7d",
+	"30d",
+	"month",
+	"custom",
+] as const;
+export type PeriodPreset = (typeof PERIOD_PRESETS)[number];
+
 export const viewFiltersStateSchema = z.object({
 	searchQuery: z.string().optional(),
 	assigneeIds: z.array(z.string()).optional(),
@@ -29,6 +39,9 @@ export const viewFiltersStateSchema = z.object({
 	valueMax: z.number().nonnegative().nullable().optional(),
 	onlyStagnant: z.boolean().optional(),
 	includeClosed: z.boolean().optional(),
+	periodPreset: z.enum(PERIOD_PRESETS).optional(),
+	periodFrom: z.string().optional(),
+	periodTo: z.string().optional(),
 });
 
 export type ViewFiltersState = z.infer<typeof viewFiltersStateSchema>;
@@ -60,6 +73,7 @@ export function isFiltersEmpty(f: ViewFiltersState | null | undefined): boolean 
 	if (f.valueMax != null) return false;
 	if (f.onlyStagnant) return false;
 	if (f.includeClosed) return false;
+	if (f.periodPreset && f.periodPreset !== "all") return false;
 	return true;
 }
 
@@ -73,6 +87,7 @@ export function activeFilterCount(f: ViewFiltersState | null | undefined): numbe
 	if (f.valueMin != null || f.valueMax != null) n++;
 	if (f.onlyStagnant) n++;
 	if (f.includeClosed) n++;
+	if (f.periodPreset && f.periodPreset !== "all") n++;
 	return n;
 }
 
@@ -91,6 +106,9 @@ function filtersEquals(a: ViewFiltersState, b: ViewFiltersState): boolean {
 	if ((a.valueMax ?? null) !== (b.valueMax ?? null)) return false;
 	if (!!a.onlyStagnant !== !!b.onlyStagnant) return false;
 	if (!!a.includeClosed !== !!b.includeClosed) return false;
+	if ((a.periodPreset ?? "all") !== (b.periodPreset ?? "all")) return false;
+	if ((a.periodFrom ?? "") !== (b.periodFrom ?? "")) return false;
+	if ((a.periodTo ?? "") !== (b.periodTo ?? "")) return false;
 	return true;
 }
 

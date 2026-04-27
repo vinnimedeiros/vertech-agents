@@ -18,11 +18,11 @@ import {
 	SelectValue,
 } from "@ui/components/select";
 import { Slider } from "@ui/components/slider";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { Textarea } from "@ui/components/textarea";
 import { cn } from "@ui/lib";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-	BotIcon,
 	BrainIcon,
 	CheckCircle2Icon,
 	Loader2Icon,
@@ -444,7 +444,7 @@ export function ModesView({ agent }: { agent: EditorAgent }) {
 		return (
 			<div className="flex flex-col items-center gap-3 rounded-xl bg-muted/30 px-4 py-10 text-center">
 				<div className="flex size-10 items-center justify-center rounded-xl bg-foreground/5 ring-1 ring-foreground/10">
-					<BotIcon className="size-4 text-muted-foreground" />
+					<AiStudioIcon className="size-4" />
 				</div>
 				<p className="max-w-xs text-[12px] text-muted-foreground leading-relaxed">
 					Modos contextuais são exclusivos do Atendente (Supervisor do TIME).
@@ -474,7 +474,7 @@ export function ModesView({ agent }: { agent: EditorAgent }) {
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex items-start gap-2 rounded-lg border border-border/40 bg-muted/30 px-3 py-2">
-				<BotIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+				<AiStudioIcon className="mt-0.5 size-3.5" />
 				<p className="text-[11.5px] text-muted-foreground leading-relaxed">
 					3 modos com mesma identidade. O sistema alterna sozinho conforme o
 					estágio do lead. Edição por modo chega quando o schema for ampliado.

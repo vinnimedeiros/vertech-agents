@@ -49,6 +49,25 @@ export const attendeeSchema = z.object({
 	userId: z.string().nullable().optional(),
 });
 
+export const externalAttendeeSchema = z.object({
+	email: z.string().email(),
+	name: z.string().max(80).optional(),
+	status: z.enum(["pending", "accepted", "declined"]).optional(),
+});
+
+// RRULE iCal (RFC 5545). Validado por sintaxe básica; rrule lib faz parse robusto.
+// Ex: "FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261231T235959Z"
+export const recurrenceRuleSchema = z
+	.string()
+	.max(500)
+	.regex(/^FREQ=(SECONDLY|MINUTELY|HOURLY|DAILY|WEEKLY|MONTHLY|YEARLY)/, {
+		message: "RRULE deve começar com FREQ=...",
+	})
+	.optional()
+	.nullable();
+
+export const eventKindSchema = z.enum(["event", "meet"]);
+
 export const createEventInputSchema = z.object({
 	organizationId: z.string(),
 	calendarId: z.string(),
@@ -61,7 +80,13 @@ export const createEventInputSchema = z.object({
 	color: colorSchema.optional().nullable(),
 	location: z.string().max(200).optional().nullable(),
 	attendees: z.array(attendeeSchema).default([]),
+	externalAttendees: z.array(externalAttendeeSchema).default([]),
 	reminder: z.boolean().default(true),
+	recurrenceRule: recurrenceRuleSchema,
+	/** `meet` cria videochamada Google Meet via conferenceData.createRequest no push */
+	eventKind: eventKindSchema.default("event"),
+	/** Vincula evento a lead do CRM (LeadModal shortcut). NULL em agenda standalone. */
+	leadId: z.string().nullable().optional(),
 });
 
 export const updateEventInputSchema = createEventInputSchema
@@ -72,6 +97,45 @@ export const eventIdSchema = z.object({
 	eventId: z.string(),
 });
 
+// =============================================
+// Availability schemas (D.1 free-slot finder)
+// =============================================
+
+export const findAvailableSlotsInputSchema = z.object({
+	organizationId: z.string(),
+	from: z.coerce.date(),
+	to: z.coerce.date(),
+	durationMinutes: z.number().int().min(5).max(1440).default(30),
+	calendarIds: z.array(z.string()).optional(), // se omitido, considera todos da org
+	workingHoursStart: z.number().int().min(0).max(23).default(9),
+	workingHoursEnd: z.number().int().min(0).max(23).default(18),
+	excludeWeekends: z.boolean().default(true),
+});
+
+// =============================================
+// External attendee actions (D.5)
+// =============================================
+
+export const addExternalAttendeeInputSchema = z.object({
+	eventId: z.string(),
+	email: z.string().email(),
+	name: z.string().max(80).optional(),
+});
+
+export const removeExternalAttendeeInputSchema = z.object({
+	eventId: z.string(),
+	email: z.string().email(),
+});
+
+export const respondInviteInputSchema = z.object({
+	eventId: z.string(),
+	email: z.string().email(),
+	response: z.enum(["accepted", "declined"]),
+	token: z.string().min(20), // signed token enviado no email
+});
+
 export type CalendarType = z.infer<typeof calendarTypeSchema>;
 export type EventType = z.infer<typeof eventTypeSchema>;
+export type EventKind = z.infer<typeof eventKindSchema>;
 export type Attendee = z.infer<typeof attendeeSchema>;
+export type ExternalAttendee = z.infer<typeof externalAttendeeSchema>;

@@ -1,7 +1,7 @@
 "use client";
 
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
-import { SparklesIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -42,7 +42,7 @@ function InitialShimmer() {
 	return (
 		<div className="flex flex-col items-start gap-3">
 			<div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
-				<SparklesIcon className="size-4 text-primary" />
+				<AiStudioIcon className="size-4" />
 			</div>
 			<div className="flex flex-col gap-2">
 				<div className="h-4 w-48 animate-pulse rounded-md bg-foreground/10" />

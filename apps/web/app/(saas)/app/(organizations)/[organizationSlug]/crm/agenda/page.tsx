@@ -5,7 +5,6 @@ import {
 	listEventsInRange,
 } from "@saas/agenda/lib/server";
 import { getActiveOrganization, getSession } from "@saas/auth/lib/server";
-import { PageHeader } from "@saas/shared/components/PageHeader";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { notFound, redirect } from "next/navigation";
 
@@ -24,12 +23,10 @@ export default async function CrmAgendaPage({ params }: Props) {
 	const org = await getActiveOrganization(organizationSlug);
 	if (!org) return notFound();
 
-	// Garante calendar default. Idempotente, safe pra orgs antigas.
 	await ensureDefaultCalendar(org.id);
 
 	const [calendars, events] = await Promise.all([
 		listCalendarsForOrg(org.id),
-		// Busca eventos do mês anterior + atual + dois próximos pra ter pontos no picker
 		listEventsInRange(
 			org.id,
 			startOfMonth(subMonths(new Date(), 1)),
@@ -40,17 +37,11 @@ export default async function CrmAgendaPage({ params }: Props) {
 	]);
 
 	return (
-		<>
-			<PageHeader
-				title="Agenda"
-				subtitle="Eventos, reuniões e compromissos do seu workspace"
-			/>
-			<AgendaShell
-				organizationId={org.id}
-				organizationSlug={organizationSlug}
-				calendars={calendars}
-				events={events}
-			/>
-		</>
+		<AgendaShell
+			organizationId={org.id}
+			organizationSlug={organizationSlug}
+			calendars={calendars}
+			events={events}
+		/>
 	);
 }

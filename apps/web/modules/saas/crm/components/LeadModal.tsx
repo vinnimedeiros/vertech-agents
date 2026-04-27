@@ -30,7 +30,6 @@ import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	DollarSignIcon,
-	FileEditIcon,
 	FlagIcon,
 	GlobeIcon,
 	Loader2Icon,
@@ -41,16 +40,22 @@ import {
 	SendIcon,
 	SparklesIcon,
 	StarIcon,
-	StickyNoteIcon,
 	ThermometerIcon,
 	Trash2Icon,
 	UserIcon,
-	UsersIcon,
+	VideoIcon,
 	XIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import {
+	deleteEventAction,
+	getCalendarsForOrgAction,
+} from "@saas/agenda/lib/actions";
+import { EventForm } from "@saas/agenda/components/EventForm";
+import { ScheduledEventCard } from "@saas/agenda/components/ScheduledEventCard";
+import type { CalendarRow } from "@saas/agenda/types";
 import {
 	deleteLeadAction,
 	getLeadDetailsAction,
@@ -100,6 +105,7 @@ export type LeadModalStage = {
 
 type LoadedLead = {
 	id: string;
+	organizationId: string;
 	title: string | null;
 	description: string | null;
 	value: string | null;
@@ -132,23 +138,47 @@ type LoadedActivity = {
 	createdAt: Date | string;
 };
 
+type LoadedEvent = {
+	id: string;
+	title: string;
+	startAt: Date | string;
+	duration: string;
+	eventKind: "event" | "meet";
+	meetLink: string | null;
+	conferenceId: string | null;
+};
+
 type LoadedDetails = {
 	lead: LoadedLead;
 	contact: LoadedContact;
 	activities: LoadedActivity[];
+	events: LoadedEvent[];
 };
 
 // ============================================================
 // Constants
 // ============================================================
 
-const ACTIVITY_BUTTONS = [
-	{ type: "CALL" as const, label: "Ligação", icon: PhoneCallIcon },
-	{ type: "EMAIL" as const, label: "E-mail", icon: MailIcon },
-	{ type: "MEETING" as const, label: "Reunião", icon: UsersIcon },
-	{ type: "TASK" as const, label: "Tarefa", icon: FileEditIcon },
-	{ type: "WHATSAPP" as const, label: "WhatsApp", icon: MessageCircleIcon },
-	{ type: "NOTE" as const, label: "Nota", icon: StickyNoteIcon },
+type ActivityButtonMode = "navigate" | "meet" | "event" | "soon";
+
+type ActivityButtonDef = {
+	id: string;
+	label: string;
+	icon: typeof MessageCircleIcon;
+	mode: ActivityButtonMode;
+};
+
+const ACTIVITY_BUTTONS: ActivityButtonDef[] = [
+	{
+		id: "whatsapp",
+		label: "WhatsApp",
+		icon: MessageCircleIcon,
+		mode: "navigate",
+	},
+	{ id: "meet", label: "Reunião", icon: VideoIcon, mode: "meet" },
+	{ id: "event", label: "Evento", icon: CalendarIcon, mode: "event" },
+	{ id: "email", label: "E-mail", icon: MailIcon, mode: "soon" },
+	{ id: "call", label: "Ligação", icon: PhoneCallIcon, mode: "soon" },
 ];
 
 // ============================================================
@@ -206,9 +236,78 @@ export function LeadModal({
 	const [isSaving, startSaving] = useTransition();
 	const [deleteOpen, setDeleteOpen] = useState(false);
 
+	// Schedule dialog (Reunião / Evento) — abre EventForm com restrictKind
+	const [scheduleOpen, setScheduleOpen] = useState(false);
+	const [scheduleKind, setScheduleKind] = useState<"event" | "meet">("meet");
+	const [calendars, setCalendars] = useState<CalendarRow[]>([]);
+	const [calendarsLoading, setCalendarsLoading] = useState(false);
+
+	// Delete event confirmation
+	const [eventToDelete, setEventToDelete] = useState<LoadedEvent | null>(null);
+	const [isDeletingEvent, startDeleteEvent] = useTransition();
+
 	async function refresh(id: string) {
 		const fresh = await getLeadDetailsAction(id);
 		setDetails(fresh as LoadedDetails);
+	}
+
+	async function ensureCalendars(orgId: string): Promise<CalendarRow[]> {
+		if (calendars.length > 0) return calendars;
+		setCalendarsLoading(true);
+		try {
+			const cals = (await getCalendarsForOrgAction(orgId)) as CalendarRow[];
+			setCalendars(cals);
+			return cals;
+		} finally {
+			setCalendarsLoading(false);
+		}
+	}
+
+	async function openScheduleDialog(kind: "event" | "meet") {
+		if (!details) return;
+		setScheduleKind(kind);
+		const cals = await ensureCalendars(details.lead.organizationId);
+		if (cals.length === 0) {
+			toast.error("Nenhum calendário disponível pra esta organização");
+			return;
+		}
+		setScheduleOpen(true);
+	}
+
+	function nextRoundedHour(): Date {
+		const d = new Date();
+		d.setMinutes(0, 0, 0);
+		d.setHours(d.getHours() + 1);
+		return d;
+	}
+
+	async function handleScheduleSaved(_result: {
+		eventId: string;
+		meetLink: string | null;
+	}) {
+		if (!details) return;
+		// Refresh recarrega lead.events — card aparece automaticamente na
+		// sidebar. Sem log MEETING auxiliar pra evitar duplicação visual
+		// (card + entry no histórico). Histórico fica pra calls/emails reais.
+		await refresh(details.lead.id);
+	}
+
+	function confirmDeleteEvent() {
+		if (!eventToDelete || !details) return;
+		const targetId = eventToDelete.id;
+		const leadId = details.lead.id;
+		startDeleteEvent(async () => {
+			try {
+				await deleteEventAction({ eventId: targetId }, organizationSlug);
+				toast.success("Removido");
+				setEventToDelete(null);
+				await refresh(leadId);
+			} catch (err) {
+				toast.error(
+					err instanceof Error ? err.message : "Falha ao excluir",
+				);
+			}
+		});
 	}
 
 	useEffect(() => {
@@ -647,20 +746,40 @@ export function LeadModal({
 											Nova Atividade
 										</h3>
 										<ActivityLogger
-											leadId={details.lead.id}
+											contactId={details.contact.id}
+											contactPhone={details.contact.phone}
 											organizationSlug={organizationSlug}
-											onLogged={() => refresh(details.lead.id)}
+											onMeetClick={() => openScheduleDialog("meet")}
+											onEventClick={() => openScheduleDialog("event")}
 										/>
 									</section>
 
-									{/* Atividades agendadas (placeholder) */}
+									{/* Reuniões e eventos agendados deste lead */}
 									<section className="mt-8">
-										<h3 className="mb-2 text-sm font-semibold text-foreground">
-											Atividades Agendadas
+										<h3 className="mb-3 text-sm font-semibold text-foreground">
+											Reuniões e Eventos
 										</h3>
-										<p className="text-xs text-muted-foreground">
-											Nenhuma atividade agendada ainda.
-										</p>
+										{details.events.length === 0 ? (
+											<p className="text-xs text-muted-foreground">
+												Nenhuma reunião ou evento agendado. Use os botões acima
+												pra marcar.
+											</p>
+										) : (
+											<div className="flex flex-col gap-3">
+												{details.events.map((ev) => (
+													<ScheduledEventCard
+														key={ev.id}
+														event={ev}
+														recipientName={details.contact.name}
+														onDelete={() => setEventToDelete(ev)}
+														deleting={
+															isDeletingEvent &&
+															eventToDelete?.id === ev.id
+														}
+													/>
+												))}
+											</div>
+										)}
 									</section>
 								</main>
 
@@ -699,6 +818,69 @@ export function LeadModal({
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			{/* Confirm exclusão de evento agendado */}
+			<AlertDialog
+				open={!!eventToDelete}
+				onOpenChange={(o) => !o && setEventToDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							Excluir{" "}
+							{eventToDelete?.eventKind === "meet"
+								? "reunião"
+								: "evento"}
+							?
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							{eventToDelete?.eventKind === "meet"
+								? "A videochamada Google Meet será removida do Google Calendar e da agenda. Convidados receberão notificação de cancelamento."
+								: "O evento será removido da agenda e do Google Calendar (se sincronizado)."}
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isDeletingEvent}>
+							Cancelar
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={(e) => {
+								e.preventDefault();
+								confirmDeleteEvent();
+							}}
+							disabled={isDeletingEvent}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						>
+							{isDeletingEvent ? "Excluindo..." : "Excluir"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+
+			{/* Reunião / Evento — EventForm renderizado em paralelo ao LeadModal */}
+			{details && calendars.length > 0 ? (
+				<EventForm
+					open={scheduleOpen}
+					onOpenChange={setScheduleOpen}
+					organizationSlug={organizationSlug}
+					organizationId={details.lead.organizationId}
+					calendars={calendars}
+					leadId={details.lead.id}
+					defaultDate={nextRoundedHour()}
+					defaultKind={scheduleKind}
+					restrictKind={scheduleKind}
+					defaultTitle={
+						scheduleKind === "meet"
+							? `Reunião com ${details.contact.name}`
+							: `Evento com ${details.contact.name}`
+					}
+					defaultEmails={
+						details.contact.email ? [details.contact.email] : []
+					}
+					recipientName={details.contact.name}
+					onSaved={handleScheduleSaved}
+				/>
+			) : null}
 		</>
 	);
 }
@@ -801,95 +983,71 @@ function InlineTextField({
 // ============================================================
 
 function ActivityLogger({
-	leadId,
+	contactId,
+	contactPhone,
 	organizationSlug,
-	onLogged,
+	onMeetClick,
+	onEventClick,
 }: {
-	leadId: string;
+	contactId: string;
+	contactPhone: string | null;
 	organizationSlug: string;
-	onLogged: () => void;
+	onMeetClick: () => void;
+	onEventClick: () => void;
 }) {
-	const [selectedType, setSelectedType] =
-		useState<(typeof ACTIVITY_BUTTONS)[number]["type"] | null>(null);
-	const [title, setTitle] = useState("");
-	const [isPending, startPending] = useTransition();
+	const router = useRouter();
 
-	function submit() {
-		if (!selectedType || !title.trim()) return;
-		const type = selectedType;
-		const t = title.trim();
-		startPending(async () => {
-			try {
-				await logActivityAction(
-					{ leadId, type, title: t },
-					organizationSlug,
+	const handleClick = (def: ActivityButtonDef) => {
+		switch (def.mode) {
+			case "navigate":
+				if (!contactPhone) {
+					toast.error("Lead sem telefone — adicione um número primeiro");
+					return;
+				}
+				router.push(
+					`/app/${organizationSlug}/crm/chat/new/${contactId}`,
 				);
-				setTitle("");
-				setSelectedType(null);
-				onLogged();
-				toast.success("Atividade registrada");
-			} catch (err) {
-				toast.error(err instanceof Error ? err.message : "Falhou");
-			}
-		});
-	}
+				return;
+			case "meet":
+				onMeetClick();
+				return;
+			case "event":
+				onEventClick();
+				return;
+			case "soon":
+				toast.info(`${def.label} em breve`);
+				return;
+		}
+	};
 
 	return (
-		<div className="space-y-2">
-			<div className="grid grid-cols-6 gap-2">
-				{ACTIVITY_BUTTONS.map((b) => (
+		<div className="grid grid-cols-5 gap-2">
+			{ACTIVITY_BUTTONS.map((b) => {
+				const disabled = b.mode === "soon";
+				return (
 					<button
-						key={b.type}
+						key={b.id}
 						type="button"
-						onClick={() => setSelectedType(b.type)}
+						onClick={() => handleClick(b)}
+						disabled={disabled}
+						title={disabled ? "Em breve" : b.label}
 						className={cn(
-							"flex flex-col items-center gap-1.5 rounded-lg border border-border/60 bg-card py-3 text-xs transition-colors",
-							selectedType === b.type
-								? "border-primary bg-primary/10 text-primary"
-								: "hover:bg-muted",
+							"relative flex flex-col items-center gap-1.5 rounded-lg border border-border/60 bg-card py-3 text-xs transition-colors",
+							disabled
+								? "cursor-not-allowed opacity-50"
+								: "hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
 						)}
 					>
 						<b.icon className="size-4" />
 						<span>{b.label}</span>
+						{disabled ? (
+							<span className="absolute right-1.5 top-1.5 rounded-full bg-foreground/10 px-1.5 py-0.5 text-[9px] text-foreground/60">
+								Em breve
+							</span>
+						) : null}
 					</button>
-				))}
-			</div>
-			{selectedType && (
-				<div className="flex gap-2">
-					<Input
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
-						placeholder="Descreva a atividade…"
-						onKeyDown={(e) => {
-							if (e.key === "Enter") {
-								e.preventDefault();
-								submit();
-							}
-						}}
-						autoFocus
-						className="h-8 text-sm"
-					/>
-					<Button
-						type="button"
-						size="sm"
-						onClick={submit}
-						disabled={isPending || !title.trim()}
-					>
-						Registrar
-					</Button>
-					<Button
-						type="button"
-						size="sm"
-						variant="ghost"
-						onClick={() => {
-							setSelectedType(null);
-							setTitle("");
-						}}
-					>
-						Cancelar
-					</Button>
-				</div>
-			)}
+				);
+			})}
 		</div>
 	);
 }

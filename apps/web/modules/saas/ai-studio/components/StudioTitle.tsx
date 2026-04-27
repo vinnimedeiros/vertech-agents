@@ -1,5 +1,5 @@
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
-import { SparklesIcon } from "lucide-react";
 
 type Props = {
 	className?: string;
@@ -18,19 +18,7 @@ export function StudioTitle({ className, size = "md" }: Props) {
 
 	return (
 		<div className={cn("flex items-center gap-2", className)}>
-			<span
-				className={cn(
-					"inline-flex items-center justify-center rounded-md bg-foreground/5 ring-1 ring-foreground/10",
-					isMd ? "size-6" : "size-5",
-				)}
-			>
-				<SparklesIcon
-					className={cn(
-						"text-muted-foreground",
-						isMd ? "size-3.5" : "size-3",
-					)}
-				/>
-			</span>
+			<AiStudioIcon className={cn(isMd ? "size-6" : "size-5")} />
 			<h1
 				className={cn(
 					"flex items-baseline gap-1.5 leading-none",

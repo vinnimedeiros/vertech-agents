@@ -63,9 +63,22 @@ export const SHADOW_TOKENS = {
 
 /**
  * Borda metálica usada nos 2 cantos opostos de MetricCard.
- * Sutil no light, levemente mais saturada no dark.
+ * @deprecated Substituído por METALLIC_GRADIENT_BORDER (gradient diagonal completo)
+ * a partir de 2026-04-26 noite — Vinni cobrou. Mantido temporariamente pra
+ * components que ainda referenciam.
  */
 export const METALLIC_BORDER = "border-zinc-300/35 dark:border-zinc-400/40";
+
+/**
+ * Borda metálica do MetricCard — pattern Vinni 2026-04-26 noite.
+ * Aplicar como wrapper com padding 1px.
+ *
+ * Light: borda sólida zinc (zinc-300 → zinc-400 → zinc-300, sem transparência)
+ * Dark: gradient diagonal translúcido (cantos sup-esq + inf-dir visíveis,
+ *       cantos sup-dir + inf-esq somem)
+ */
+export const METALLIC_GRADIENT_BORDER =
+	"bg-[linear-gradient(135deg,#d4d4d8_0%,#a1a1aa_50%,#d4d4d8_100%)] dark:bg-[linear-gradient(135deg,rgba(228,228,231,0.40)_0%,rgba(228,228,231,0.04)_30%,rgba(228,228,231,0.04)_70%,rgba(228,228,231,0.40)_100%)]";
 
 /**
  * Classes base do FloatingPanel — exportadas pra debug ou

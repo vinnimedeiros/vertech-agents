@@ -4,7 +4,8 @@ import { Button } from "@ui/components/button";
 import { Checkbox } from "@ui/components/checkbox";
 import { Textarea } from "@ui/components/textarea";
 import { cn } from "@ui/lib";
-import { Loader2Icon, SparklesIcon } from "lucide-react";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
+import { Loader2Icon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { ArchitectArtifact } from "../../lib/artifact-types";
@@ -307,7 +308,7 @@ export function IdealizationStep({
 						</>
 					) : (
 						<>
-							<SparklesIcon className="size-4" />
+							<AiStudioIcon className="size-4" />
 							{canGenerate
 								? "Gerar Análise"
 								: `Gerar Análise (responda ${MIN_QUESTIONS_REQUIRED - answeredCount} a mais)`}

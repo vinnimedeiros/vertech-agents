@@ -13,19 +13,19 @@ import {
 	useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
 import {
 	BookOpenIcon,
 	BrainIcon,
 	HelpCircleIcon,
 	LinkIcon,
-	type LucideIcon,
 	MoreHorizontalIcon,
 	RocketIcon,
-	SparklesIcon,
 	UsersRoundIcon,
 	WrenchIcon,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import Link from "next/link";
 import {
 	ROLE_LABELS,
@@ -55,8 +55,11 @@ const SUB_DELEGATE: Record<TeamMemberRole, string> = {
 	ASSISTANT: "Delegue para escalar para equipe humana.",
 };
 
-const ROLE_ICON: Record<TeamMemberRole, LucideIcon> = {
-	SUPERVISOR: SparklesIcon,
+const ROLE_ICON: Record<
+	TeamMemberRole,
+	ComponentType<{ className?: string }>
+> = {
+	SUPERVISOR: AiStudioIcon,
 	ANALYST: BrainIcon,
 	CAMPAIGNS: RocketIcon,
 	ASSISTANT: UsersRoundIcon,

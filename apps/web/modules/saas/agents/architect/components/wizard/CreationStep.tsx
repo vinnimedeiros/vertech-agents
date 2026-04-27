@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@ui/components/button";
-import { CheckIcon, Loader2Icon, SparklesIcon } from "lucide-react";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
+import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type {
@@ -159,7 +160,7 @@ export function CreationStep({
 							</>
 						) : (
 							<>
-								<SparklesIcon className="size-4" />
+								<AiStudioIcon className="size-4" />
 								Criar agente {plan.persona.name}
 							</>
 						)}

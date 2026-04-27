@@ -1,9 +1,8 @@
 import { cn } from "@ui/lib";
-import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 type Props = {
-	icon: LucideIcon;
+	icon: ComponentType<{ className?: string }>;
 	title: string;
 	description?: string;
 	action?: ReactNode;

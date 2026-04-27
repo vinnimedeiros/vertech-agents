@@ -7,3 +7,4 @@ export * from "./teams";
 export * from "./knowledge";
 export * from "./architect-session";
 export * from "./agenda";
+export * from "./oauth";

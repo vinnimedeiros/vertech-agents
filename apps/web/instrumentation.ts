@@ -46,6 +46,32 @@ export async function register() {
 		);
 	}
 
+	// 1.5. Registrar GoogleSyncRunner (D.3 Wave B)
+	// Injeta `runFullSync` da web no @repo/queue pra worker poder chamar
+	// sem ciclo de dep (apps/web → packages/queue → apps/web).
+	try {
+		const { registerGoogleSyncRunner } = await import("@repo/queue");
+		const { runFullSync } = await import(
+			"@saas/integrations/google/lib/calendar-sync"
+		);
+		registerGoogleSyncRunner(async ({ organizationId, userId, force }) => {
+			const result = await runFullSync(organizationId, userId, { force });
+			return {
+				ok: result.ok,
+				pulled: result.pulled,
+				pushed: result.pushed,
+				deleted: result.deleted,
+				error: result.error,
+			};
+		});
+		console.log("[instrumentation] GoogleSyncRunner registrado");
+	} catch (err) {
+		console.error(
+			"[instrumentation] falha ao registrar GoogleSyncRunner:",
+			err instanceof Error ? err.message : err,
+		);
+	}
+
 	// 2. Iniciar worker inline somente em dev
 	const shouldStartInline =
 		process.env.NODE_ENV === "development" ||
@@ -56,12 +82,24 @@ export async function register() {
 	}
 
 	try {
-		const { startAgentInvocationWorker, startIngestDocumentWorker } =
-			await import("@repo/queue");
+		const {
+			startAgentInvocationWorker,
+			startIngestDocumentWorker,
+			startGoogleCalendarSyncWorker,
+			scheduleGoogleCalendarSyncRepeatable,
+		} = await import("@repo/queue");
 		startAgentInvocationWorker();
 		startIngestDocumentWorker();
+		startGoogleCalendarSyncWorker();
+		// Agenda o sweep repeatable. Idempotente — BullMQ dedupe via jobId.
+		await scheduleGoogleCalendarSyncRepeatable().catch((err) => {
+			console.error(
+				"[instrumentation] falha ao agendar google sync repeatable:",
+				err instanceof Error ? err.message : err,
+			);
+		});
 		console.log(
-			"[instrumentation] agent-invocation + ingest-document workers iniciados inline (dev mode)",
+			"[instrumentation] agent-invocation + ingest-document + google-calendar-sync workers iniciados inline (dev mode)",
 		);
 	} catch (err) {
 		console.error(

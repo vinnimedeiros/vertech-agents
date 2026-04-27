@@ -1,12 +1,5 @@
 "use client";
 
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from "@ui/components/sheet";
 import { useState } from "react";
 import { AgendaMain } from "./AgendaMain";
 import { AgendaSidebar } from "./AgendaSidebar";
@@ -32,70 +25,36 @@ export function AgendaShell({
 	const [editingEvent, setEditingEvent] = useState<CalendarEventRow | null>(
 		null,
 	);
-	const [showSidebarSheet, setShowSidebarSheet] = useState(false);
+	const [slotDefaultDate, setSlotDefaultDate] = useState<Date | null>(null);
+	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [showNewCalendar, setShowNewCalendar] = useState(false);
 
 	const openNewEvent = () => {
 		setEditingEvent(null);
+		setSlotDefaultDate(null);
+		setShowEventForm(true);
+	};
+
+	const openSlotEditor = (date: Date) => {
+		setEditingEvent(null);
+		setSlotDefaultDate(date);
 		setShowEventForm(true);
 	};
 
 	const openEditEvent = (event: CalendarEventRow) => {
 		setEditingEvent(event);
+		setSlotDefaultDate(null);
 		setShowEventForm(true);
 	};
 
 	return (
 		<>
-			<div className="relative rounded-lg border bg-background">
-				<div className="flex min-h-[800px]">
-					<div className="hidden w-80 shrink-0 border-r xl:block">
+			<div className="flex h-full min-h-0 flex-1 overflow-hidden rounded-lg border border-border/40 bg-background">
+				{sidebarOpen ? (
+					<aside className="hidden w-72 shrink-0 border-r border-border/40 xl:block">
 						<AgendaSidebar
-							selectedDate={selectedDate}
-							onDateSelect={(d) => {
-								setSelectedDate(d);
-								setShowSidebarSheet(false);
-							}}
-							onNewEvent={openNewEvent}
-							onNewCalendar={() => setShowNewCalendar(true)}
-							calendars={calendars}
-							events={events}
-							organizationSlug={organizationSlug}
-							className="h-full"
-						/>
-					</div>
-
-					<div className="min-w-0 flex-1">
-						<AgendaMain
 							selectedDate={selectedDate}
 							onDateSelect={setSelectedDate}
-							onMenuClick={() => setShowSidebarSheet(true)}
-							events={events}
-							calendars={calendars}
-							onEventClick={openEditEvent}
-							onNewEvent={openNewEvent}
-						/>
-					</div>
-				</div>
-
-				<Sheet open={showSidebarSheet} onOpenChange={setShowSidebarSheet}>
-					<SheetContent
-						side="left"
-						className="w-80 p-0"
-						style={{ position: "absolute" }}
-					>
-						<SheetHeader className="p-4 pb-2">
-							<SheetTitle>Agenda</SheetTitle>
-							<SheetDescription>
-								Navegue pelas datas e gerencie seus eventos.
-							</SheetDescription>
-						</SheetHeader>
-						<AgendaSidebar
-							selectedDate={selectedDate}
-							onDateSelect={(d) => {
-								setSelectedDate(d);
-								setShowSidebarSheet(false);
-							}}
 							onNewEvent={openNewEvent}
 							onNewCalendar={() => setShowNewCalendar(true)}
 							calendars={calendars}
@@ -103,8 +62,21 @@ export function AgendaShell({
 							organizationSlug={organizationSlug}
 							className="h-full"
 						/>
-					</SheetContent>
-				</Sheet>
+					</aside>
+				) : null}
+
+				<div className="flex min-w-0 flex-1 flex-col">
+					<AgendaMain
+						selectedDate={selectedDate}
+						onDateSelect={setSelectedDate}
+						onMenuClick={() => setSidebarOpen((v) => !v)}
+						events={events}
+						calendars={calendars}
+						onEventClick={openEditEvent}
+						onNewEvent={openNewEvent}
+						onSlotClick={openSlotEditor}
+					/>
+				</div>
 			</div>
 
 			<EventForm
@@ -114,7 +86,7 @@ export function AgendaShell({
 				organizationId={organizationId}
 				calendars={calendars}
 				event={editingEvent}
-				defaultDate={selectedDate}
+				defaultDate={slotDefaultDate ?? selectedDate}
 			/>
 
 			<NewCalendarDialog

@@ -7,9 +7,10 @@ import {
 	listOrgMembers,
 } from "@saas/crm/lib/server";
 import { ComingSoon } from "@saas/shared/components/ComingSoon";
-import { PageHeader } from "@saas/shared/components/PageHeader";
 import { UsersIcon } from "lucide-react";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export default async function CrmLeadsPage({
 	params,
@@ -23,17 +24,13 @@ export default async function CrmLeadsPage({
 	const pipelineData = await getDefaultPipelineWithStages(org.id);
 	if (!pipelineData) {
 		return (
-			<>
-				<PageHeader
-					title="Leads"
-					subtitle="Lista e detalhe de todos os contatos em prospecção"
-				/>
+			<div className="flex h-full flex-col gap-3 overflow-hidden">
 				<ComingSoon
 					icon={UsersIcon}
 					title="Pipeline não configurado"
 					description="Este workspace ainda não tem um pipeline padrão."
 				/>
-			</>
+			</div>
 		);
 	}
 
@@ -41,20 +38,24 @@ export default async function CrmLeadsPage({
 		listLeadsForOrg(org.id),
 		listOrgMembers(org.id),
 	]);
-	const leads = leadsRaw.map((l) => ({
-		id: l.id,
-		title: l.title,
-		value: l.value,
-		currency: l.currency,
-		temperature: l.temperature,
-		priority: l.priority,
-		stageId: l.stageId,
-		updatedAt: l.updatedAt,
-		createdAt: l.createdAt,
-		closedAt: l.closedAt,
-		contact: l.contact,
-		stage: l.stage,
-	}));
+
+	// Aba Leads = só leads em prospecção (não-fechados). Won → /crm/clientes
+	const inProspect = leadsRaw
+		.filter((l) => !l.stage.isWon)
+		.map((l) => ({
+			id: l.id,
+			title: l.title,
+			value: l.value,
+			currency: l.currency,
+			temperature: l.temperature,
+			priority: l.priority,
+			stageId: l.stageId,
+			updatedAt: l.updatedAt,
+			createdAt: l.createdAt,
+			closedAt: l.closedAt,
+			contact: l.contact,
+			stage: l.stage,
+		}));
 
 	const stages = pipelineData.stages.map((s) => ({
 		id: s.id,
@@ -66,11 +67,12 @@ export default async function CrmLeadsPage({
 	}));
 
 	return (
-		<>
-			<PageHeader
-				title="Leads"
-				subtitle="Lista completa com filtros e timeline"
-			>
+		<LeadsTable
+			organizationSlug={organizationSlug}
+			leads={inProspect}
+			stages={stages}
+			members={members}
+			headerActions={
 				<NewLeadDialog
 					organizationId={org.id}
 					organizationSlug={organizationSlug}
@@ -82,13 +84,7 @@ export default async function CrmLeadsPage({
 						position: s.position,
 					}))}
 				/>
-			</PageHeader>
-			<LeadsTable
-				organizationSlug={organizationSlug}
-				leads={leads}
-				stages={stages}
-				members={members}
-			/>
-		</>
+			}
+		/>
 	);
 }

@@ -1,5 +1,6 @@
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { Button } from "@ui/components/button";
-import { PlusIcon, SparklesIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
 type Props = {
@@ -33,7 +34,7 @@ export function Hero({ organizationSlug, variant }: Props) {
 				</div>
 				<Button asChild size="lg">
 					<Link href={ctaHref}>
-						<SparklesIcon className="mr-2 size-5" />
+						<AiStudioIcon className="mr-2 size-5" />
 						Criar com o Arquiteto
 					</Link>
 				</Button>

@@ -1,7 +1,8 @@
 "use client";
 
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { Button } from "@ui/components/button";
-import { Loader2Icon, SparklesIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 
 type Props = {
 	templateLabel: string;
@@ -26,7 +27,7 @@ export function ChatWelcomeCta({
 		<div className="flex flex-1 items-center justify-center bg-background px-6">
 			<div className="flex max-w-md flex-col items-center text-center">
 				<div className="mb-6 flex size-16 items-center justify-center rounded-2xl bg-primary/10">
-					<SparklesIcon className="size-8 text-primary" />
+					<AiStudioIcon className="size-8" />
 				</div>
 				<h2 className="mb-2 font-semibold text-2xl text-foreground tracking-tight">
 					Vamos começar?
@@ -51,7 +52,7 @@ export function ChatWelcomeCta({
 						</>
 					) : (
 						<>
-							<SparklesIcon className="size-4" />
+							<AiStudioIcon className="size-4" />
 							Iniciar construção do agente de IA
 						</>
 					)}

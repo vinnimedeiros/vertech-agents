@@ -27,15 +27,20 @@ import {
 	Plus,
 	Search,
 	Users,
+	VideoIcon,
 	X,
 } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
 	createEventAction,
 	deleteEventAction,
 	updateEventAction,
 } from "../lib/actions";
+import {
+	ScheduledEventCard,
+	type ScheduledEventLike,
+} from "./ScheduledEventCard";
 import {
 	type CalendarEventRow,
 	type CalendarRow,
@@ -53,6 +58,24 @@ type Props = {
 	calendars: CalendarRow[];
 	event?: CalendarEventRow | null;
 	defaultDate?: Date;
+	/** Pré-seleciona o tipo (event/meet). Default `event`. LeadModal usa `meet`. */
+	defaultKind?: "event" | "meet";
+	/**
+	 * Restringe o salvamento a um tipo único — esconde o botão alternativo.
+	 * Útil quando shortcuts (botão Reunião / Evento do LeadModal) já decidiram
+	 * o tipo. Sem `restrictKind`, ambos botões aparecem (uso da agenda).
+	 */
+	restrictKind?: "event" | "meet";
+	/** Pré-preenche título (ex: "Reunião com {leadName}"). */
+	defaultTitle?: string;
+	/** Pré-preenche emails dos convidados (ex: email do lead). */
+	defaultEmails?: string[];
+	/** Nome do destinatário pra header do bloco "Copiar" Meet. */
+	recipientName?: string | null;
+	/** Callback após salvar com sucesso. Recebe `{ eventId, meetLink? }`. */
+	onSaved?: (result: { eventId: string; meetLink: string | null }) => void;
+	/** Vincula evento a lead do CRM (mostra na sidebar do LeadModal). */
+	leadId?: string | null;
 };
 
 const toTimeString = (date: Date) => format(date, "HH:mm");
@@ -65,6 +88,13 @@ export function EventForm({
 	calendars,
 	event,
 	defaultDate,
+	defaultKind,
+	restrictKind,
+	defaultTitle,
+	defaultEmails,
+	recipientName,
+	onSaved,
+	leadId,
 }: Props) {
 	const eventTypes = Object.entries(EVENT_TYPE_META) as Array<
 		[EventTypeKey, (typeof EVENT_TYPE_META)[EventTypeKey]]
@@ -73,7 +103,16 @@ export function EventForm({
 	const defaultCalendarId =
 		calendars.find((c) => c.isDefault)?.id ?? calendars[0]?.id ?? "";
 
-	const [title, setTitle] = useState(event?.title ?? "");
+	const initialEmails = (
+		(event?.externalAttendees ?? []).map((a) => a.email) as string[]
+	).concat(
+		// Compatibilidade legado: emails antes ficavam em `attendees` como name
+		((event?.attendees ?? []) as Array<{ name: string }>)
+			.map((a) => a.name)
+			.filter((n) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(n)),
+	);
+
+	const [title, setTitle] = useState(event?.title ?? defaultTitle ?? "");
 	const [calendarId, setCalendarId] = useState(
 		event?.calendarId ?? defaultCalendarId,
 	);
@@ -90,24 +129,55 @@ export function EventForm({
 	const [contactQuery, setContactQuery] = useState("");
 	const [emailInput, setEmailInput] = useState("");
 	const [emails, setEmails] = useState<string[]>(
-		(event?.attendees ?? []).map((a) => a.name),
+		initialEmails.length > 0 ? initialEmails : (defaultEmails ?? []),
 	);
 	const [description, setDescription] = useState(event?.description ?? "");
 	const [isPending, startTransition] = useTransition();
+	// Resultado do salvamento Meet — preenchido após push síncrono pro Google.
+	// Renderiza ScheduledEventCard (mesmo card da sidebar do LeadModal).
+	const [meetResult, setMeetResult] = useState<ScheduledEventLike | null>(
+		null,
+	);
 
+	// Reset state APENAS na transição closed → open. Sem isso, parents que
+	// re-renderizam (ex: LeadModal após refresh) trocam refs de
+	// `defaultEmails`/`defaultTitle` e disparariam reset → bloco do meetResult
+	// some na hora. Ref controla se já fizemos init nesta abertura.
+	const wasOpenRef = useRef(false);
 	useEffect(() => {
-		if (!open) return;
-		setTitle(event?.title ?? "");
-		setCalendarId(event?.calendarId ?? defaultCalendarId);
-		setType((event?.type as EventTypeKey) ?? "meeting");
-		setDate(event?.startAt ?? defaultDate ?? new Date());
-		setTimeStr(event?.startAt ? toTimeString(event.startAt) : "09:00");
-		setDuration(event?.duration ?? "30 min");
-		setContactQuery("");
-		setEmailInput("");
-		setEmails((event?.attendees ?? []).map((a) => a.name));
-		setDescription(event?.description ?? "");
-	}, [open, event, defaultDate, defaultCalendarId]);
+		if (open && !wasOpenRef.current) {
+			wasOpenRef.current = true;
+			const seedEmails = (
+				(event?.externalAttendees ?? []).map((a) => a.email) as string[]
+			).concat(
+				((event?.attendees ?? []) as Array<{ name: string }>)
+					.map((a) => a.name)
+					.filter((n) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(n)),
+			);
+			setTitle(event?.title ?? defaultTitle ?? "");
+			setCalendarId(event?.calendarId ?? defaultCalendarId);
+			setType((event?.type as EventTypeKey) ?? "meeting");
+			setDate(event?.startAt ?? defaultDate ?? new Date());
+			setTimeStr(event?.startAt ? toTimeString(event.startAt) : "09:00");
+			setDuration(event?.duration ?? "30 min");
+			setContactQuery("");
+			setEmailInput("");
+			setEmails(
+				seedEmails.length > 0 ? seedEmails : (defaultEmails ?? []),
+			);
+			setDescription(event?.description ?? "");
+			setMeetResult(null);
+		} else if (!open) {
+			wasOpenRef.current = false;
+		}
+	}, [
+		open,
+		event,
+		defaultDate,
+		defaultCalendarId,
+		defaultTitle,
+		defaultEmails,
+	]);
 
 	const addEmail = () => {
 		const v = emailInput.trim();
@@ -131,21 +201,11 @@ export function EventForm({
 
 	const typeMeta = EVENT_TYPE_META[type];
 
-	const handleSave = () => {
-		if (!title.trim()) {
-			toast.error("Dê um título pro evento.");
-			return;
-		}
-		if (!calendarId) {
-			toast.error("Nenhum calendário disponível.");
-			return;
-		}
-
+	const buildPayload = (kind: "event" | "meet") => {
 		const [hh, mm] = timeStr.split(":").map((n) => Number.parseInt(n, 10));
 		const startAt = new Date(date);
 		startAt.setHours(hh, mm, 0, 0);
-
-		const payload = {
+		return {
 			organizationId,
 			calendarId,
 			title: title.trim(),
@@ -156,12 +216,34 @@ export function EventForm({
 			type,
 			color: typeMeta.color,
 			location: null,
-			attendees: emails.map((email) => ({
-				name: email,
-				initials: email.slice(0, 2).toUpperCase(),
+			// Convidados externos viram attendees Google via mapLocalToGoogle.
+			// Não popular `attendees` (campo pra membros internos) — vazio.
+			attendees: [],
+			externalAttendees: emails.map((email) => ({
+				email,
+				status: "pending" as const,
 			})),
 			reminder: true,
+			eventKind: kind,
+			leadId: leadId ?? null,
 		};
+	};
+
+	const validate = (): boolean => {
+		if (!title.trim()) {
+			toast.error("Dê um título pro evento.");
+			return false;
+		}
+		if (!calendarId) {
+			toast.error("Nenhum calendário disponível.");
+			return false;
+		}
+		return true;
+	};
+
+	const handleSave = (kind: "event" | "meet") => {
+		if (!validate()) return;
+		const payload = buildPayload(kind);
 
 		startTransition(async () => {
 			try {
@@ -171,16 +253,52 @@ export function EventForm({
 						organizationSlug,
 					);
 					toast.success("Evento atualizado");
-				} else {
-					await createEventAction(payload, organizationSlug);
-					toast.success("Evento criado");
+					onSaved?.({ eventId: event.id, meetLink: null });
+					onOpenChange(false);
+					return;
 				}
+
+				const result = await createEventAction(payload, organizationSlug);
+				if (kind === "meet") {
+					if (result.meetError === "GOOGLE_NOT_CONNECTED") {
+						toast.error(
+							"Conecte o Google Calendar em Integrações pra criar Meet.",
+						);
+						onOpenChange(false);
+						return;
+					}
+					if (!result.meetLink) {
+						toast.error(
+							`Evento criado, mas Meet não veio do Google: ${result.meetError ?? "erro desconhecido"}`,
+						);
+						onOpenChange(false);
+						return;
+					}
+					setMeetResult({
+						id: result.eventId,
+						title: payload.title,
+						startAt: payload.startAt,
+						duration: payload.duration,
+						eventKind: "meet",
+						meetLink: result.meetLink,
+						conferenceId: result.conferenceId ?? null,
+					});
+					toast.success("Reunião criada com Google Meet");
+					onSaved?.({
+						eventId: result.eventId,
+						meetLink: result.meetLink,
+					});
+					return;
+				}
+				toast.success("Evento criado");
+				onSaved?.({ eventId: result.eventId, meetLink: null });
 				onOpenChange(false);
 			} catch (err) {
 				toast.error(err instanceof Error ? err.message : "Falha ao salvar");
 			}
 		});
 	};
+
 
 	const handleDelete = () => {
 		if (!event) return;
@@ -446,37 +564,115 @@ export function EventForm({
 						</div>
 					)}
 
-					<div className="flex gap-3 pt-2">
-						<Button
-							onClick={handleSave}
-							disabled={isPending}
-							className="flex-1"
-						>
-							{isPending ? (
-								<Loader2Icon className="size-4 animate-spin" />
-							) : event ? (
-								"Atualizar evento"
+					{meetResult ? (
+						<div className="space-y-3">
+							<div className="flex items-center gap-2 text-xs font-medium text-emerald-400">
+								<VideoIcon className="size-3.5" />
+								Reunião com Google Meet criada
+							</div>
+							<ScheduledEventCard
+								event={meetResult}
+								recipientName={recipientName}
+							/>
+							<div className="flex justify-end">
+								<Button
+									type="button"
+									size="sm"
+									onClick={() => onOpenChange(false)}
+								>
+									Concluído
+								</Button>
+							</div>
+						</div>
+					) : (
+						<div className="flex flex-wrap gap-3 pt-2">
+							{event ? (
+								<Button
+									onClick={() => handleSave("event")}
+									disabled={isPending}
+									className="flex-1"
+								>
+									{isPending ? (
+										<Loader2Icon className="size-4 animate-spin" />
+									) : (
+										"Atualizar evento"
+									)}
+								</Button>
+							) : restrictKind === "meet" ? (
+								<Button
+									onClick={() => handleSave("meet")}
+									disabled={isPending}
+									className="flex-1 gap-1.5"
+								>
+									{isPending ? (
+										<Loader2Icon className="size-4 animate-spin" />
+									) : (
+										<>
+											<VideoIcon className="size-4" />
+											Salvar reunião
+										</>
+									)}
+								</Button>
+							) : restrictKind === "event" ? (
+								<Button
+									onClick={() => handleSave("event")}
+									disabled={isPending}
+									className="flex-1"
+								>
+									{isPending ? (
+										<Loader2Icon className="size-4 animate-spin" />
+									) : (
+										"Salvar evento"
+									)}
+								</Button>
 							) : (
-								"Criar evento"
+								<>
+									<Button
+										onClick={() => handleSave("event")}
+										disabled={isPending}
+										variant="outline"
+										className="flex-1"
+									>
+										{isPending ? (
+											<Loader2Icon className="size-4 animate-spin" />
+										) : (
+											"Salvar como evento"
+										)}
+									</Button>
+									<Button
+										onClick={() => handleSave("meet")}
+										disabled={isPending}
+										className="flex-1 gap-1.5"
+									>
+										{isPending ? (
+											<Loader2Icon className="size-4 animate-spin" />
+										) : (
+											<>
+												<VideoIcon className="size-4" />
+												Salvar como Meet
+											</>
+										)}
+									</Button>
+								</>
 							)}
-						</Button>
-						{event && (
+							{event && (
+								<Button
+									variant="error"
+									onClick={handleDelete}
+									disabled={isPending}
+								>
+									Excluir
+								</Button>
+							)}
 							<Button
-								variant="error"
-								onClick={handleDelete}
+								variant="outline"
+								onClick={() => onOpenChange(false)}
 								disabled={isPending}
 							>
-								Excluir
+								Cancelar
 							</Button>
-						)}
-						<Button
-							variant="outline"
-							onClick={() => onOpenChange(false)}
-							disabled={isPending}
-						>
-							Cancelar
-						</Button>
-					</div>
+						</div>
+					)}
 				</div>
 			</DialogContent>
 		</Dialog>

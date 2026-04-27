@@ -1,4 +1,5 @@
-import { FilterXIcon, SparklesIcon } from "lucide-react";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
+import { FilterXIcon } from "lucide-react";
 import type { TeamWithMembers } from "../lib/types";
 import { StudioEmpty } from "./StudioEmpty";
 import { TeamCard } from "./TeamCard";
@@ -13,7 +14,7 @@ export function TeamGrid({ teams, organizationSlug, isEmpty }: Props) {
 	if (isEmpty) {
 		return (
 			<StudioEmpty
-				icon={SparklesIcon}
+				icon={AiStudioIcon}
 				title="Nenhum TIME configurado"
 				description="A Master Agency Vertech configurará o primeiro TIME para esta organização."
 			/>

@@ -11,6 +11,7 @@ import {
 	timestamp,
 	varchar,
 } from "drizzle-orm/pg-core";
+import { lead } from "./crm";
 import { organization, user } from "./postgres";
 
 // =============================================
@@ -29,6 +30,19 @@ export const calendarEventTypeEnum = pgEnum("CalendarEventType", [
 	"personal",
 	"task",
 	"reminder",
+]);
+
+/**
+ * Distingue evento simples (só agenda) de reunião com videochamada (Meet).
+ * - `event`: evento normal sem link de vídeo
+ * - `meet`: evento com Google Meet — `meetLink` e `conferenceId` populados
+ *   após push pro Google Calendar com `conferenceData.createRequest`
+ *
+ * Extensão futura: `zoom`, `teams` etc.
+ */
+export const calendarEventKindEnum = pgEnum("CalendarEventKind", [
+	"event",
+	"meet",
 ]);
 
 // =============================================
@@ -127,7 +141,40 @@ export const calendarEvent = pgTable(
 			.notNull()
 			.default(sql`'[]'::jsonb`),
 
+		// Convidados externos por email (D.5). Cada item: {email, name?, status: pending|accepted|declined}
+		externalAttendees: jsonb("externalAttendees")
+			.$type<{
+				email: string;
+				name?: string;
+				status?: "pending" | "accepted" | "declined";
+			}[]>()
+			.notNull()
+			.default(sql`'[]'::jsonb`),
+
 		reminder: boolean("reminder").notNull().default(true),
+
+		// Recorrência iCal RRULE (D.1). Null = evento único.
+		// Ex: "FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261231T235959Z"
+		recurrenceRule: text("recurrenceRule"),
+		// ID do evento "pai" quando esta linha é uma exceção/instância modificada
+		// de uma série recorrente
+		recurrenceParentId: text("recurrenceParentId"),
+
+		// Sync externo (D.3 Google Calendar)
+		externalProvider: varchar("externalProvider", { length: 32 }), // "google" | null
+		externalEventId: text("externalEventId"), // ID do evento no provider
+		externalEtag: text("externalEtag"), // ETag pra detectar mudança remota
+		externalSyncedAt: timestamp("externalSyncedAt"),
+
+		// Google Meet — populado após push com conferenceData.createRequest (D.3 Meet)
+		eventKind: calendarEventKindEnum("eventKind").notNull().default("event"),
+		meetLink: text("meetLink"), // URL pública da videochamada (ex: https://meet.google.com/abc-defg-hij)
+		conferenceId: text("conferenceId"), // ID interno da conferência no Google (pra updates idempotentes)
+
+		// Vincula evento a lead do CRM (LeadModal shortcut). NULL em agenda standalone / pull Google.
+		leadId: varchar("leadId", { length: 255 }).references(() => lead.id, {
+			onDelete: "set null",
+		}),
 
 		// M2-02 Sandbox flag
 		isSandbox: boolean("isSandbox").notNull().default(false),
@@ -144,6 +191,12 @@ export const calendarEvent = pgTable(
 			table.startAt,
 		),
 		index("calendar_event_calendar_idx").on(table.calendarId),
+		index("calendar_event_external_idx").on(
+			table.externalProvider,
+			table.externalEventId,
+		),
+		index("calendar_event_recurrence_parent_idx").on(table.recurrenceParentId),
+		index("calendar_event_lead_idx").on(table.leadId),
 	],
 );
 
@@ -175,5 +228,9 @@ export const calendarEventRelations = relations(calendarEvent, ({ one }) => ({
 	creator: one(user, {
 		fields: [calendarEvent.createdBy],
 		references: [user.id],
+	}),
+	lead: one(lead, {
+		fields: [calendarEvent.leadId],
+		references: [lead.id],
 	}),
 }));

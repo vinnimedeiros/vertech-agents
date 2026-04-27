@@ -204,6 +204,7 @@ export const listLeadsByPipeline = cache(
 				temperature: lead.temperature,
 				priority: lead.priority,
 				origin: lead.origin,
+				interests: lead.interests,
 				stageId: lead.stageId,
 				assignedTo: lead.assignedTo,
 				stageDates: lead.stageDates,

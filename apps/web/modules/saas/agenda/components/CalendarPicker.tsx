@@ -33,7 +33,7 @@ export function CalendarPicker({
 				selected={selectedDate}
 				onSelect={(d) => d && onDateSelect?.(d)}
 				locale={ptBR}
-				className="w-full [&_[role=gridcell]_button]:cursor-pointer [&_button]:cursor-pointer"
+				className="[&_[role=gridcell]_button]:cursor-pointer [&_button]:cursor-pointer"
 				modifiers={{
 					hasEvents: (date) => {
 						const cnt = eventDatesMap[date.toDateString()];
@@ -42,7 +42,7 @@ export function CalendarPicker({
 				}}
 				modifiersClassNames={{
 					hasEvents:
-						"relative after:absolute after:bottom-1 after:right-1 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
+						"relative after:absolute after:bottom-1 after:right-1 after:w-1.5 after:h-1.5 after:bg-foreground/40 after:rounded-full",
 				}}
 			/>
 		</div>

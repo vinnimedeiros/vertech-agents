@@ -1,7 +1,8 @@
 "use client";
 
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
-import { SparklesIcon, UserIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
 
 type Props = {
 	role: "user" | "assistant" | "system" | "data" | "tool";
@@ -37,7 +38,7 @@ export function MessageBubble({ role, content, isStreaming }: Props) {
 	return (
 		<div className="flex items-start gap-3">
 			<div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-				<SparklesIcon className="size-4 text-primary" />
+				<AiStudioIcon className="size-4" />
 			</div>
 			<div className="flex-1 pt-1">
 				<p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">

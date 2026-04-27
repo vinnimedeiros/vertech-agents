@@ -1,7 +1,8 @@
 "use client";
 
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { Button } from "@ui/components/button";
-import { Loader2Icon, SparklesIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 
 type Props = {
 	agentName: string;
@@ -37,7 +38,7 @@ export function CreateAgentCTA({
 					</>
 				) : (
 					<>
-						<SparklesIcon className="size-4" />
+						<AiStudioIcon className="size-4" />
 						Criar agente {agentName}
 					</>
 				)}

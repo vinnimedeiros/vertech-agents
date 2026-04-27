@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import {
 	type FloatingColor,
 	ICON_COLOR_BY_TINT,
-	METALLIC_BORDER,
 	SHADOW_TOKENS,
 	TINT_BY_COLOR,
 } from "./tokens";
@@ -19,17 +18,17 @@ type MetricCardProps = {
 };
 
 /**
- * Card de métrica do dashboard comercial — pattern SuperCash.
+ * Card de métrica do dashboard comercial — pattern Vinni 2026-04-26 noite.
  *
  * Anatomia:
- *   1. Container floating (rounded-xl, bg-card, shadow elevated).
- *   2. Blur tint colorido no topo (radial gradient suave por color).
- *   3. Linhas metálicas SOMENTE no canto superior esquerdo + canto
- *      inferior direito (referência Vinni 2026-04-26).
- *   4. Conteúdo: label uppercase + value grande Satoshi + trend opcional.
+ *   1. Wrapper com padding 1px + background linear-gradient diagonal (135deg)
+ *      → cantos sup-esq + inf-dir metálicos, cantos sup-dir + inf-esq somem.
+ *   2. Inner card sólido bg-card cobrindo tudo, deixando só a "borda gradient"
+ *      visível ao redor.
+ *   3. Blur tint colorido no topo (radial gradient suave por color).
+ *   4. Conteúdo: label uppercase pequena + value Satoshi medium + trend opcional.
  *
- * Aplicar em: Dashboard v2 (cards topo + métricas profundas), Tab
- * Follow-up (taxa resposta, conversão), Tab Campanhas (disparos).
+ * Sem mais "linhas em 2 cantos" — agora borda contínua que esmaece em diagonal.
  */
 export function MetricCard({
 	label,
@@ -42,57 +41,45 @@ export function MetricCard({
 	return (
 		<div
 			className={cn(
-				"relative isolate overflow-hidden rounded-xl border border-border/40 bg-card p-5",
+				"rounded-xl p-px",
+				// Light: borda sólida metálica (zinc-300 → zinc-400 → zinc-300, sem transparência)
+				"bg-[linear-gradient(135deg,#d4d4d8_0%,#a1a1aa_50%,#d4d4d8_100%)]",
+				// Dark: gradient diagonal translúcido (cantos sup-esq + inf-dir visíveis, opostos somem)
+				"dark:bg-[linear-gradient(135deg,rgba(228,228,231,0.40)_0%,rgba(228,228,231,0.04)_30%,rgba(228,228,231,0.04)_70%,rgba(228,228,231,0.40)_100%)]",
 				SHADOW_TOKENS.elevated,
 				className,
 			)}
 		>
-			{/* Blur tint colorido (top) */}
-			<div
-				aria-hidden
-				className={cn(
-					"pointer-events-none absolute inset-x-0 top-0 z-0 h-24",
-					TINT_BY_COLOR[color],
-				)}
-			/>
+			<div className="relative isolate overflow-hidden rounded-[11px] bg-card p-4">
+				{/* Blur tint colorido (top) */}
+				<div
+					aria-hidden
+					className={cn(
+						"pointer-events-none absolute inset-x-0 top-0 z-0 h-20",
+						TINT_BY_COLOR[color],
+					)}
+				/>
 
-			{/* Canto superior esquerdo metálico */}
-			<div
-				aria-hidden
-				className={cn(
-					"pointer-events-none absolute top-0 left-0 z-20 size-14 rounded-tl-xl border-t border-l",
-					METALLIC_BORDER,
-				)}
-			/>
-
-			{/* Canto inferior direito metálico */}
-			<div
-				aria-hidden
-				className={cn(
-					"pointer-events-none absolute right-0 bottom-0 z-20 size-14 rounded-br-xl border-r border-b",
-					METALLIC_BORDER,
-				)}
-			/>
-
-			{/* Conteúdo */}
-			<div className="relative z-10 flex flex-col gap-1.5">
-				<div className="flex items-center justify-between gap-2">
-					<span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-						{label}
-					</span>
-					{Icon ? (
-						<Icon className={cn("size-3.5", ICON_COLOR_BY_TINT[color])} />
+				{/* Conteúdo */}
+				<div className="relative z-10 flex flex-col gap-1">
+					<div className="flex items-center justify-between gap-2">
+						<span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+							{label}
+						</span>
+						{Icon ? (
+							<Icon className={cn("size-3", ICON_COLOR_BY_TINT[color])} />
+						) : null}
+					</div>
+					<div
+						className="font-medium text-[20px] text-foreground leading-tight"
+						style={{ fontFamily: "var(--font-satoshi)" }}
+					>
+						{value}
+					</div>
+					{trend ? (
+						<div className="text-[10px] text-muted-foreground">{trend}</div>
 					) : null}
 				</div>
-				<div
-					className="font-medium text-2xl text-foreground leading-tight"
-					style={{ fontFamily: "var(--font-satoshi)" }}
-				>
-					{value}
-				</div>
-				{trend ? (
-					<div className="text-[11px] text-muted-foreground">{trend}</div>
-				) : null}
 			</div>
 		</div>
 	);

@@ -1,6 +1,6 @@
 "use client";
 
-import { SparklesIcon } from "lucide-react";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 
 /**
  * Indicador "digitando..." exibido enquanto o Arquiteto processa
@@ -15,7 +15,7 @@ export function TypingIndicator() {
 	return (
 		<div className="flex items-start gap-3" aria-live="polite">
 			<div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-				<SparklesIcon className="size-4 text-primary" />
+				<AiStudioIcon className="size-4" />
 			</div>
 			<div className="flex items-center gap-1.5 rounded-2xl bg-foreground/5 px-4 py-3">
 				<Dot delay={0} />

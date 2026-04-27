@@ -37,3 +37,27 @@ export const ingestDocumentJobSchema = z.object({
 });
 
 export type IngestDocumentJob = z.infer<typeof ingestDocumentJobSchema>;
+
+/**
+ * Payload do job de polling sync do Google Calendar (D.3 Wave B).
+ *
+ * Dois modos:
+ * - **Sweep** (sem org/user): worker itera todos `oauth_token` com
+ *   `provider="google"` e roda sync sequencial em cada. Disparado pelo
+ *   repeatable job a cada 30min.
+ * - **Specific**: sync forçado de uma conexão única. Útil pra UI
+ *   "Sincronizar agora" caso queira sair do request HTTP e cair pro worker.
+ *
+ * Idempotência: jobId = `sync:{orgId}:{userId}` no modo specific evita
+ * duplicar quando user clica botão 2x. Modo sweep usa repeatable jobId
+ * fixo `google-sweep` (BullMQ dedupe automático).
+ */
+export const googleCalendarSyncJobSchema = z.object({
+	organizationId: z.string().optional(),
+	userId: z.string().optional(),
+	force: z.boolean().optional(),
+});
+
+export type GoogleCalendarSyncJob = z.infer<
+	typeof googleCalendarSyncJobSchema
+>;

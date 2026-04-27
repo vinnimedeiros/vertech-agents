@@ -19,6 +19,7 @@ export {
 	type FloatingColor,
 	ICON_COLOR_BY_TINT,
 	METALLIC_BORDER,
+	METALLIC_GRADIENT_BORDER,
 	SHADOW_TOKENS,
 	TINT_BY_COLOR,
 } from "./tokens";

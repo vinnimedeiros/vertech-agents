@@ -8,6 +8,17 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+/* Canvas dot grid (StudioCanvas/FloatingCanvas) — Figma/Miro style.
+ * Light: dots cinza escuros visíveis sobre bg zinc-100.
+ * Dark: dots brancos sutis sobre bg zinc-950.
+ */
+:root {
+	--canvas-dot-color: rgba(24, 24, 27, 0.10);
+}
+.dark {
+	--canvas-dot-color: rgba(255, 255, 255, 0.05);
+}
+
 pre.shiki {
 	@apply mb-4 rounded-lg p-6;
 }

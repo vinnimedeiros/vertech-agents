@@ -13,22 +13,21 @@ import {
 	useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
 import {
 	BrainIcon,
-	type LucideIcon,
 	MessageSquareIcon,
 	SendHorizontalIcon,
-	SparklesIcon,
 	WrenchIcon,
 	ZapIcon,
 } from "lucide-react";
-import { useCallback } from "react";
+import { type ComponentType, useCallback } from "react";
 
 type NodeData = {
 	label: string;
 	subtitle?: string;
-	icon: LucideIcon;
+	icon: ComponentType<{ className?: string }>;
 	color: "lime" | "cyan" | "violet" | "orange" | "amber" | "rose";
 	tools?: string[];
 	locked?: boolean;
@@ -212,7 +211,7 @@ function buildNodes(agent: AgentRecord, onSelect: (id: string) => void): Node<No
 			data: {
 				label: agent.name,
 				subtitle: agent.model,
-				icon: SparklesIcon,
+				icon: AiStudioIcon,
 				color: "lime",
 				onSelect,
 			},

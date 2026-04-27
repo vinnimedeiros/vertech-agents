@@ -17,15 +17,14 @@ import { OrchestratorColumn } from "./OrchestratorColumn";
  * Rotas que controlam a própria altura (não precisam de scroll no container da página).
  * Cada painel interno dessas páginas gerencia seu próprio overflow.
  */
-const FIXED_HEIGHT_ROUTES = ["/crm/chat"];
+const FIXED_HEIGHT_ROUTES = ["/crm"];
 
 /**
  * Rotas que renderizam canvas full-bleed (sem bg-card, border ou padding do shell).
- * Usado por sub-rotas do AI Studio que criam canvas próprio com panels floating
- * (Construtor de TIME, Editor de Agente). A home /ai-studio NÃO é full-bleed —
- * usa o main padrão como painel.
+ * Usado por sub-rotas do AI Studio + setor Comercial que criam canvas próprio
+ * com panels floating sobre dot grid (padrão Wave 2 Vinni 2026-04-26).
  */
-const FULL_BLEED_ROUTES = ["/ai-studio/teams"];
+const FULL_BLEED_ROUTES = ["/ai-studio/teams", "/crm"];
 
 const ORCHESTRATOR_STORAGE_KEY = "vertech:orchestrator-open";
 

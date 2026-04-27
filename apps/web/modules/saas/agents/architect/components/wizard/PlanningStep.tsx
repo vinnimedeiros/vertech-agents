@@ -2,7 +2,8 @@
 
 import { Button } from "@ui/components/button";
 import { Textarea } from "@ui/components/textarea";
-import { Loader2Icon, SparklesIcon } from "lucide-react";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
+import { Loader2Icon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { ArchitectArtifact } from "../../lib/artifact-types";
@@ -316,7 +317,7 @@ export function PlanningStep({
 						</>
 					) : (
 						<>
-							<SparklesIcon className="size-4" />
+							<AiStudioIcon className="size-4" />
 							Aprovar plano
 						</>
 					)}

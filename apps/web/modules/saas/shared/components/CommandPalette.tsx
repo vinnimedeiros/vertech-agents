@@ -13,6 +13,7 @@ import {
 	CommandSeparator,
 	CommandShortcut,
 } from "@ui/components/command";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import {
 	BriefcaseBusinessIcon,
 	CalendarIcon,
@@ -23,7 +24,6 @@ import {
 	PlugIcon,
 	PlusIcon,
 	SettingsIcon,
-	SparklesIcon,
 	UserCheckIcon,
 	UsersIcon,
 } from "lucide-react";
@@ -101,7 +101,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 				},
 				{
 					label: "AI Studio",
-					icon: SparklesIcon,
+					icon: AiStudioIcon,
 					path: `${base}/ai-studio`,
 				},
 				{

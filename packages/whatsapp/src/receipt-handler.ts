@@ -1,4 +1,4 @@
-import { db, eq, message } from "@repo/database";
+import { and, conversation, db, desc, eq, message } from "@repo/database";
 import type { WAMessageKey, WAMessageUpdate } from "@whiskeysockets/baileys";
 
 /**
@@ -34,8 +34,32 @@ export async function handleMessageUpdate(update: WAMessageUpdate) {
 	const next = mapReceiptStatus(status as number | null | undefined);
 	if (!next) return;
 
-	await db
+	const [updated] = await db
 		.update(message)
 		.set({ status: next })
-		.where(eq(message.externalId, externalId));
+		.where(eq(message.externalId, externalId))
+		.returning({
+			id: message.id,
+			conversationId: message.conversationId,
+			createdAt: message.createdAt,
+		});
+
+	if (!updated) return;
+
+	// Reflete status na conversation se essa message é a mais recente da conv —
+	// evita "engessar" preview no status de uma mensagem antiga quando chegam
+	// recibos atrasados.
+	const [latest] = await db
+		.select({ id: message.id })
+		.from(message)
+		.where(eq(message.conversationId, updated.conversationId))
+		.orderBy(desc(message.createdAt))
+		.limit(1);
+
+	if (latest?.id === updated.id) {
+		await db
+			.update(conversation)
+			.set({ lastMessageStatus: next, updatedAt: new Date() })
+			.where(eq(conversation.id, updated.conversationId));
+	}
 }

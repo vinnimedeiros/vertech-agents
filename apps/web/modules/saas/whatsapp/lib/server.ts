@@ -2,9 +2,14 @@ import "server-only";
 import {
 	and,
 	asc,
+	contact,
 	db,
+	desc,
 	eq,
+	gt,
 	inArray,
+	like,
+	sql,
 	whatsappInstance,
 } from "@repo/database";
 import { cache } from "react";
@@ -75,6 +80,55 @@ export const hasActiveWhatsAppInstance = cache(
 		return !!row;
 	},
 );
+
+export type WhatsAppSyncStatus = {
+	active: boolean;
+	contactsCount: number;
+	lastHistorySyncAt: Date | null;
+	secondsSinceLastBatch: number | null;
+};
+
+/**
+ * Status do sync de history do WhatsApp pra renderizar banner UI.
+ * Sync é considerado "ativo" quando o último batch chegou nos últimos 30s.
+ * UI faz polling desse endpoint enquanto active=true.
+ *
+ * NÃO é cached — precisa ser fresh a cada poll do client.
+ */
+export async function getWhatsAppSyncStatus(
+	organizationId: string,
+): Promise<WhatsAppSyncStatus> {
+	const [inst] = await db
+		.select({ lastHistorySyncAt: whatsappInstance.lastHistorySyncAt })
+		.from(whatsappInstance)
+		.where(eq(whatsappInstance.organizationId, organizationId))
+		.orderBy(desc(whatsappInstance.lastConnectedAt))
+		.limit(1);
+
+	const [{ count }] = await db
+		.select({ count: sql<number>`count(*)::int` })
+		.from(contact)
+		.where(
+			and(
+				eq(contact.organizationId, organizationId),
+				like(contact.source, "whatsapp%"),
+			),
+		);
+
+	const lastBatch = inst?.lastHistorySyncAt ?? null;
+	const secondsSinceLastBatch = lastBatch
+		? Math.floor((Date.now() - lastBatch.getTime()) / 1000)
+		: null;
+	const active =
+		secondsSinceLastBatch !== null && secondsSinceLastBatch < 30;
+
+	return {
+		active,
+		contactsCount: count,
+		lastHistorySyncAt: lastBatch,
+		secondsSinceLastBatch,
+	};
+}
 
 export const getInstanceStatusSnapshot = cache(
 	async (

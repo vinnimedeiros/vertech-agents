@@ -12,6 +12,7 @@ import {
 	uploadChatMediaAction,
 	type ChatMediaKind,
 } from "@saas/chat/lib/upload-actions";
+import { FloatingPanel } from "@saas/shared/floating";
 import { Button } from "@ui/components/button";
 import { Textarea } from "@ui/components/textarea";
 import { cn } from "@ui/lib";
@@ -325,7 +326,10 @@ export function MessageComposer({
 	}
 
 	return (
-		<div className="shrink-0 border-t border-border/60 bg-card/30 px-4 py-3">
+		<FloatingPanel
+			variant="elevated"
+			className="shrink-0 px-4 py-3"
+		>
 			{error ? (
 				<div className="mb-2 rounded-md bg-rose-500/10 px-3 py-1.5 text-xs text-rose-400">
 					{error}
@@ -411,9 +415,9 @@ export function MessageComposer({
 									: "Escreva uma mensagem... (Ctrl+Enter envia)"
 							}
 							disabled={disabled}
-							rows={1}
+							rows={2}
 							className={cn(
-								"min-h-[40px] max-h-40 resize-none text-sm",
+								"min-h-[60px] max-h-48 resize-none text-sm border-transparent bg-transparent shadow-none",
 								"focus-visible:ring-1",
 							)}
 						/>
@@ -422,7 +426,7 @@ export function MessageComposer({
 							size="icon"
 							onClick={handleSend}
 							disabled={!canSend}
-							className="h-10 w-10 shrink-0 rounded-full"
+							className="h-11 w-11 shrink-0 rounded-full"
 						>
 							{uploading ? (
 								<Loader2Icon className="size-4 animate-spin" />
@@ -434,7 +438,7 @@ export function MessageComposer({
 				</div>
 			)}
 
-		</div>
+		</FloatingPanel>
 	);
 }
 

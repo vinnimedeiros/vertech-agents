@@ -2,6 +2,7 @@ import { createId as cuid } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
 import {
 	boolean,
+	check,
 	decimal,
 	index,
 	integer,
@@ -133,6 +134,11 @@ export const contact = pgTable(
 		// com `phone` (dígitos puros) que continua útil pra busca/dedup
 		// quando WhatsApp manda em modo legacy.
 		whatsappJid: text("whatsappJid"),
+		// Baileys v7: LID puro (sem domínio @lid). Nativo do v7 quando contato
+		// é Anonymous mode ou grupos grandes. Pode coexistir com phone real
+		// (preenchido via evento lid-mapping.update). Pelo menos um de
+		// (lid, phone) é exigido por contato.
+		lid: text("lid"),
 		email: text("email"),
 		company: text("company"),
 		document: text("document"),
@@ -164,6 +170,16 @@ export const contact = pgTable(
 		uniqueIndex("contact_org_phone_uniq")
 			.on(table.organizationId, table.phone)
 			.where(sql`${table.phone} IS NOT NULL`),
+		// Baileys v7: lookup rápido por LID
+		index("contact_org_lid_idx")
+			.on(table.organizationId, table.lid)
+			.where(sql`${table.lid} IS NOT NULL`),
+		// Pelo menos um identificador (lid OU phone) — proteção contra
+		// inserts vazios. NOT VALID no DB ao aplicar (rows existentes não bloqueiam).
+		check(
+			"contact_lid_or_phone_check",
+			sql`${table.lid} IS NOT NULL OR ${table.phone} IS NOT NULL`,
+		),
 	],
 );
 
@@ -226,6 +242,20 @@ export const lead = pgTable(
 		index("lead_pipeline_idx").on(table.pipelineId),
 		index("lead_stage_idx").on(table.stageId),
 		index("lead_assigned_idx").on(table.assignedTo),
+		// H.1 Dashboard agregação — índices compostos pra acelerar queries
+		// de período + group-by (origin/temperature/closedAt)
+		index("lead_org_created_idx").on(table.organizationId, table.createdAt),
+		index("lead_org_closed_idx").on(table.organizationId, table.closedAt),
+		index("lead_org_origin_idx").on(table.organizationId, table.origin),
+		index("lead_org_temperature_idx").on(
+			table.organizationId,
+			table.temperature,
+		),
+		index("lead_org_sandbox_created_idx").on(
+			table.organizationId,
+			table.isSandbox,
+			table.createdAt,
+		),
 	],
 );
 

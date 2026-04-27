@@ -3,9 +3,9 @@
 import { MessageMediaRenderer } from "@saas/chat/components/MessageMediaRenderer";
 import { retryMessageAction } from "@saas/chat/lib/actions";
 import type { ChatMessage } from "@saas/chat/lib/server";
+import { AiStudioIcon } from "@saas/shared/components/AiStudioIcon";
 import { cn } from "@ui/lib";
 import {
-	BotIcon,
 	CheckCheckIcon,
 	CheckIcon,
 	ClockIcon,
@@ -85,7 +85,7 @@ export function MessageBubble({ message, organizationSlug }: Props) {
 			<div className={cn("flex max-w-[min(78%,42rem)] flex-col", isOutbound ? "items-end" : "items-start")}>
 				{isAgent ? (
 					<span className="mb-1 inline-flex items-center gap-1 text-[10px] text-violet-400">
-						<BotIcon className="size-3" />
+						<AiStudioIcon className="size-3" />
 						{message.senderName ?? "Agente IA"}
 					</span>
 				) : null}

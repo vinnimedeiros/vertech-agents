@@ -2,7 +2,7 @@ import { MessageSquareIcon } from "lucide-react";
 
 export function ChatEmptyState() {
 	return (
-		<section className="flex min-w-0 flex-1 flex-col items-center justify-center bg-card/20 text-center text-foreground/55">
+		<section className="flex min-w-0 flex-1 flex-col items-center justify-center text-center text-foreground/55">
 			<MessageSquareIcon className="size-10 text-foreground/30" />
 			<p className="mt-3 text-sm font-medium text-foreground/70">
 				Selecione uma conversa

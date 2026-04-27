@@ -314,6 +314,8 @@ export async function sendTextMessageAction(
 			.set({
 				lastMessageAt: now,
 				lastMessagePreview: preview,
+				lastMessageDirection: data.direction,
+				lastMessageStatus: initialStatus,
 				// Incrementa unreadCount apenas em mensagens INBOUND
 				unreadCount:
 					data.direction === "INBOUND"
@@ -522,6 +524,10 @@ export async function sendMediaMessageAction(
 						externalId: result?.key?.id ?? null,
 					})
 					.where(eq(message.id, created.id));
+				await db
+					.update(conversation)
+					.set({ lastMessageStatus: "SENT", updatedAt: new Date() })
+					.where(eq(conversation.id, data.conversationId));
 			} catch (err) {
 				console.error(
 					"[sendMediaMessageAction] whatsapp send failed",
@@ -531,6 +537,10 @@ export async function sendMediaMessageAction(
 					.update(message)
 					.set({ status: "FAILED" })
 					.where(eq(message.id, created.id));
+				await db
+					.update(conversation)
+					.set({ lastMessageStatus: "FAILED", updatedAt: new Date() })
+					.where(eq(conversation.id, data.conversationId));
 			}
 		} else {
 			console.warn(

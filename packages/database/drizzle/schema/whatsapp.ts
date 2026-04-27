@@ -52,6 +52,10 @@ export const whatsappInstance = pgTable(
 		lastConnectedAt: timestamp("lastConnectedAt"),
 		lastQRCode: text("lastQRCode"),
 		lastError: text("lastError"),
+		// Última vez que o servidor WhatsApp enviou batch de history sync.
+		// UI usa pra renderizar banner "Sincronizando contatos" enquanto
+		// batches estão chegando ativamente.
+		lastHistorySyncAt: timestamp("lastHistorySyncAt"),
 
 		createdAt: timestamp("createdAt").notNull().defaultNow(),
 		updatedAt: timestamp("updatedAt").notNull().defaultNow(),

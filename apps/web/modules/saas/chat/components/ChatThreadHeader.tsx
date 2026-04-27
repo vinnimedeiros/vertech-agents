@@ -6,6 +6,7 @@ import {
 	CHANNEL_COLOR,
 	CHANNEL_LABEL,
 } from "@saas/chat/lib/status-config";
+import { FloatingPanel } from "@saas/shared/floating";
 import { Avatar, AvatarFallback, AvatarImage } from "@ui/components/avatar";
 import { cn } from "@ui/lib";
 import {
@@ -32,9 +33,20 @@ function initialsOf(name: string): string {
 export function ChatThreadHeader({ conversation }: Props) {
 	const { isOpen, toggle } = useChatDetails();
 	const { contact, channel } = conversation;
-	const displayName = contact.name?.trim() || contact.phone || "Sem nome";
+	const displayName =
+		contact.name?.trim() || contact.phone || contact.lid || "Sem nome";
 	const channelColor = CHANNEL_COLOR[channel];
 	const channelLabel = CHANNEL_LABEL[channel];
+
+	// Identificador secundário no header. Phone real tem prioridade.
+	// Se contato é LID-only (Anonymous mode), mostra "Número oculto" — o phone
+	// real chega depois via evento `lid-mapping.update` do Baileys.
+	let identifierLabel: string | null = null;
+	if (contact.phone) {
+		identifierLabel = contact.phone;
+	} else if (contact.lid || contact.whatsappJid) {
+		identifierLabel = "Número oculto";
+	}
 
 	const ChannelIcon =
 		channel === "EMAIL"
@@ -46,10 +58,18 @@ export function ChatThreadHeader({ conversation }: Props) {
 	const ToggleIcon = isOpen ? PanelRightCloseIcon : PanelRightOpenIcon;
 
 	return (
-		<header className="flex shrink-0 items-center gap-3 border-b border-border/60 bg-card/40 px-4 py-3">
-			<Avatar className="size-10 rounded-full shrink-0">
+		<FloatingPanel
+			as="header"
+			variant="tight"
+			className="flex shrink-0 items-center gap-3 px-4 py-2.5"
+		>
+			<Avatar className="size-9 rounded-full shrink-0">
 				{contact.photoUrl ? (
-					<AvatarImage src={contact.photoUrl} alt={displayName} className="rounded-full" />
+					<AvatarImage
+						src={contact.photoUrl}
+						alt={displayName}
+						className="rounded-full"
+					/>
 				) : null}
 				<AvatarFallback className="rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white text-sm">
 					{initialsOf(displayName) || "?"}
@@ -63,10 +83,10 @@ export function ChatThreadHeader({ conversation }: Props) {
 				<div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-foreground/55">
 					<ChannelIcon className={cn("size-3", channelColor)} />
 					<span>{channelLabel}</span>
-					{contact.phone ? (
+					{identifierLabel ? (
 						<>
 							<span className="text-foreground/30">·</span>
-							<span className="truncate">{contact.phone}</span>
+							<span className="truncate">{identifierLabel}</span>
 						</>
 					) : null}
 				</div>
@@ -85,6 +105,6 @@ export function ChatThreadHeader({ conversation }: Props) {
 			>
 				<ToggleIcon className="size-4" />
 			</button>
-		</header>
+		</FloatingPanel>
 	);
 }

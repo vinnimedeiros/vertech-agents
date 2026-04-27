@@ -1,0 +1,1 @@
+ALTER TABLE "whatsapp_instance" ADD COLUMN "lastHistorySyncAt" timestamp;
